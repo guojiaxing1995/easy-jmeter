@@ -35,8 +35,8 @@ export default {
     position: absolute;
     right: 40px;
     bottom: 40px;
-    width: 60px;
-    height: 98px;
+    width: 65px;
+    height: 158px;
   }
 }
 </style>
