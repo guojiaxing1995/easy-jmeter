@@ -1,0 +1,46 @@
+#开发环境配置
+
+server:
+  # 服务端口
+  port: 5000
+
+
+spring:
+  # 数据源配置，请修改为你项目的实际配置
+  datasource:
+    username: "root"
+    password: "root"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://www.guojiaxing.red:9081/easy-jmeter?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
+
+
+# 开启权限拦截
+auth:
+  enabled: true
+
+# 开启登录要求验证码
+login-captcha:
+  enabled: false
+  secret: "m49CPM5ak@MDXTzbbT_ZEyMM3KBsBn!h"
+
+# 开启http请求日志记录
+request-log:
+  enabled: true
+
+
+logging:
+  level:
+    # web信息日志记录
+    web: debug
+    # SQL日志记录
+    io.github.talelin.latticy.mapper: debug
+
+minio:
+  endpoint: http://www.guojiaxing.red:9085
+  bucketName: dev
+  accessKey: root
+  secretKey: minio2023
+
+
+
+

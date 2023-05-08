@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.github.guojiaxing1995.easyJmeter.mapper.XssMapper">
+
+    <resultMap id="BaseResultMap" type="io.github.guojiaxing1995.easyJmeter.model.XssDO">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="xss_key" jdbcType="VARCHAR" property="xssKey"/>
+        <result column="xss_value" jdbcType="VARCHAR" property="xssValue"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>
+    </resultMap>
+
+    <select id="selectByKey" resultMap="BaseResultMap">
+        SELECT *
+        FROM xss x
+        WHERE
+        x.xss_key LIKE #{k}
+        AND
+        x.delete_time IS NULL
+    </select>
+
+</mapper>
