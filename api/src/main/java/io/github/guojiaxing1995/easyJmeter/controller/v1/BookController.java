@@ -96,28 +96,4 @@ public class BookController {
         return new DeletedVO(14);
     }
 
-    @PostMapping("/hello")
-    public JSONObject hello() {
-        JSONObject res = new JSONObject();
-        res.put("msg", "hello");
-        res.put("code", "10086");
-        return res;
-    }
-
-    @PostMapping("/myPost")
-    public JSONObject myPost(@RequestBody JSONObject jsonObject) {
-        jsonObject.put("time", new Date());
-        return jsonObject;
-    }
-
-    @GetMapping("/myGet")
-    public JSONObject myGet(@RequestParam(value = "q", required = false, defaultValue = "") String q,
-                            @RequestParam(value = "n", required = false, defaultValue = "") int n) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("time", new Date());
-        jsonObject.put("value", "myGet" + q);
-        jsonObject.put("n", 1000*n);
-        return jsonObject;
-    }
-
 }

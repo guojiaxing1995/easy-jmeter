@@ -203,3 +203,17 @@ INSERT INTO lin_user_group(id, user_id, group_id)
 VALUES (1, 1, 1);
 
 COMMIT;
+
+-- ----------------------------
+-- 工程表
+-- ----------------------------
+CREATE TABLE `project` (
+   `id` int(11) NOT NULL AUTO_INCREMENT,
+   `name` varchar(50) NOT NULL COMMENT '项目名称',
+   `creator` varchar(30) DEFAULT NULL COMMENT '创建人员',
+   `description` varchar(1000) DEFAULT NULL COMMENT '项目描述',
+   `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+   `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+   `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
+   PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
