@@ -1,6 +1,8 @@
 #主配置文件
 
 spring:
+  application:
+    name: easy-jmeter
   # 激活环境配置
   profiles:
     active: dev
@@ -46,3 +48,10 @@ logging:
     rollingpolicy:
       max-history:
   config:
+
+swagger:
+  enable: true
+  application-name: ${spring.application.name}
+  application-version: 1.0
+  application-description: 接口文档
+  try-host: http://localhost:${server.port}

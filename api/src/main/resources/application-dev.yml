@@ -41,6 +41,6 @@ minio:
   accessKey: root
   secretKey: minio2023
 
-
-
+swagger:
+  enable: true
 
