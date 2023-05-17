@@ -1,16 +1,15 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
+import io.github.guojiaxing1995.easyJmeter.dto.project.CreateOrUpdateProjectDTO;
 import io.github.guojiaxing1995.easyJmeter.model.ProjectDO;
 import io.github.guojiaxing1995.easyJmeter.service.ProjectService;
+import io.github.guojiaxing1995.easyJmeter.vo.CreatedVO;
 import io.github.talelin.core.annotation.LoginRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,5 +28,12 @@ public class ProjectController {
     public List<ProjectDO> search(@RequestParam(value = "name", required = false, defaultValue = "") String name){
         List<ProjectDO> projects = projectService.getProjectByName(name);
         return projects;
+    }
+    @PostMapping("")
+    @ApiOperation(value = "项目创建", notes = "输入名称、描述创建项目")
+    @LoginRequired
+    public CreatedVO creatProject(@RequestBody @Validated CreateOrUpdateProjectDTO validator){
+        projectService.createProject(validator);
+        return new CreatedVO();
     }
 }

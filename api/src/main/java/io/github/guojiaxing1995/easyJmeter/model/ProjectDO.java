@@ -16,7 +16,7 @@ public class ProjectDO extends BaseModel implements Serializable {
 
     private String name;
 
-    private String creator;
+    private Integer creator;
 
     private String description;
 

@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 public class CreatedVO extends UnifyResponseVO<String> {
 
     public CreatedVO() {
-        super(Code.CREATED.getCode());
+        super(Code.CREATED.getCode(),Code.CREATED.getZhDescription());
         ResponseUtil.setCurrentResponseHttpStatus(HttpStatus.CREATED.value());
     }
 
