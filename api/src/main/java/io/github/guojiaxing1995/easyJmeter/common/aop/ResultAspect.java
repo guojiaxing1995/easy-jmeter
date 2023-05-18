@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
 @Aspect
 @Component
 public class ResultAspect {
-    @AfterReturning(returning = "result", pointcut = "execution(public * io.github.talelin.latticy.controller..*.*(..))")
+    @AfterReturning(returning = "result", pointcut = "execution(public * io.github.guojiaxing1995.easyJmeter.controller..*.*(..))")
     public void doAfterReturning(UnifyResponseVO<String> result) {
         int code = result.getCode();
         String messageOfVO = result.getMessage();

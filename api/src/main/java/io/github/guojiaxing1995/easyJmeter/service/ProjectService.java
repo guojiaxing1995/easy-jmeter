@@ -11,4 +11,10 @@ public interface ProjectService {
     List<ProjectDO> getProjectByName(String name);
 
     boolean createProject(CreateOrUpdateProjectDTO validator);
+
+    boolean updateProject(ProjectDO projectDO, CreateOrUpdateProjectDTO validator);
+
+    ProjectDO getById(Integer id);
+
+    boolean deleteProject(Integer id);
 }

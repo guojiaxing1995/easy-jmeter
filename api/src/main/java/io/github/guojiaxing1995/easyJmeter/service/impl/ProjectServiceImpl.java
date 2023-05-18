@@ -32,4 +32,21 @@ public class ProjectServiceImpl implements ProjectService {
         projectDO.setDescription(validator.getDescription());
         return projectMapper.insert(projectDO) > 0;
     }
+
+    @Override
+    public boolean updateProject(ProjectDO project, CreateOrUpdateProjectDTO validator) {
+        project.setName(validator.getName());
+        project.setDescription(validator.getDescription());
+        return projectMapper.updateById(project) > 0;
+    }
+
+    @Override
+    public ProjectDO getById(Integer id) {
+        return projectMapper.selectById(id);
+    }
+
+    @Override
+    public boolean deleteProject(Integer id) {
+        return projectMapper.deleteById(id) > 0;
+    }
 }

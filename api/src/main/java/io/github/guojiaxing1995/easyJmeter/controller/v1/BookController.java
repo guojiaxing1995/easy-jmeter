@@ -90,7 +90,7 @@ public class BookController {
     public DeletedVO deleteBook(@PathVariable("id") @Positive(message = "{id.positive}") Integer id) {
         BookDO book = bookService.getById(id);
         if (book == null) {
-            throw new NotFoundException(10022);
+            throw new NotFoundException();
         }
         bookService.deleteById(book.getId());
         return new DeletedVO(14);
