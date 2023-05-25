@@ -1,10 +1,13 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.github.guojiaxing1995.easyJmeter.common.util.PageUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.project.CreateOrUpdateProjectDTO;
 import io.github.guojiaxing1995.easyJmeter.model.ProjectDO;
 import io.github.guojiaxing1995.easyJmeter.service.ProjectService;
 import io.github.guojiaxing1995.easyJmeter.vo.CreatedVO;
 import io.github.guojiaxing1995.easyJmeter.vo.DeletedVO;
+import io.github.guojiaxing1995.easyJmeter.vo.PageResponseVO;
 import io.github.guojiaxing1995.easyJmeter.vo.UpdatedVO;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.core.annotation.LoginRequired;
@@ -15,7 +18,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Positive;
-import java.util.List;
 
 @RestController
 @RequestMapping("/v1/project")
@@ -29,9 +31,10 @@ public class ProjectController {
     @GetMapping("")
     @ApiOperation(value = "项目查询", notes = "根据项目名称查询项目")
     @LoginRequired
-    public List<ProjectDO> search(@RequestParam(value = "name", required = false, defaultValue = "") String name){
-        List<ProjectDO> projects = projectService.getProjectByName(name);
-        return projects;
+    public PageResponseVO<ProjectDO> search(@RequestParam(value = "name", required = false, defaultValue = "") String name,
+                                            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page){
+        IPage<ProjectDO> projects = projectService.getProjectByName(page, name);
+        return PageUtil.build(projects);
     }
     @PostMapping("")
     @ApiOperation(value = "项目创建", notes = "输入名称、描述创建项目")

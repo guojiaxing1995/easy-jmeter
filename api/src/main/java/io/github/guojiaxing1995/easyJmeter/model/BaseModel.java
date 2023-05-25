@@ -16,10 +16,8 @@ public class BaseModel {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    @JsonIgnore
     private Date createTime;
 
-    @JsonIgnore
     private Date updateTime;
 
     @TableLogic

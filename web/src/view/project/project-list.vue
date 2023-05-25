@@ -28,7 +28,7 @@
       </el-table>
       <div class="pagination">
         <el-pagination
-          background :hide-on-single-page=true @current-change="handleCurrentChange" layout="prev, pager, next" :current-page="page" :page-size=10 :total="total">
+          background :hide-on-single-page=true @current-change="handleCurrentChange" layout="prev, pager, next" :current-page="page + 1" :page-size=10 :total="total">
         </el-pagination>
       </div>
   </div>
@@ -44,28 +44,32 @@
       const name = ref('')
       const projects = ref([])
       const total = ref(0)
-      const page = ref(1)
-      const pages = ref(0)
+      const page = ref(0)
       const loading = ref(false)
 
       onMounted(() => {
         getProjects()
       })
+
       const getProjects = async () => {
         let res
         try {
           loading.value = true
           res = await get('/v1/project', { page: page.value, name: name.value }, { showBackend: true })
           console.log("res")
-          projects.value = res.data
+          projects.value = res.items
           total.value = res.total
           page.value = res.page
-          pages.value = res.pages
           loading.value = false
         } catch (error) {
           loading.value = false
           projects.value = []
         }
+      }
+
+      const handleCurrentChange = val => {
+        page.value = val-1
+        getProjects()
       }
 
       return {
@@ -74,8 +78,8 @@
         showEdit,
         total,
         page,
-        pages,
         loading,
+        handleCurrentChange
     }
 
     },

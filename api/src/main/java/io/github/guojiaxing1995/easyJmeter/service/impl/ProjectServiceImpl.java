@@ -1,6 +1,8 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
+import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
 import io.github.guojiaxing1995.easyJmeter.dto.project.CreateOrUpdateProjectDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.ProjectMapper;
 import io.github.guojiaxing1995.easyJmeter.model.ProjectDO;
@@ -18,8 +20,9 @@ public class ProjectServiceImpl implements ProjectService {
     private ProjectMapper projectMapper;
 
     @Override
-    public List<ProjectDO> getProjectByName(String name) {
-        List<ProjectDO> projects = projectMapper.selectByName(name);
+    public IPage<ProjectDO> getProjectByName(Integer current, String name) {
+        Page page = new Page(current, 10);
+        IPage<ProjectDO> projects = projectMapper.selectByName(page, name);
         return projects;
     }
 
