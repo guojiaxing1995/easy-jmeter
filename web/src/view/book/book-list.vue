@@ -10,7 +10,7 @@
         <el-table-column type="index" :index="indexMethod" label="序号" width="100"></el-table-column>
         <el-table-column prop="title" label="书名"></el-table-column>
         <el-table-column prop="author" label="作者"></el-table-column>
-        <el-table-column label="操作" fixed="right" width="275">
+        <el-table-column label="操作" fixed="right" width="315">
           <template #default="scope">
             <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>
             <el-button

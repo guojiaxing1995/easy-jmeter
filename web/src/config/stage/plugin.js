@@ -2,7 +2,7 @@
 import custom from '@/plugin/custom/stage-config'
 
 const pluginsConfig = [
-  custom
+  custom,
 ]
 
 export default pluginsConfig
