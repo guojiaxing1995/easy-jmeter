@@ -1,28 +1,22 @@
 <template>
   <div class="container" v-if="!showEdit">
     <div class="header">
+      <div class="newBtn"><el-button type="primary" @click="handleCreate">新 增</el-button></div>
       <div class="search">
         <el-input placeholder="请输入工程名称查询" v-model="name" clearable></el-input>
       </div>
     </div>
       <el-table :data="projects" v-loading="loading">
-        <el-table-column prop="name" label="名称"></el-table-column>
-        <el-table-column prop="count" label="用例个数"></el-table-column>
-        <el-table-column prop="creator" label="创建人"></el-table-column>
-        <el-table-column prop="description" label="描述"></el-table-column>
-        <el-table-column prop="createtime" label="创建时间"></el-table-column>
-        <el-table-column label="操作" fixed="right" width="275">
+        <el-table-column prop="name" label="名称" width="300" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="case_count" label="用例条数" width="130"></el-table-column>
+        <el-table-column prop="creator" label="创建人" width="160" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="description" label="描述" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="create_time" label="创建时间" width="230"></el-table-column>
+        <el-table-column label="操作" fixed="right" width="265">
           <template #default="scope">
             <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">用例</el-button>
             <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>
-            <el-button
-              plain
-              size="small"
-              type="danger"
-              @click="handleDelete(scope.row.id)"
-              v-permission="{ permission: '删除图书', type: 'disabled' }"
-              >删除</el-button
-            >
+            <el-button plain size="small" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -32,13 +26,20 @@
         </el-pagination>
       </div>
   </div>
+  <project v-else @editClose="editClose" :editProjectId="editProjectId"></project>
 </template>
 
 <script>
-  import { onMounted, ref } from 'vue'
-  import { get } from '@/lin/plugin/axios'
+  import Utils from 'lin/util/util'
+  import { onMounted, ref ,watch } from 'vue'
+  import { get,_delete } from '@/lin/plugin/axios'
+  import { ElMessageBox, ElMessage } from 'element-plus'
+  import Project from './project'
 
   export default {
+    components: {
+      Project,
+    },
     setup() {
       const showEdit = ref(false)
       const name = ref('')
@@ -46,6 +47,7 @@
       const total = ref(0)
       const page = ref(0)
       const loading = ref(false)
+      const editProjectId = ref(null)
 
       onMounted(() => {
         getProjects()
@@ -56,7 +58,6 @@
         try {
           loading.value = true
           res = await get('/v1/project', { page: page.value, name: name.value }, { showBackend: true })
-          console.log("res")
           projects.value = res.items
           total.value = res.total
           page.value = res.page
@@ -67,10 +68,50 @@
         }
       }
 
+      const handleDelete = id => {
+        let res
+        ElMessageBox.confirm('此操作将永久删除该项目, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }).then(async () => {
+          loading.value = true
+          res = await _delete(`/v1/project/${id}`, { showBackend: true })
+          page.value = 0
+          getProjects()
+          res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
+        })
+      }
+
       const handleCurrentChange = val => {
         page.value = val-1
         getProjects()
       }
+
+      const editClose = () => {
+        showEdit.value = false
+        page.value = 0
+        getProjects()
+      }
+
+      const handleEdit = id => {
+        showEdit.value = true
+        editProjectId.value = id
+      }
+
+      const handleCreate = () => {
+        showEdit.value = true
+        editProjectId.value = null
+      }
+      
+      const _debounce =Utils.debounce(()=>{
+        page.value = 0
+          getProjects()
+      }, 800)
+
+      watch(name, () => {
+        _debounce()
+      })
 
       return {
         projects,
@@ -79,7 +120,12 @@
         total,
         page,
         loading,
-        handleCurrentChange
+        editProjectId,
+        handleCurrentChange,
+        handleDelete,
+        editClose,
+        handleEdit,
+        handleCreate,
     }
 
     },
@@ -92,8 +138,9 @@
 
   .header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
+    margin: 20px 0;
 
     .search {
       height: 59px;

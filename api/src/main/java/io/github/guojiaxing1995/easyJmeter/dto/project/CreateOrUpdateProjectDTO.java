@@ -14,7 +14,6 @@ public class CreateOrUpdateProjectDTO {
     @Length(max = 50, message = "{project.name.length}")
     private String name;
 
-    @NotEmpty(message = "{project.description.not-empty}")
     @Length(max = 1000, message = "{project.description.length}")
     private String description;
 }

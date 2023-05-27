@@ -17,6 +17,7 @@
         WHERE p.name LIKE CONCAT('%',#{name},'%')
           AND
             p.delete_time IS NULL
+        ORDER BY p.create_time DESC
     </select>
 </mapper>
 
