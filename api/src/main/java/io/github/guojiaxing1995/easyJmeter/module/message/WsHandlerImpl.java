@@ -1,7 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.module.message;
 
-import io.github.guojiaxing1995.easyJmeter.service.GroupService;
 import io.github.guojiaxing1995.easyJmeter.model.UserDO;
+import io.github.guojiaxing1995.easyJmeter.service.GroupService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.TextMessage;

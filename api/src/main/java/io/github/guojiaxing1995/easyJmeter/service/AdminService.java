@@ -2,13 +2,7 @@ package io.github.guojiaxing1995.easyJmeter.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.bo.GroupPermissionBO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.DispatchPermissionDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.DispatchPermissionsDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.NewGroupDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.RemovePermissionsDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.ResetPasswordDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.UpdateGroupDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.admin.UpdateUserInfoDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.admin.*;
 import io.github.guojiaxing1995.easyJmeter.model.GroupDO;
 import io.github.guojiaxing1995.easyJmeter.model.PermissionDO;
 import io.github.guojiaxing1995.easyJmeter.model.UserDO;

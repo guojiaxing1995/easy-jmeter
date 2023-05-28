@@ -1,8 +1,8 @@
 package io.github.guojiaxing1995.easyJmeter.controller.cms;
 
-import io.github.talelin.core.annotation.LoginRequired;
 import io.github.guojiaxing1995.easyJmeter.bo.FileBO;
 import io.github.guojiaxing1995.easyJmeter.service.FileService;
+import io.github.talelin.core.annotation.LoginRequired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;

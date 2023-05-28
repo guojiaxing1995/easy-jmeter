@@ -1,14 +1,12 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
-import io.github.guojiaxing1995.easyJmeter.mapper.*;
-import io.github.guojiaxing1995.easyJmeter.model.*;
-import io.github.talelin.autoconfigure.exception.ForbiddenException;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.dto.user.ChangePasswordDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.user.RegisterDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.user.UpdateInfoDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
+import io.github.talelin.autoconfigure.exception.ForbiddenException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

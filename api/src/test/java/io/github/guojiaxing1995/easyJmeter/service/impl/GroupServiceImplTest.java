@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.bo.GroupPermissionBO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
-import io.github.guojiaxing1995.easyJmeter.mapper.*;
-import io.github.guojiaxing1995.easyJmeter.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

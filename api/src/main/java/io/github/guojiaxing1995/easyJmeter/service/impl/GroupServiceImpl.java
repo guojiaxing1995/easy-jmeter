@@ -3,7 +3,6 @@ package io.github.guojiaxing1995.easyJmeter.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.github.talelin.autoconfigure.exception.ForbiddenException;
 import io.github.guojiaxing1995.easyJmeter.bo.GroupPermissionBO;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.GroupLevelEnum;
 import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
@@ -14,6 +13,7 @@ import io.github.guojiaxing1995.easyJmeter.model.PermissionDO;
 import io.github.guojiaxing1995.easyJmeter.model.UserGroupDO;
 import io.github.guojiaxing1995.easyJmeter.service.GroupService;
 import io.github.guojiaxing1995.easyJmeter.service.PermissionService;
+import io.github.talelin.autoconfigure.exception.ForbiddenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

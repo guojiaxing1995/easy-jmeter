@@ -1,10 +1,10 @@
 package io.github.guojiaxing1995.easyJmeter.common.listener;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import io.github.guojiaxing1995.easyJmeter.model.PermissionDO;
 import io.github.guojiaxing1995.easyJmeter.service.PermissionService;
 import io.github.talelin.autoconfigure.bean.MetaInfo;
 import io.github.talelin.autoconfigure.bean.PermissionMetaCollector;
-import io.github.guojiaxing1995.easyJmeter.model.PermissionDO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;

@@ -1,12 +1,12 @@
 package io.github.guojiaxing1995.easyJmeter.common.interceptor;
 
+import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
+import io.github.guojiaxing1995.easyJmeter.model.UserDO;
 import io.github.guojiaxing1995.easyJmeter.service.LogService;
 import io.github.talelin.autoconfigure.interfaces.LoggerResolver;
 import io.github.talelin.core.annotation.Logger;
 import io.github.talelin.core.annotation.PermissionMeta;
 import io.github.talelin.core.util.BeanUtil;
-import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
-import io.github.guojiaxing1995.easyJmeter.model.UserDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

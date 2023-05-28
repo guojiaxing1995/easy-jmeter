@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.dto.user;
 
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Email;

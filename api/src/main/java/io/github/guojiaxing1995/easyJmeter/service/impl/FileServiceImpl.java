@@ -1,12 +1,11 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.github.guojiaxing1995.easyJmeter.module.file.*;
-import io.github.guojiaxing1995.easyJmeter.service.FileService;
 import io.github.guojiaxing1995.easyJmeter.bo.FileBO;
 import io.github.guojiaxing1995.easyJmeter.mapper.FileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.FileDO;
 import io.github.guojiaxing1995.easyJmeter.module.file.*;
+import io.github.guojiaxing1995.easyJmeter.service.FileService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

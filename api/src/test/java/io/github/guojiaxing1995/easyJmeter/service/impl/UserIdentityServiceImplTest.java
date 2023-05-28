@@ -1,8 +1,8 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
-import io.github.talelin.core.util.EncryptUtil;
 import io.github.guojiaxing1995.easyJmeter.common.constant.IdentityConstant;
 import io.github.guojiaxing1995.easyJmeter.model.UserIdentityDO;
+import io.github.talelin.core.util.EncryptUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
