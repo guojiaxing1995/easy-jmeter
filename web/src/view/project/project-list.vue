@@ -22,7 +22,7 @@
       </el-table>
       <div class="pagination">
         <el-pagination
-          background :hide-on-single-page=true @current-change="handleCurrentChange" layout="prev, pager, next" :current-page="page + 1" :page-size=10 :total="total">
+          background :hide-on-single-page=true @current-change="handleCurrentChange" layout="prev, pager, next" :current-page="pageData.page + 1" :page-size=10 :total="pageData.total">
         </el-pagination>
       </div>
   </div>
@@ -44,8 +44,7 @@
       const showEdit = ref(false)
       const name = ref('')
       const projects = ref([])
-      const total = ref(0)
-      const page = ref(0)
+      const pageData = ref({ total: 0, page: 0 })
       const loading = ref(false)
       const editProjectId = ref(null)
 
@@ -57,10 +56,10 @@
         let res
         try {
           loading.value = true
-          res = await get('/v1/project', { page: page.value, name: name.value }, { showBackend: true })
+          res = await get('/v1/project', { page: pageData.value.page, name: name.value }, { showBackend: true })
           projects.value = res.items
-          total.value = res.total
-          page.value = res.page
+          pageData.value.total = res.total
+          pageData.value.page = res.page
           loading.value = false
         } catch (error) {
           loading.value = false
@@ -77,20 +76,20 @@
         }).then(async () => {
           loading.value = true
           res = await _delete(`/v1/project/${id}`, { showBackend: true })
-          page.value = 0
+          pageData.value.page = 0
           getProjects()
           res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
         })
       }
 
       const handleCurrentChange = val => {
-        page.value = val-1
+        pageData.value.page = val-1
         getProjects()
       }
 
       const editClose = () => {
         showEdit.value = false
-        page.value = 0
+        pageData.value.page = 0
         getProjects()
       }
 
@@ -105,8 +104,8 @@
       }
       
       const _debounce =Utils.debounce(()=>{
-        page.value = 0
-          getProjects()
+        pageData.value.page = 0
+        getProjects()
       }, 800)
 
       watch(name, () => {
@@ -117,8 +116,7 @@
         projects,
         name,
         showEdit,
-        total,
-        page,
+        pageData,
         loading,
         editProjectId,
         handleCurrentChange,

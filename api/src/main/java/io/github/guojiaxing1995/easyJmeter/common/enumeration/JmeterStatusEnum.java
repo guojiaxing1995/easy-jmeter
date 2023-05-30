@@ -12,7 +12,7 @@ public enum JmeterStatusEnum implements IEnum<Integer> {
 
     @EnumValue
     private final Integer value;
-    
+
     @JsonValue
     private  final String desc;
 
