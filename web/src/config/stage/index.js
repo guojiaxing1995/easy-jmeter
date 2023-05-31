@@ -3,6 +3,7 @@ import adminConfig from './admin'
 import bookConfig from './book' // 引入图书管理路由文件
 import pluginsConfig from './plugin'
 import projectConfig from './project'
+import machineConfig from './machine'
 
 // eslint-disable-next-line import/no-mutable-exports
 let homeRouter = [
@@ -47,7 +48,8 @@ let homeRouter = [
   },
   bookConfig,
   adminConfig,
-  projectConfig
+  projectConfig,
+  machineConfig
 ]
 
 // 接入插件

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.Positive;
 
 @RestController
-@RequestMapping("/v1/mactine")
+@RequestMapping("/v1/machine")
 @Api(tags = "压力机管理")
 @Validated
 public class MachineController {

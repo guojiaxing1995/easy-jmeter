@@ -20,7 +20,7 @@
         WHERE m.name LIKE CONCAT('%',#{name},'%')
           AND
             m.delete_time IS NULL
-        ORDER BY m.create_time DESC
+        ORDER BY m.online DESC, m.create_time DESC
     </select>
 </mapper>
 

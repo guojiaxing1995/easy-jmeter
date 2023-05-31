@@ -1,27 +1,21 @@
 <template>
     <div class="container">
-      <div class="title" v-if="!editProjectId">
-        <span>新建项目</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
+      <div class="title" v-if="!editMachineId">
+        <span>新建压力机</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
       </div>
       <div class="title" v-else>
-        <span>修改项目</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
+        <span>修改压力机</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
       </div>
   
       <div class="wrap">
         <el-row>
           <el-col :lg="16" :md="20" :sm="24" :xs="24">
-            <el-form :model="project" status-icon ref="form" label-width="100px" @submit.prevent :rules="rules">
-              <el-form-item label="项目名称" prop="name">
-                <el-input v-model="project.name" placeholder="请填写项目名称"></el-input>
+            <el-form :model="machine" status-icon ref="form" label-width="100px" @submit.prevent :rules="rules">
+              <el-form-item label="压力机名称" prop="name">
+                <el-input v-model="machine.name" placeholder="请填写压力机名称"></el-input>
               </el-form-item>
-              <el-form-item label="项目描述" prop="description">
-                <el-input
-                  type="textarea"
-                  :autosize="{ minRows: 4, maxRows: 8 }"
-                  placeholder="请输入项目描述"
-                  v-model="project.description"
-                >
-                </el-input>
+              <el-form-item label="压力机地址" prop="address">
+                <el-input placeholder="请输入压力机描述" v-model="machine.address"></el-input>
               </el-form-item>
   
               <el-form-item class="submit">
@@ -42,7 +36,7 @@
   
   export default {
     props: {
-      editProjectId: {
+      editMachineId: {
         type: Number,
         default: null,
       },
@@ -50,7 +44,7 @@
     setup(props, context) {
       const form = ref(null)
       const loading = ref(false)
-      const project = reactive({ name: '', description: ''})
+      const machine = reactive({ name: '', address: ''})
   
       const listAssign = (a, b) => Object.keys(a).forEach(key => {
         a[key] = b[key] || a[key]
@@ -62,16 +56,16 @@
       const { rules } = getRules()
   
       onMounted(() => {
-        if (props.editProjectId) {
-          getproject()
+        if (props.editMachineId) {
+          getmachine()
         }
       })
   
-      const getproject = async () => {
+      const getmachine = async () => {
         loading.value = true
-        const res = await get(`/v1/project/${props.editProjectId}`, { showBackend: true })
+        const res = await get(`/v1/machine/${props.editMachineId}`, { showBackend: true })
         console.log(res)
-        listAssign(project, res)
+        listAssign(machine, res)
         loading.value = false
       }
   
@@ -84,10 +78,10 @@
         form.value.validate(async valid => {
           if (valid) {
             let res = {}
-            if (props.editProjectId) {
-              res = await put(`/v1/project/${props.editProjectId}`, project, { showBackend: true })
+            if (props.editMachineId) {
+              res = await put(`/v1/machine/${props.editMachineId}`, machine, { showBackend: true })
             } else {
-              res = await post('/v1/project', project, { showBackend: true })
+              res = await post('/v1/machine', machine, { showBackend: true })
               resetForm(formName)
             }
             context.emit('editClose')
@@ -107,12 +101,12 @@
   
       return {
         back,
-        project,
+        machine,
         form,
         rules,
         resetForm,
         submitForm,
-        getproject,
+        getmachine,
       }
     },
   }
@@ -132,7 +126,7 @@
     }
     const rules = {
       name: [{ validator: checkInfo, trigger: 'blur', required: true },{ max: 50, message: '长度在50个字符内', trigger: 'blur' }],
-      description: [{ max: 1000, message: '长度在1000个字符内', trigger: 'blur' }],
+      address: [{ max: 100, message: '长度在100个字符内', trigger: 'blur' }],
     }
     return { rules }
   }
