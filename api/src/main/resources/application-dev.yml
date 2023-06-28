@@ -44,3 +44,8 @@ minio:
 swagger:
   enable: true
 
+socket:
+  host: localhost
+  port: 9000
+  enable: true
+
