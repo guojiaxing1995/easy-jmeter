@@ -16,6 +16,7 @@ public class SocketIOClientHandler {
         this.socket = socket;
         connectListener();
         disconnectListener();
+        eventListeners();
     }
 
     //事件监听
@@ -32,9 +33,9 @@ public class SocketIOClientHandler {
     }
 
     private void eventListeners() {
-        socket.on("msg", args -> {
+        socket.on("msgClient", args -> {
             log.info(args[0].toString());
-            socket.emit("msg", "收到" + args[0].toString());
+            socket.emit("msgServer", "收到" + args[0].toString());
         });
     }
 }
