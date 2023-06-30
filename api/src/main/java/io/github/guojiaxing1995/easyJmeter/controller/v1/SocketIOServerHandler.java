@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-public class SocketIOHandler {
+public class SocketIOServerHandler {
 
     @Autowired
     private SocketIOServer socketServer;
@@ -19,6 +19,7 @@ public class SocketIOHandler {
     @OnConnect
     public void onConnect(SocketIOClient client) {
         log.info("Client connected: " + client.getSessionId());
+        client.sendEvent("msg", "hello");
         // 处理连接事件
         // ...
     }

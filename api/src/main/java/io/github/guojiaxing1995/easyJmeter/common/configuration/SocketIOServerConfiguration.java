@@ -9,15 +9,15 @@ import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration(proxyBeanMethods = false)
-public class NettySocketConfiguration {
+public class SocketIOServerConfiguration {
 
-    @Value("${socket.host}")
+    @Value("${socket.server.host}")
     private String host;
 
-    @Value("${socket.port}")
+    @Value("${socket.server.port}")
     private int port;
 
-    @Value("${socket.enable}")
+    @Value("${socket.server.enable}")
     private boolean enableSocket;
 
     @Bean

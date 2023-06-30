@@ -45,7 +45,11 @@ swagger:
   enable: true
 
 socket:
-  host: localhost
-  port: 9000
-  enable: true
+  server:
+    host: localhost
+    port: 9000
+    enable: true
+  client:
+    serverUrl: http://127.0.0.1:9000
+    enable: true
 
