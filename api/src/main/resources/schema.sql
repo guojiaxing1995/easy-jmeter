@@ -229,6 +229,7 @@ CREATE TABLE `machine` (
    `version` varchar(30) DEFAULT NULL COMMENT '版本',
    `online` tinyint(2) NOT NULL DEFAULT '2' COMMENT '在线状态 1：在线 2：离线',
    `jmeter_status` tinyint(2) NOT NULL DEFAULT '0' COMMENT 'jmeter状态',
+   `client_id` varchar(36) DEFAULT NULL COMMENT 'socketIO sessionId 连接标识',
    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',

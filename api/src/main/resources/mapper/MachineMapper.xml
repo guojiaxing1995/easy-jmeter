@@ -9,6 +9,7 @@
         <result column="version" jdbcType="VARCHAR" property="version"/>
         <result column="online" property="online" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
         <result column="jmeter_status" property="jmeterStatus" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="client_id" jdbcType="VARCHAR" property="clientId"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
         <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>
