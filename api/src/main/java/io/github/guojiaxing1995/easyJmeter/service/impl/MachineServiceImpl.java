@@ -6,6 +6,7 @@ import io.github.guojiaxing1995.easyJmeter.dto.machine.CreateOrUpdateMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.MachineMapper;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import io.github.guojiaxing1995.easyJmeter.service.MachineService;
+import io.github.talelin.autoconfigure.exception.ParameterException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public boolean createMachine(CreateOrUpdateMachineDTO validator) {
+        if (machineMapper.selectByAddress(validator.getAddress()) != null){
+            throw new ParameterException(12002);
+        }
         MachineDO machineDO = new MachineDO();
         machineDO.setName(validator.getName());
         machineDO.setAddress(validator.getAddress());
@@ -32,6 +36,11 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public boolean updateMachine(MachineDO machine, CreateOrUpdateMachineDTO validator) {
+        if (!validator.getAddress().equals(machine.getAddress())) {
+            if (machineMapper.selectByAddress(validator.getAddress()) != null){
+                throw new ParameterException(12002);
+            }
+        }
         machine.setName(validator.getName());
         machine.setAddress(validator.getAddress());
         return machineMapper.updateById(machine) > 0;

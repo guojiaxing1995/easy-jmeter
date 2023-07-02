@@ -23,5 +23,13 @@
             m.delete_time IS NULL
         ORDER BY m.online DESC, m.create_time DESC
     </select>
+
+    <select id="selectByAddress" resultMap="BaseResultMap">
+        SELECT m.*
+        FROM machine m
+        WHERE m.address = #{address}
+          AND
+            m.delete_time IS NULL
+    </select>
 </mapper>
 

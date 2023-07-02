@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface MachineMapper  extends BaseMapper<MachineDO> {
 
     IPage<MachineDO> selectByName(Page page, @Param("name") String name);
+
+    MachineDO selectByAddress(String address);
 }
