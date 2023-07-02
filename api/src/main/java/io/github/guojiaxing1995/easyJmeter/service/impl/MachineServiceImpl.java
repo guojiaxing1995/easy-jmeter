@@ -1,8 +1,11 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.CreateOrUpdateMachineDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.MachineMapper;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import io.github.guojiaxing1995.easyJmeter.service.MachineService;
@@ -54,5 +57,23 @@ public class MachineServiceImpl implements MachineService {
     @Override
     public boolean deleteMachine(Integer id) {
         return machineMapper.deleteById(id) > 0;
+    }
+
+    @Override
+    public boolean setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum) {
+        MachineDO machine = machineMapper.selectByClientId(heartBeatMachineDTO.getClientId());
+        if (machine != null){
+            if (onlineEnum == MachineOnlineEnum.OFFLINE) {
+                machine.setOnline(MachineOnlineEnum.OFFLINE);
+                machine.setJmeterStatus(JmeterStatusEnum.IDLE);
+                machine.setClientId("");
+            } else {
+                machine.setPath(heartBeatMachineDTO.getPath());
+                machine.setVersion(heartBeatMachineDTO.getVersion());
+                machine.setOnline(heartBeatMachineDTO.getOnline());
+                machine.setJmeterStatus(heartBeatMachineDTO.getJmeterStatus());
+            }
+        }
+        return machineMapper.updateById(machine) > 0;
     }
 }

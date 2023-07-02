@@ -31,5 +31,13 @@
           AND
             m.delete_time IS NULL
     </select>
+
+    <select id="selectByClientId" resultMap="BaseResultMap">
+        SELECT m.*
+        FROM machine m
+        WHERE m.client_id = #{clientId}
+          AND
+            m.delete_time IS NULL
+    </select>
 </mapper>
 

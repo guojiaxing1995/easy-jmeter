@@ -5,9 +5,14 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
+import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
+import io.github.guojiaxing1995.easyJmeter.service.MachineService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -15,6 +20,9 @@ public class SocketIOServerHandler {
 
     @Autowired
     private SocketIOServer socketServer;
+
+    @Autowired
+    private MachineService machineService;
 
     @OnConnect
     public void onConnect(SocketIOClient client) {
@@ -27,7 +35,18 @@ public class SocketIOServerHandler {
     public void onDisconnect(SocketIOClient client) {
         log.info("Client disconnected: " + client.getSessionId());
         // 处理断开连接事件
-        // ...
+        // 压力机客户端离线后处理
+        Set<String> rooms = client.getAllRooms();
+        if (rooms.contains("machine")){
+            // 设置为已下线状态
+            HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(client.getSessionId().toString());
+            machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.OFFLINE);
+            log.info("压力机已经离线:" + client.getSessionId());
+        }
+
+        // 将客户端从所有room中移除
+        client.leaveRooms(rooms);
+
     }
 
     @OnEvent("msgServer")
