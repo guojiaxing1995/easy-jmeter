@@ -10,9 +10,11 @@ import io.github.guojiaxing1995.easyJmeter.mapper.MachineMapper;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import io.github.guojiaxing1995.easyJmeter.service.MachineService;
 import io.github.talelin.autoconfigure.exception.ParameterException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class MachineServiceImpl implements MachineService {
 
@@ -61,17 +63,22 @@ public class MachineServiceImpl implements MachineService {
 
     @Override
     public boolean setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum) {
-        MachineDO machine = machineMapper.selectByClientId(heartBeatMachineDTO.getClientId());
-        if (machine != null){
-            if (onlineEnum == MachineOnlineEnum.OFFLINE) {
-                machine.setOnline(MachineOnlineEnum.OFFLINE);
-                machine.setJmeterStatus(JmeterStatusEnum.IDLE);
-                machine.setClientId("");
-            } else {
+        MachineDO machine;
+        if (onlineEnum == MachineOnlineEnum.OFFLINE) {
+            machine = machineMapper.selectByClientId(heartBeatMachineDTO.getClientId());
+            machine.setOnline(MachineOnlineEnum.OFFLINE);
+            machine.setJmeterStatus(JmeterStatusEnum.IDLE);
+            machine.setClientId("");
+        } else {
+            machine = machineMapper.selectByAddress(heartBeatMachineDTO.getAddress());
+            if (machine != null) {
                 machine.setPath(heartBeatMachineDTO.getPath());
                 machine.setVersion(heartBeatMachineDTO.getVersion());
                 machine.setOnline(heartBeatMachineDTO.getOnline());
                 machine.setJmeterStatus(heartBeatMachineDTO.getJmeterStatus());
+                machine.setClientId(heartBeatMachineDTO.getClientId());
+            } else {
+                log.info("压力机地址未在web端维护：" + heartBeatMachineDTO.getAddress());
             }
         }
         return machineMapper.updateById(machine) > 0;

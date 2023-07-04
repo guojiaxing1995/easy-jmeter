@@ -3,12 +3,14 @@ package io.github.guojiaxing1995.easyJmeter;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author pedro@TaleLin
  */
+@EnableScheduling
 @RestController
 @MapperScan(basePackages = {"io.github.guojiaxing1995.easyJmeter.mapper"})
 @SpringBootApplication(scanBasePackages = {"io.github.guojiaxing1995.easyJmeter"})

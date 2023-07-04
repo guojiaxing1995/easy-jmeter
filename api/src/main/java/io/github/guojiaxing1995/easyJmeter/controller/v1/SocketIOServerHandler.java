@@ -5,6 +5,8 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.service.MachineService;
@@ -56,6 +58,14 @@ public class SocketIOServerHandler {
         log.info("msg: " + message);
         client.sendEvent("msgClient", "已经收到" + message);
 
+    }
+
+    @OnEvent("heartBeat")
+    public void  handleHeartBeatEvent(SocketIOClient client, String heartBeat) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        HeartBeatMachineDTO heartBeatMachineDTO = mapper.readValue(heartBeat, HeartBeatMachineDTO.class);
+        heartBeatMachineDTO.setClientId(client.getSessionId().toString());
+        machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.ONLINE);
     }
 
 }
