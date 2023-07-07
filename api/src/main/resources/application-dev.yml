@@ -51,5 +51,5 @@ socket:
     enable: true
   client:
     serverUrl: http://127.0.0.1:9000
-    enable: true
+    enable: false
 

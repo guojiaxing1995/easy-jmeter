@@ -62,7 +62,7 @@ public class MachineServiceImpl implements MachineService {
     }
 
     @Override
-    public boolean setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum) {
+    public void setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum) {
         MachineDO machine;
         if (onlineEnum == MachineOnlineEnum.OFFLINE) {
             machine = machineMapper.selectByClientId(heartBeatMachineDTO.getClientId());
@@ -75,12 +75,12 @@ public class MachineServiceImpl implements MachineService {
                 machine.setPath(heartBeatMachineDTO.getPath());
                 machine.setVersion(heartBeatMachineDTO.getVersion());
                 machine.setOnline(heartBeatMachineDTO.getOnline());
-                machine.setJmeterStatus(heartBeatMachineDTO.getJmeterStatus());
                 machine.setClientId(heartBeatMachineDTO.getClientId());
+                machineMapper.updateById(machine);
             } else {
                 log.info("压力机地址未在web端维护：" + heartBeatMachineDTO.getAddress());
             }
         }
-        return machineMapper.updateById(machine) > 0;
+
     }
 }

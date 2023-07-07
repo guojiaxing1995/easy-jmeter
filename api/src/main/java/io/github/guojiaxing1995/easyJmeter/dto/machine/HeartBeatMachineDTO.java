@@ -1,6 +1,5 @@
 package io.github.guojiaxing1995.easyJmeter.dto.machine;
 
-import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,8 +22,6 @@ public class HeartBeatMachineDTO implements Serializable {
     private String version;
 
     private MachineOnlineEnum online;
-
-    private JmeterStatusEnum jmeterStatus;
 
     public HeartBeatMachineDTO(String clientId) {
         this.clientId = clientId;

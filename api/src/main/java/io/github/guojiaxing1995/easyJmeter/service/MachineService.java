@@ -18,5 +18,5 @@ public interface MachineService {
 
     boolean deleteMachine(Integer id);
 
-    boolean setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum);
+    void setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum);
 }
