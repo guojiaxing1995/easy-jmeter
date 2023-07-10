@@ -69,6 +69,7 @@ public class MachineServiceImpl implements MachineService {
             machine.setOnline(MachineOnlineEnum.OFFLINE);
             machine.setJmeterStatus(JmeterStatusEnum.IDLE);
             machine.setClientId("");
+            machineMapper.updateById(machine);
         } else {
             machine = machineMapper.selectByAddress(heartBeatMachineDTO.getAddress());
             if (machine != null) {
@@ -82,5 +83,10 @@ public class MachineServiceImpl implements MachineService {
             }
         }
 
+    }
+
+    @Override
+    public MachineDO getByClientId(String clientId) {
+        return machineMapper.selectByClientId(clientId);
     }
 }

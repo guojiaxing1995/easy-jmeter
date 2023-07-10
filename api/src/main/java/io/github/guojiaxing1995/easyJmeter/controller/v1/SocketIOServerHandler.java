@@ -1,5 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
+import com.corundumstudio.socketio.BroadcastOperations;
+import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
@@ -13,8 +15,6 @@ import io.github.guojiaxing1995.easyJmeter.service.MachineService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Set;
 
 @Slf4j
 @RestController
@@ -30,7 +30,14 @@ public class SocketIOServerHandler {
     public void onConnect(SocketIOClient client) {
         log.info("Client connected: " + client.getSessionId());
         // 处理连接事件
-        // ...
+        // 判断客户端类型 加入room
+        HandshakeData handshakeData = client.getHandshakeData();
+        String type = handshakeData.getUrlParams().get("client-type").get(0);
+        if (type.equals("machine")){
+            client.joinRoom("machine");
+        } else if (type.equals("web")) {
+            client.joinRoom("web");
+        }
     }
 
     @OnDisconnect
@@ -38,16 +45,12 @@ public class SocketIOServerHandler {
         log.info("Client disconnected: " + client.getSessionId());
         // 处理断开连接事件
         // 压力机客户端离线后处理
-        Set<String> rooms = client.getAllRooms();
-        if (rooms.contains("machine")){
+        if (machineService.getByClientId(client.getSessionId().toString()) != null){
             // 设置为已下线状态
             HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(client.getSessionId().toString());
             machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.OFFLINE);
             log.info("压力机已经离线:" + client.getSessionId());
         }
-
-        // 将客户端从所有room中移除
-        client.leaveRooms(rooms);
 
     }
 
@@ -66,6 +69,9 @@ public class SocketIOServerHandler {
         HeartBeatMachineDTO heartBeatMachineDTO = mapper.readValue(heartBeat, HeartBeatMachineDTO.class);
         heartBeatMachineDTO.setClientId(client.getSessionId().toString());
         machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.ONLINE);
+
+        BroadcastOperations web = socketServer.getRoomOperations("web");
+        web.sendEvent("machineHeartWeb", "hello");
     }
 
 }

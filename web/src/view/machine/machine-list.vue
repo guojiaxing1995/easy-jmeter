@@ -36,10 +36,12 @@
   
   <script>
     import Utils from 'lin/util/util'
-    import { onMounted, ref ,watch } from 'vue'
+    import { onMounted, ref ,watch, inject } from 'vue'
     import { get,_delete } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import Machine from './machine'
+
+    // const socket = inject("socket");
   
     export default {
       components: {
@@ -52,6 +54,7 @@
         const pageData = ref({ total: 0, page: 0 })
         const loading = ref(false)
         const editMachineId = ref(null)
+        const socket =  inject("socket")
   
         onMounted(() => {
           getMachines()
@@ -115,6 +118,10 @@
   
         watch(name, () => {
           _debounce()
+        })
+
+        socket.on("machineHeartWeb", (res) => {
+          console.log("#message: ", res)
         })
   
         return {

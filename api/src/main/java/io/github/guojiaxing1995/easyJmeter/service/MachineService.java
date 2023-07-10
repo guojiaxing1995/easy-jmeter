@@ -19,4 +19,6 @@ public interface MachineService {
     boolean deleteMachine(Integer id);
 
     void setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum);
+
+    MachineDO getByClientId(String clientId);
 }

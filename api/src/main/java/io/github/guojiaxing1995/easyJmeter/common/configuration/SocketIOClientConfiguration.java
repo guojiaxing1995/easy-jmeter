@@ -24,6 +24,7 @@ public class SocketIOClientConfiguration {
         IO.Options options = new IO.Options();
         options.forceNew = true;
         options.reconnection = true;
+        options.query = "client-type=machine";
 
         Socket socket = IO.socket(serverUrl, options);
 
