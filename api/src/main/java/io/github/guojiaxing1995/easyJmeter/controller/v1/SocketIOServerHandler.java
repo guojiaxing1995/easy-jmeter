@@ -1,6 +1,5 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
-import com.corundumstudio.socketio.BroadcastOperations;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
@@ -69,9 +68,6 @@ public class SocketIOServerHandler {
         HeartBeatMachineDTO heartBeatMachineDTO = mapper.readValue(heartBeat, HeartBeatMachineDTO.class);
         heartBeatMachineDTO.setClientId(client.getSessionId().toString());
         machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.ONLINE);
-
-        BroadcastOperations web = socketServer.getRoomOperations("web");
-        web.sendEvent("machineHeartWeb", "hello");
     }
 
 }

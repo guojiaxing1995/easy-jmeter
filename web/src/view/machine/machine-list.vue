@@ -2,8 +2,11 @@
     <div class="container" v-if="!showEdit">
       <div class="header">
         <div class="newBtn"><el-button type="primary" @click="handleCreate">新 增</el-button></div>
-        <div class="search">
-          <el-input placeholder="请输入压力机名称查询" v-model="name" clearable></el-input>
+        <div class="header-right">
+          <el-icon :size="25" @click="getMachines"><Refresh /></el-icon>
+          <div class="search">
+            <el-input placeholder="请输入压力机名称查询" v-model="name" clearable></el-input>
+          </div>
         </div>
       </div>
         <el-table :data="machines" v-loading="loading">
@@ -36,16 +39,16 @@
   
   <script>
     import Utils from 'lin/util/util'
-    import { onMounted, ref ,watch, inject } from 'vue'
+    import { onMounted, ref ,watch } from 'vue'
     import { get,_delete } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
+    import { Refresh } from '@element-plus/icons-vue'
     import Machine from './machine'
-
-    // const socket = inject("socket");
   
     export default {
       components: {
         Machine,
+        Refresh,
       },
       setup() {
         const showEdit = ref(false)
@@ -54,7 +57,6 @@
         const pageData = ref({ total: 0, page: 0 })
         const loading = ref(false)
         const editMachineId = ref(null)
-        const socket =  inject("socket")
   
         onMounted(() => {
           getMachines()
@@ -119,10 +121,6 @@
         watch(name, () => {
           _debounce()
         })
-
-        socket.on("machineHeartWeb", (res) => {
-          console.log("#message: ", res)
-        })
   
         return {
           machines,
@@ -136,6 +134,7 @@
           editClose,
           handleEdit,
           handleCreate,
+          getMachines,
       }
   
       },
@@ -151,13 +150,22 @@
       justify-content: space-between;
       align-items: center;
       margin: 20px 0;
-  
-      .search {
-        height: 59px;
-        line-height: 59px;
-        color: $parent-title-color;
-        font-size: 16px;
-        font-weight: 500;
+      
+      .header-right{
+        display: flex;
+        align-items: center;
+
+        .el-icon {
+          cursor: pointer;
+        }
+        .search {
+          height: 59px;
+          line-height: 59px;
+          color: $parent-title-color;
+          font-size: 16px;
+          font-weight: 500;
+          margin-left: 15px;
+        }
       }
     }
   
