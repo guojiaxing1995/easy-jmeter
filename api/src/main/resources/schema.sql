@@ -235,3 +235,19 @@ CREATE TABLE `machine` (
    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- 文件表
+-- ----------------------------
+CREATE TABLE `file` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(255) NOT NULL COMMENT '原始文件名称',
+    `type` varchar(50) DEFAULT NULL COMMENT '文件类型',
+    `path` varchar(500) NOT NULL COMMENT '文件路径',
+    `url` varchar(500) NOT NULL COMMENT '访问全路径',
+    `size` bigint(20) DEFAULT NULL COMMENT '文件大小',
+    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
