@@ -4,6 +4,7 @@ import io.github.guojiaxing1995.easyJmeter.mapper.JFileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.talelin.autoconfigure.exception.FailedException;
+import io.github.talelin.autoconfigure.exception.ParameterException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.util.Arrays;
 
 @Service
 public class JFileServiceImpl implements JFileService {
@@ -38,8 +39,10 @@ public class JFileServiceImpl implements JFileService {
     public JFileDO createFile(MultipartFile file) {
         String name = file.getOriginalFilename();
         String fileExtension = StringUtils.getFilenameExtension(name);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-        String timestamp = dateFormat.format(new Date());
+        if (!Arrays.asList("csv", "jar", "jmx").contains(fileExtension)) {
+            throw new ParameterException(12102);
+        }
+        String timestamp = String.valueOf(Instant.now().toEpochMilli());
         String objectName = timestamp + "." + fileExtension;
         try {
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(file.getInputStream(), file.getSize(), -1).build());

@@ -42,7 +42,7 @@ import static io.github.talelin.autoconfigure.util.RequestUtil.getSimpleRequest;
 @Slf4j
 public class RestExceptionHandler {
 
-    @Value("${spring.servlet.multipart.max-file-size:20M}")
+    @Value("${spring.servlet.multipart.max-file-size:300M}")
     private String maxFileSize;
 
     /**
