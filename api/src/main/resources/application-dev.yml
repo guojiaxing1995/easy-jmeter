@@ -33,7 +33,7 @@ logging:
     # web信息日志记录
     web: debug
     # SQL日志记录
-    io.github.talelin.latticy.mapper: debug
+    io.github.guojiaxing1995.easyJmeter.mapper: debug
 
 minio:
   endpoint: http://www.guojiaxing.red:9085

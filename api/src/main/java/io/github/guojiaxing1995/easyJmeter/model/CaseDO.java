@@ -8,15 +8,15 @@ import lombok.EqualsAndHashCode;
 import java.io.Serializable;
 
 @Data
-@TableName("case")
+@TableName("`case`")
 @EqualsAndHashCode(callSuper = true)
-public class CaseModel extends BaseModel implements Serializable {
+public class CaseDO extends BaseModel implements Serializable {
 
     private static final long serialVersionUID = -1597190968205712177L;
 
     private String name;
 
-    private Integer author;
+    private Integer creator;
 
     private JmeterStatusEnum status;
 

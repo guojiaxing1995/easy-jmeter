@@ -251,3 +251,22 @@ CREATE TABLE `file` (
     `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- 用例表
+-- ----------------------------
+CREATE TABLE `case` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(50) NOT NULL COMMENT '名称',
+    `creator` int(11) NOT NULL COMMENT '创建人',
+    `project` int(11) NOT NULL COMMENT '所属工程',
+    `jmx` varchar(50) DEFAULT NULL COMMENT 'jmx文件id,逗号分割',
+    `csv` varchar(50) DEFAULT NULL COMMENT 'csv文件id,逗号分割',
+    `jar` varchar(50) DEFAULT NULL COMMENT 'jar文件id,逗号分割',
+    `status` tinyint(2) NOT NULL DEFAULT '0' COMMENT 'jmeter状态',
+    `description` varchar(500) DEFAULT NULL COMMENT '描述',
+    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
