@@ -17,4 +17,27 @@
         <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>
     </resultMap>
 
+    <resultMap id="SearchResultMap" type="io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="status" property="status" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="project" jdbcType="INTEGER" property="project"/>
+        <result column="jmx" jdbcType="VARCHAR" property="jmx"/>
+        <result column="csv" jdbcType="VARCHAR" property="csv"/>
+        <result column="jar" jdbcType="VARCHAR" property="jar"/>
+        <result column="p.name" jdbcType="VARCHAR" property="project.name"/>
+        <result column="lu.username" jdbcType="VARCHAR" property="lin_user.username"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="SearchResultMap">
+        SELECT c.*, p.name as projectName, lu.username
+        FROM `case` c
+            LEFT JOIN project p on c.project = p.id
+            LEFT JOIN lin_user lu on lu.id = c.creator
+        WHERE c.delete_time IS NULL
+    </select>
 </mapper>
