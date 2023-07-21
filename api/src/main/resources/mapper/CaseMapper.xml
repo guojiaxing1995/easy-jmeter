@@ -25,8 +25,8 @@
         <result column="jmx" jdbcType="VARCHAR" property="jmx"/>
         <result column="csv" jdbcType="VARCHAR" property="csv"/>
         <result column="jar" jdbcType="VARCHAR" property="jar"/>
-        <result column="p.name" jdbcType="VARCHAR" property="project.name"/>
-        <result column="lu.username" jdbcType="VARCHAR" property="lin_user.username"/>
+        <result column="project_name" jdbcType="VARCHAR" property="projectName"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
@@ -34,7 +34,7 @@
     </resultMap>
 
     <select id="selectAll" resultMap="SearchResultMap">
-        SELECT c.*, p.name as projectName, lu.username
+        SELECT c.*, p.name as project_name, lu.username
         FROM `case` c
             LEFT JOIN project p on c.project = p.id
             LEFT JOIN lin_user lu on lu.id = c.creator
