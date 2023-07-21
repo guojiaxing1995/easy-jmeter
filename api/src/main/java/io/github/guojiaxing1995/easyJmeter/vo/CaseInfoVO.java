@@ -22,7 +22,7 @@ public class CaseInfoVO {
 
     private JmeterStatusEnum status;
 
-    private Integer project;
+    private String project;
 
     private String jmx;
 
@@ -32,9 +32,7 @@ public class CaseInfoVO {
 
     private String description;
 
-    private String projectName;
-
-    private String username;
+    private String creator;
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date createTime;
