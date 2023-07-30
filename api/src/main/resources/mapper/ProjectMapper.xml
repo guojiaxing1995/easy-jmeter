@@ -19,5 +19,13 @@
             p.delete_time IS NULL
         ORDER BY p.create_time DESC
     </select>
+
+    <select id="getAll" resultMap="BaseResultMap">
+        SELECT p.*
+        FROM project p
+        WHERE
+            p.delete_time IS NULL
+        ORDER BY p.create_time DESC
+    </select>
 </mapper>
 

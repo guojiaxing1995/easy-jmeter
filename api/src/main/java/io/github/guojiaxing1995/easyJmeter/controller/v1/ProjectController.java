@@ -44,6 +44,13 @@ public class ProjectController {
         return PageUtil.build(projects, projectInfos);
     }
 
+    @GetMapping("/all")
+    @ApiOperation(value = "项目列表", notes = "获取所有项目")
+    @LoginRequired
+    public List<ProjectDO> searchProject() {
+        return projectService.getAll();
+    }
+
     @GetMapping("/{id}")
     @ApiOperation(value = "项目查询-id", notes = "获取指定id的项目")
     @LoginRequired

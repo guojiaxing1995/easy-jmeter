@@ -11,6 +11,8 @@ import io.github.guojiaxing1995.easyJmeter.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
@@ -49,5 +51,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public boolean deleteProject(Integer id) {
         return projectMapper.deleteById(id) > 0;
+    }
+
+    @Override
+    public List<ProjectDO> getAll() {
+        return projectMapper.getAll();
     }
 }
