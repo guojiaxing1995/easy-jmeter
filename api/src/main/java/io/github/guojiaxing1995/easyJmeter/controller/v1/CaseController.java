@@ -54,7 +54,7 @@ public class CaseController {
     @GetMapping("")
     @ApiOperation(value = "用例列表", notes = "返回所有用例")
     @LoginRequired
-    public List<CaseInfoVO> getallCases() {
+    public List<CaseInfoVO> getAllCases() {
         return caseService.getAll();
     }
 }

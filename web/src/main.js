@@ -1,7 +1,7 @@
 import 'dayjs/locale/zh-cn'
 import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
-import locale from 'element-plus/lib/locale/lang/zh-cn'
+import locale from 'element-plus/es/locale/lang/zh-cn'
 
 import '@/config/global'
 import 'lin/plugin'

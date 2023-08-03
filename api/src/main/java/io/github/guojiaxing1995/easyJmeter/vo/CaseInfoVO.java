@@ -22,7 +22,9 @@ public class CaseInfoVO {
 
     private JmeterStatusEnum status;
 
-    private String project;
+    private String projectName;
+
+    private Integer project;
 
     private String jmx;
 

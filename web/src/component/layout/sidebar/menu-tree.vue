@@ -1,6 +1,6 @@
 <template>
   <!--el-submenu改名为el-sub-menu-->
-  <el-sub-menu v-if="item.children?.length > 0" :index="item.path" popper-append-to-body>
+  <el-sub-menu v-if="item.children?.length > 0" :index="item.path" teleported>
     <template #title>
       <i v-if="!filterIcon(item.icon)" :class="item.icon"></i>
       <img v-else :src="item.icon" class="img-icon" />

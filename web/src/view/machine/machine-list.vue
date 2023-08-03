@@ -9,30 +9,30 @@
           </div>
         </div>
       </div>
-        <el-table :data="machines" v-loading="loading">
-          <el-table-column prop="name" label="名称" width="300" show-overflow-tooltip></el-table-column>
-          <el-table-column prop="address" label="地址" width="230"></el-table-column>
-          <el-table-column prop="path" label="路径" width="390" show-overflow-tooltip></el-table-column>
-          <el-table-column prop="version" label="版本" width="160" show-overflow-tooltip></el-table-column>
-          <el-table-column label="压力机状态" width="150">
-            <template #default="scope">
-                <el-tag v-if="scope.row.online==='离线'" type="danger">{{ scope.row.online }}</el-tag>
-                <el-tag v-else type="info">{{ scope.row.online }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="jmeter_status" label="jmeter状态" width="150"></el-table-column>
-          <el-table-column label="操作" fixed="right" width="200">
-            <template #default="scope">
-              <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>
-              <el-button plain size="small" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-        <div class="pagination">
-          <el-pagination
-            background :hide-on-single-page=true @current-change="handleCurrentChange" layout="prev, pager, next" :current-page="pageData.page + 1" :page-size=10 :total="pageData.total">
-          </el-pagination>
-        </div>
+      <el-table :data="machines" v-loading="loading">
+        <el-table-column prop="name" label="名称" width="300" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="address" label="地址" width="230"></el-table-column>
+        <el-table-column prop="path" label="路径" width="390" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="version" label="版本" width="160" show-overflow-tooltip></el-table-column>
+        <el-table-column label="压力机状态" width="150">
+          <template #default="scope">
+              <el-tag v-if="scope.row.online==='离线'" type="danger">{{ scope.row.online }}</el-tag>
+              <el-tag v-else type="info">{{ scope.row.online }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="jmeter_status" label="jmeter状态" width="150"></el-table-column>
+        <el-table-column label="操作" fixed="right" width="200">
+          <template #default="scope">
+            <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>
+            <el-button plain size="small" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="pagination">
+        <el-pagination
+          background :hide-on-single-page=true @current-change="handleCurrentChange" layout="prev, pager, next" :current-page="pageData.page + 1" :page-size=10 :total="pageData.total">
+        </el-pagination>
+      </div>
     </div>
     <machine v-else @editClose="editClose" :editMachineId="editMachineId"></machine>
   </template>
@@ -175,5 +175,6 @@
       margin-top: 30px;
       margin-bottom: 20px;
     }
+    
   }
   </style>
