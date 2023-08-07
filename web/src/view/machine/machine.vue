@@ -8,14 +8,14 @@
       </div>
   
       <div class="wrap">
-        <el-row>
+        <el-row v-loading="loading">
           <el-col :lg="16" :md="20" :sm="24" :xs="24">
             <el-form :model="machine" status-icon ref="form" label-width="100px" @submit.prevent :rules="rules">
               <el-form-item label="压力机名称" prop="name">
                 <el-input v-model="machine.name" placeholder="请填写压力机名称"></el-input>
               </el-form-item>
               <el-form-item label="压力机地址" prop="address">
-                <el-input placeholder="请输入压力机描述" v-model="machine.address"></el-input>
+                <el-input placeholder="请输入压力机地址" v-model="machine.address"></el-input>
               </el-form-item>
   
               <el-form-item class="submit">
@@ -107,6 +107,7 @@
         resetForm,
         submitForm,
         getmachine,
+        loading,
       }
     },
   }

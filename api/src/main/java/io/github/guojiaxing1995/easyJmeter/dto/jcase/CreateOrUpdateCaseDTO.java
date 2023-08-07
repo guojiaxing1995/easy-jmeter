@@ -18,13 +18,13 @@ public class CreateOrUpdateCaseDTO {
     @NotNull(message = "{case.project.not-empty}")
     private Integer project;
 
+    @NotNull(message = "{case.jmx.not-empty}")
     private String jmx;
 
     private String csv;
 
     private String jar;
 
-    @NotEmpty(message = "{case.description.not-empty}")
     @Length(max = 500, message = "{case.description.length}")
     private String description;
 

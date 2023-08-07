@@ -8,7 +8,7 @@
       </div>
   
       <div class="wrap">
-        <el-row>
+        <el-row v-loading="loading">
           <el-col :lg="16" :md="20" :sm="24" :xs="24">
             <el-form :model="project" status-icon ref="form" label-width="100px" @submit.prevent :rules="rules">
               <el-form-item label="项目名称" prop="name">
@@ -113,6 +113,7 @@
         resetForm,
         submitForm,
         getproject,
+        loading,
       }
     },
   }

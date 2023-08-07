@@ -9,7 +9,7 @@
           </div>
         </div>
       </div>
-      <el-table :data="machines" v-loading="loading">
+      <el-table :data="machines" v-loading="loading" >
         <el-table-column prop="name" label="名称" width="300" show-overflow-tooltip></el-table-column>
         <el-table-column prop="address" label="地址" width="230"></el-table-column>
         <el-table-column prop="path" label="路径" width="390" show-overflow-tooltip></el-table-column>
@@ -174,6 +174,11 @@
       justify-content: flex-end;
       margin-top: 30px;
       margin-bottom: 20px;
+    }
+
+    ::v-deep .is-vertical {
+      width: 0;
+      top: 2px;
     }
     
   }

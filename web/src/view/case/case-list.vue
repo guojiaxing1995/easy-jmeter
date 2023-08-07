@@ -30,32 +30,33 @@
               <i class="iconfont icon-clear"></i>
               <i class="iconfont icon-start"></i>
               <i class="iconfont icon-debug"></i>
-              <i class="iconfont icon-modify"></i>
+              <i class="iconfont icon-modify" @click="handleEdit(item.id)"></i>
               <i class="iconfont icon-remove"></i>
               <i class="iconfont icon-history"></i>
             </div>
           </div>
         </div>
       </div>
-
     </div>
+    <case v-else @editClose="editClose" :editCaseId="editCaseId" :projects="projects"></case>
   </template>
   
   <script>
     import Utils from 'lin/util/util'
     import { onMounted, ref ,watch } from 'vue'
     import { get,_delete } from '@/lin/plugin/axios'
+    import Case from './case'
   
     export default {
       components: {
-
+        Case,
       },
       setup() {
         const showEdit = ref(false)
         const name = ref('')
         const cases = ref([])
         const loading = ref(false)
-        const editcaseId = ref(null)
+        const editCaseId = ref(null)
         const projects = ref([])
         const projectId = ref('')
         const casesRes = ref([])
@@ -87,6 +88,11 @@
           searchCases()
         }
 
+        const editClose = () => {
+          showEdit.value = false
+          getCases()
+        }
+
         const searchCases = () => {
           loading.value = true
           casesRes.value = []
@@ -100,7 +106,12 @@
         
         const handleCreate = () => {
           showEdit.value = true
-          editcaseId.value = null
+          editCaseId.value = null
+        }
+
+        const handleEdit = id => {
+          showEdit.value = true
+          editCaseId.value = id
         }
 
         const _debounce =Utils.debounce(()=>{
@@ -118,7 +129,7 @@
         return {
           cases,
           loading,
-          editcaseId,
+          editCaseId,
           projects,
           projectId,
           name,
@@ -126,6 +137,8 @@
           handleCreate,
           casesRes,
           searchCases,
+          editClose,
+          handleEdit,
       }
   
       },

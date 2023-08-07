@@ -155,5 +155,10 @@
     margin-top: 30px;
     margin-bottom: 20px;
   }
+
+  ::v-deep .is-vertical {
+      width: 0;
+      top: 2px;
+    }
 }
 </style>
