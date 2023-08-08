@@ -31,7 +31,7 @@
               <i class="iconfont icon-start"></i>
               <i class="iconfont icon-debug"></i>
               <i class="iconfont icon-modify" @click="handleEdit(item.id)"></i>
-              <i class="iconfont icon-remove"></i>
+              <i class="iconfont icon-remove" @click="handleDelete(item.id)"></i>
               <i class="iconfont icon-history"></i>
             </div>
           </div>
@@ -45,6 +45,7 @@
     import Utils from 'lin/util/util'
     import { onMounted, ref ,watch } from 'vue'
     import { get,_delete } from '@/lin/plugin/axios'
+    import { ElMessageBox, ElMessage } from 'element-plus'
     import Case from './case'
   
     export default {
@@ -114,6 +115,20 @@
           editCaseId.value = id
         }
 
+        const handleDelete = id => {
+          let res
+          ElMessageBox.confirm('此操作将永久删除该用例, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }).then(async () => {
+            loading.value = true
+            res = await _delete(`/v1/case/${id}`, { showBackend: true })
+            getCases()
+            res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
+          })
+        }
+
         const _debounce =Utils.debounce(()=>{
           searchCases()
         }, 800)
@@ -139,6 +154,7 @@
           searchCases,
           editClose,
           handleEdit,
+          handleDelete,
       }
   
       },
