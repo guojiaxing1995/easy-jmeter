@@ -3,10 +3,13 @@ package io.github.guojiaxing1995.easyJmeter.service.impl;
 import io.github.guojiaxing1995.easyJmeter.mapper.JFileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
+import io.github.guojiaxing1995.easyJmeter.vo.JFileVO;
 import io.github.talelin.autoconfigure.exception.FailedException;
+import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.Instant;
 import java.util.Arrays;
 
+@Slf4j
 @Service
 public class JFileServiceImpl implements JFileService {
 
@@ -36,7 +40,7 @@ public class JFileServiceImpl implements JFileService {
     private JFileMapper jFileMapper;
 
     @Override
-    public JFileDO createFile(MultipartFile file) {
+    public JFileVO createFile(MultipartFile file) {
         String name = file.getOriginalFilename();
         String fileExtension = StringUtils.getFilenameExtension(name);
         if (!Arrays.asList("csv", "jar", "jmx").contains(fileExtension)) {
@@ -47,7 +51,7 @@ public class JFileServiceImpl implements JFileService {
         try {
             minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(file.getInputStream(), file.getSize(), -1).build());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info(e.toString());
             throw new FailedException(12101);
         }
         JFileDO jFileDO = new JFileDO();
@@ -58,6 +62,23 @@ public class JFileServiceImpl implements JFileService {
         jFileDO.setType(file.getContentType());
         jFileMapper.insert(jFileDO);
 
-        return jFileMapper.selectById(jFileDO.getId());
+        JFileDO fileDO = jFileMapper.selectById(jFileDO.getId());
+        if (fileDO.getSize()/(1024 * 1024) >= 1) {
+            return new JFileVO(fileDO, String.format("%.2f", fileDO.getSize()/(float)(1024 * 1024)) + "MB");
+        } else if (fileDO.getSize()/1024 >= 1) {
+            return new JFileVO(fileDO, String.format("%.2f", fileDO.getSize()/(float)1024) + "KB");
+        } else {
+            return new JFileVO(fileDO, fileDO.getSize() + "B");
+        }
+    }
+
+    @Override
+    public Boolean setFileCut(Integer id, Boolean cut) {
+        JFileDO jFileDO = jFileMapper.selectById(id);
+        if (jFileDO == null){
+            throw new NotFoundException(12103);
+        }
+        jFileDO.setCut(cut);
+        return jFileMapper.updateById(jFileDO) > 0;
     }
 }

@@ -22,4 +22,6 @@ public class JFileDO extends BaseModel implements Serializable {
     private String url;
 
     private Long size;
+
+    private Boolean cut;
 }

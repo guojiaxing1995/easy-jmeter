@@ -246,6 +246,7 @@ CREATE TABLE `file` (
     `path` varchar(500) NOT NULL COMMENT '文件路径',
     `url` varchar(500) NOT NULL COMMENT '访问全路径',
     `size` bigint(20) DEFAULT NULL COMMENT '文件大小',
+    `cut` tinyint(1) DEFAULT 0 NOT NULL comment '是否切分',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',

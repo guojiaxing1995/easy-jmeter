@@ -9,6 +9,7 @@
         <result column="path" jdbcType="VARCHAR" property="path"/>
         <result column="url" jdbcType="VARCHAR" property="url"/>
         <result column="size" jdbcType="BIGINT" property="size"/>
+        <result column="cut" jdbcType="BOOLEAN" property="cut"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
         <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>

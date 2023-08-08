@@ -3,10 +3,7 @@ package io.github.guojiaxing1995.easyJmeter.controller.v1;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CreateOrUpdateCaseDTO;
 import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.service.CaseService;
-import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO;
-import io.github.guojiaxing1995.easyJmeter.vo.CreatedVO;
-import io.github.guojiaxing1995.easyJmeter.vo.DeletedVO;
-import io.github.guojiaxing1995.easyJmeter.vo.UpdatedVO;
+import io.github.guojiaxing1995.easyJmeter.vo.*;
 import io.github.talelin.core.annotation.LoginRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -57,4 +54,12 @@ public class CaseController {
     public List<CaseInfoVO> getAllCases() {
         return caseService.getAll();
     }
+
+    @GetMapping("/{id}")
+    @ApiOperation(value = "用例详情", notes = "获取一个用例详情")
+    @LoginRequired
+    public CaseInfoPlusVO getCaseInfo(@PathVariable("id") @Positive(message = "{id.positive}") Integer id){
+        return caseService.getCaseInfoById(id);
+    }
+
 }

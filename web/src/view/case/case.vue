@@ -57,7 +57,7 @@
                   <el-table-column :resizable="false" label="操作" width="220">
                     <template #default="scope">
                       <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'csv')">删除</el-button>
-                      <el-switch v-model="scope.row.cut" inline-prompt active-text="切分" inactive-text="不切分"/>
+                      <el-switch v-model="scope.row.cut" @change="(val) => cutFile(val, scope.row.id)" inline-prompt active-text="切分" inactive-text="不切分"/>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -223,14 +223,17 @@
       }
 
       const setFileStr = () => {
-        jcase.jmx = jmxTable.value.map(element => element.id).join(', ');
-        jcase.csv = csvTable.value.map(element => element.id).join(', ');
-        jcase.jar = jarTable.value.map(element => element.id).join(', ');
+        jcase.jmx = jmxTable.value.map(element => element.id).join(',');
+        jcase.csv = csvTable.value.map(element => element.id).join(',');
+        jcase.jar = jarTable.value.map(element => element.id).join(',');
       }
   
       const getjcase = async () => {
         loading.value = true
         const res = await get(`/v1/case/${props.editCaseId}`, { showBackend: true })
+        jmxTable.value = res.jmx_file_list
+        csvTable.value = res.csv_file_list
+        jarTable.value = res.jar_file_list
         console.log(res)
         listAssign(jcase, res)
         loading.value = false
@@ -250,7 +253,7 @@
           if (valid) {
             let res = {}
             if (props.editCaseId) {
-              res = await put(`/v1/jcase/${props.editCaseId}`, jcase, { showBackend: true })
+              res = await put(`/v1/case/${props.editCaseId}`, jcase, { showBackend: true })
             } else {
               res = await post('/v1/case', jcase, { showBackend: true })
               resetForm(formName)
@@ -266,6 +269,9 @@
         })
       }
       
+      const cutFile = async (val, id) => {
+        await put('/v1/file/cut/' + id + '?cut=' + val, { showBackend: true })
+      }
 
       const back = () => {
         context.emit('editClose')
@@ -291,6 +297,7 @@
         deleteFile,
         setFileStr,
         loading,
+        cutFile,
       }
     },
   }
