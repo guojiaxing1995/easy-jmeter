@@ -271,3 +271,30 @@ CREATE TABLE `case` (
     `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- 任务表
+-- ----------------------------
+CREATE TABLE `task` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `task_id` varchar(50) NOT NULL COMMENT '任务标识',
+    `creator` int(11) NOT NULL COMMENT '创建人',
+    `case` int(11) NOT NULL COMMENT '所属用例',
+    `jmx` varchar(50) DEFAULT NULL COMMENT 'jmx文件id,逗号分割',
+    `csv` varchar(50) DEFAULT NULL COMMENT 'csv文件id,逗号分割',
+    `jar` varchar(50) DEFAULT NULL COMMENT 'jar文件id,逗号分割',
+    `threads` int(11) NOT NULL COMMENT '并发线程数',
+    `duration` int(11) NOT NULL COMMENT '压测时长',
+    `warmup` int(11) DEFAULT 0 COMMENT '预热时长',
+    `limit` int(11) DEFAULT 0 COMMENT 'QPS限制',
+    `machine` varchar(50) DEFAULT NULL COMMENT '压力机文件id,逗号分割',
+    `machine_num` int(11) NOT NULL DEFAULT 1 COMMENT '压力机数量',
+    `monitor` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否开启运行状态监控',
+    `realtime` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否显示实时数据',
+    `log` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否记录详细日志',
+    `remark` varchar(500) DEFAULT NULL COMMENT '描述',
+    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
