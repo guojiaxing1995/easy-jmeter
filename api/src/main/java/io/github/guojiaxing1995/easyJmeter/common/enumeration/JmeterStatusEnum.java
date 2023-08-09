@@ -7,8 +7,18 @@ import lombok.Getter;
 
 @Getter
 public enum JmeterStatusEnum implements IEnum<Integer> {
+    
+    IDLE(0,"空闲"),
 
-    IDLE(0,"空闲");
+    CONFIGURE(1,"配置"),
+
+    TRIGGER(2,"触发"),
+
+    RUN(3,"运行"),
+
+    COLLECT(4,"收集"),
+
+    CLEAN(5,"清理");
 
     @EnumValue
     private final Integer value;
