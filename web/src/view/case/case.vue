@@ -173,7 +173,11 @@
 
       const uploadFileSuccess = (file,fileList,type) => {
         if(type == 'jmx') {
-          jmxTable.value.push(file)
+          if(jmxTable.value.length>=1){
+            ElMessage.warning("只允许上传一个脚本文件")
+          } else {
+            jmxTable.value.push(file)
+          }
         } else if(type == 'csv') {
           csvTable.value.push(file)
         } else if(type == 'jar') {

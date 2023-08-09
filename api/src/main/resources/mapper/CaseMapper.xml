@@ -26,7 +26,7 @@
         <result column="csv" jdbcType="VARCHAR" property="csv"/>
         <result column="jar" jdbcType="VARCHAR" property="jar"/>
         <result column="project_name" jdbcType="VARCHAR" property="projectName"/>
-        <result column="username" jdbcType="VARCHAR" property="creator"/>
+        <result column="nickname" jdbcType="VARCHAR" property="creator"/>
         <result column="description" jdbcType="VARCHAR" property="description"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
@@ -34,10 +34,17 @@
     </resultMap>
 
     <select id="selectAll" resultMap="SearchResultMap">
-        SELECT c.*, p.name as project_name, lu.username
+        SELECT c.*, p.name as project_name, lu.nickname
         FROM `case` c
             LEFT JOIN project p on c.project = p.id
             LEFT JOIN lin_user lu on lu.id = c.creator
         WHERE c.delete_time IS NULL
+    </select>
+
+    <select id="selectByProject" resultMap="BaseResultMap">
+        SELECT c.*
+        FROM `case` c
+        WHERE c.delete_time IS NULL
+        AND c.project = #{project}
     </select>
 </mapper>

@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface CaseMapper extends BaseMapper<CaseDO> {
     List<CaseInfoVO> selectAll();
+
+    List<CaseDO> selectByProject(Integer project);
 }

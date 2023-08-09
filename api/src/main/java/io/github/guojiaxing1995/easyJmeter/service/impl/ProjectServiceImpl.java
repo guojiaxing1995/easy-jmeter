@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
 import io.github.guojiaxing1995.easyJmeter.dto.project.CreateOrUpdateProjectDTO;
+import io.github.guojiaxing1995.easyJmeter.mapper.CaseMapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.ProjectMapper;
+import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.model.ProjectDO;
 import io.github.guojiaxing1995.easyJmeter.model.UserDO;
 import io.github.guojiaxing1995.easyJmeter.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,6 +21,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     private ProjectMapper projectMapper;
+
+    @Autowired
+    private CaseMapper caseMapper;
 
     @Override
     public IPage<ProjectDO> getProjectByName(Integer current, String name) {
@@ -49,7 +55,12 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public boolean deleteProject(Integer id) {
+        List<CaseDO> caseList = caseMapper.selectByProject(id);
+        caseList.forEach(caseDO -> {
+            caseMapper.deleteById(caseDO.getId());
+        });
         return projectMapper.deleteById(id) > 0;
     }
 

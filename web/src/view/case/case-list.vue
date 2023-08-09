@@ -14,7 +14,7 @@
         <div class="case" v-for="(item,index) in casesRes">
           <div class="line line-name">
             <div class="name">{{item.name}}</div>
-            <div class="last-run">2023-3-31 10:56:25  李淳罡</div>
+            <div class="last-run">{{item.creator}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{item.create_time}}</div>
           </div>
           <div class="line">
             <div class="progress">
@@ -30,8 +30,8 @@
               <i class="iconfont icon-clear"></i>
               <i class="iconfont icon-start"></i>
               <i class="iconfont icon-debug"></i>
-              <i class="iconfont icon-modify" @click="handleEdit(item.id)"></i>
-              <i class="iconfont icon-remove" @click="handleDelete(item.id)"></i>
+              <i class="iconfont icon-modify" @click.stop="handleEdit(item.id)"></i>
+              <i class="iconfont icon-remove" @click.stop="handleDelete(item.id)"></i>
               <i class="iconfont icon-history"></i>
             </div>
           </div>
@@ -234,6 +234,10 @@
         .name {
           margin: 0 0 0 8px;
           font-size: 20px;
+          white-space:nowrap;
+          text-overflow:ellipsis;
+          overflow:hidden;
+          width: 72%;
         }
         .last-run {
           margin: 0 8px 0 0;
