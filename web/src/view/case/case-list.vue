@@ -28,7 +28,7 @@
           <div class="line">
             <div class="line-icon">
               <i class="iconfont icon-clear"></i>
-              <i class="iconfont icon-start"></i>
+              <i class="iconfont icon-start" @click.stop="executeCase(item.id)"></i>
               <i class="iconfont icon-debug"></i>
               <i class="iconfont icon-modify" @click.stop="handleEdit(item.id)"></i>
               <i class="iconfont icon-remove" @click.stop="handleDelete(item.id)"></i>
@@ -37,6 +37,7 @@
           </div>
         </div>
       </div>
+      <task :taskVisible="taskVisible" :caseId="taskCaseId" @taskClose="closeTask"></task>
     </div>
     <case v-else @editClose="editClose" :editCaseId="editCaseId" :projects="projects"></case>
   </template>
@@ -47,10 +48,12 @@
     import { get,_delete } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import Case from './case'
+    import Task from './task'
   
     export default {
       components: {
         Case,
+        Task
       },
       setup() {
         const showEdit = ref(false)
@@ -61,6 +64,8 @@
         const projects = ref([])
         const projectId = ref('')
         const casesRes = ref([])
+        const taskVisible = ref(false)
+        const taskCaseId = ref(null)
   
         onMounted(() => {
             getProjects()
@@ -93,7 +98,6 @@
           showEdit.value = false
           getCases()
         }
-
         const searchCases = () => {
           loading.value = true
           casesRes.value = []
@@ -113,6 +117,16 @@
         const handleEdit = id => {
           showEdit.value = true
           editCaseId.value = id
+        }
+
+        const executeCase = id => {
+          taskVisible.value = true
+          taskCaseId.value = id
+        }
+
+        const closeTask = () => {
+          taskVisible.value = false
+          taskCaseId.value = null
         }
 
         const handleDelete = id => {
@@ -155,6 +169,10 @@
           editClose,
           handleEdit,
           handleDelete,
+          taskVisible,
+          taskCaseId,
+          executeCase,
+          closeTask,
       }
   
       },

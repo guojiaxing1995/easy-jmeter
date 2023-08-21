@@ -7,6 +7,8 @@ import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+
 @Repository
 public interface MachineMapper  extends BaseMapper<MachineDO> {
 
@@ -15,4 +17,6 @@ public interface MachineMapper  extends BaseMapper<MachineDO> {
     MachineDO selectByAddress(String address);
 
     MachineDO selectByClientId(String clientId);
+
+    ArrayList<MachineDO> selectAll();
 }

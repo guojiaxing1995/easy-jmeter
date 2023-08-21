@@ -39,5 +39,11 @@
           AND
             m.delete_time IS NULL
     </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT m.*
+        FROM machine m
+        WHERE m.delete_time IS NULL
+    </select>
 </mapper>
 

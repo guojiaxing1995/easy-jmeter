@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Slf4j
 @Service
 public class MachineServiceImpl implements MachineService {
@@ -88,5 +90,10 @@ public class MachineServiceImpl implements MachineService {
     @Override
     public MachineDO getByClientId(String clientId) {
         return machineMapper.selectByClientId(clientId);
+    }
+
+    @Override
+    public ArrayList<MachineDO> getAll() {
+        return machineMapper.selectAll();
     }
 }

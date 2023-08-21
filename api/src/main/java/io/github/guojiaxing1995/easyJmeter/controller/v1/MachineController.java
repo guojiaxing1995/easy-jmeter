@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Positive;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/v1/machine")
@@ -46,6 +47,13 @@ public class MachineController {
             throw new NotFoundException(12001);
         }
         return machine;
+    }
+
+    @GetMapping("/all")
+    @ApiOperation(value = "获取所有压力机", notes = "包含在线、离线")
+    @LoginRequired
+    public ArrayList<MachineDO> getAll(){
+        return machineService.getAll();
     }
 
     @PostMapping("")

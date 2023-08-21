@@ -6,6 +6,8 @@ import io.github.guojiaxing1995.easyJmeter.dto.machine.CreateOrUpdateMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 
+import java.util.ArrayList;
+
 public interface MachineService {
 
     IPage<MachineDO> getMachineByName(Integer current, String name);
@@ -21,4 +23,6 @@ public interface MachineService {
     void setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum);
 
     MachineDO getByClientId(String clientId);
+
+    ArrayList<MachineDO> getAll();
 }
