@@ -135,7 +135,7 @@
           handleEdit,
           handleCreate,
           getMachines,
-      }
+        }
   
       },
     }

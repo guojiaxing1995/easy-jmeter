@@ -45,5 +45,15 @@
         FROM machine m
         WHERE m.delete_time IS NULL
     </select>
+    
+    <select id="executable" resultMap="BaseResultMap">
+        SELECT m.*
+        FROM machine m
+        WHERE m.online = '${@io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum@ONLINE.value}'
+          AND
+            m.jmeter_status = '${@io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum@IDLE.value}'
+          AND
+            m.delete_time IS NULL
+    </select>
 </mapper>
 

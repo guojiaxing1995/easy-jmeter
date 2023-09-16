@@ -18,7 +18,7 @@
           </div>
           <div class="line">
             <div class="progress">
-              <el-progress :text-inside="true" :stroke-width="23" :percentage="70" color="#0f59a4" striped striped-flow :duration="10"/>
+              <el-progress :text-inside="true" :stroke-width="23" :percentage="70" color="#375fcc" striped striped-flow :duration="10"/>
             </div>
             <div class="line-icon">
               <i class="iconfont icon-stop"></i>
@@ -209,7 +209,7 @@
       flex-wrap: wrap;
     }
     .case:hover {
-      background-color: rgb(219, 234, 247);
+      background-color: #ecf5ff;
       cursor: pointer;
     }
     .case {
@@ -217,7 +217,7 @@
       margin: 15px;
       border: 1px solid #1177b0;
       border-radius: 5px;
-      background-color: aliceblue;
+      background-color: #f5faff;
       box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
 
       .line {

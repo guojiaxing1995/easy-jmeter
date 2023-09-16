@@ -19,4 +19,6 @@ public interface MachineMapper  extends BaseMapper<MachineDO> {
     MachineDO selectByClientId(String clientId);
 
     ArrayList<MachineDO> selectAll();
+
+    ArrayList<MachineDO> executable();
 }
