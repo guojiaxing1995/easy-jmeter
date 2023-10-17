@@ -1,5 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
@@ -17,8 +19,11 @@ import io.github.talelin.autoconfigure.exception.ParameterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,7 +39,11 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private MachineMapper machineMapper;
 
+    @Autowired
+    private SocketIOServer socketServer;
+
     @Override
+    @Transactional
     public boolean createTask(CreateOrUpdateTaskDTO taskDTO) {
         CaseDO caseDO = caseMapper.selectById(taskDTO.getJCase());
         if (caseDO == null){
@@ -90,6 +99,17 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setLog(taskDTO.getLog());
         taskDO.setRemark(taskDTO.getRemark());
 
-        return taskMapper.insert(taskDO) > 0;
+        if (taskMapper.insert(taskDO) > 0) {
+            // 将备选压力机加入room,发送启动命令
+            List<String> clientIds = machines.stream().map(mid -> machineMapper.selectById(mid).getClientId()).collect(Collectors.toList());
+            for (int i=0;i<clientIds.size();i++){
+                SocketIOClient client = socketServer.getClient(UUID.fromString(clientIds.get(i)));
+                client.joinRoom(taskDO.getTaskId());
+            }
+            // 向room中的client发送启动命令
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("start", taskDO.getTaskId());
+        }
+
+        return true;
     }
 }
