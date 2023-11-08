@@ -216,7 +216,7 @@ CREATE TABLE `project` (
    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- 压力机表
@@ -224,7 +224,7 @@ CREATE TABLE `project` (
 CREATE TABLE `machine` (
    `id` int(11) NOT NULL AUTO_INCREMENT,
    `name` varchar(50) NOT NULL COMMENT '机器名称',
-   `address` varchar(100) NOT NULL COMMENT '工作节点地址',
+   `address` varchar(30) NOT NULL COMMENT '工作节点地址',
    `path` varchar(2000) DEFAULT NULL COMMENT 'jmeter路径',
    `version` varchar(30) DEFAULT NULL COMMENT '版本',
    `online` tinyint(2) NOT NULL DEFAULT '2' COMMENT '在线状态 1：在线 2：离线',
@@ -234,7 +234,7 @@ CREATE TABLE `machine` (
    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- 文件表
@@ -251,7 +251,7 @@ CREATE TABLE `file` (
     `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- 用例表
@@ -270,7 +270,7 @@ CREATE TABLE `case` (
     `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- 任务表
@@ -279,7 +279,7 @@ CREATE TABLE `task` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `task_id` varchar(50) NOT NULL COMMENT '任务标识',
     `creator` int(11) NOT NULL COMMENT '创建人',
-    `j_case` int(11) NOT NULL COMMENT '所属用例',
+    `jmeter_case` int(11) NOT NULL COMMENT '所属用例',
     `jmx` varchar(50) DEFAULT NULL COMMENT 'jmx文件id,逗号分割',
     `csv` varchar(50) DEFAULT NULL COMMENT 'csv文件id,逗号分割',
     `jar` varchar(50) DEFAULT NULL COMMENT 'jar文件id,逗号分割',
@@ -293,8 +293,26 @@ CREATE TABLE `task` (
     `realtime` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否显示实时数据',
     `log` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否记录详细日志',
     `remark` varchar(500) DEFAULT NULL COMMENT '描述',
+    `result` tinyint(2) NOT NULL DEFAULT '0' COMMENT '测试执行结果 0-进行中|1-成功|2-异常终止|3-手动终止',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- 任务日志表
+-- ----------------------------
+CREATE TABLE `task_log` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `task_id` varchar(50) NOT NULL COMMENT '任务标识',
+    `j_case` int(11) NOT NULL COMMENT '所属用例',
+    `status` tinyint(2) NOT NULL DEFAULT '0' COMMENT 'jmeter状态',
+    `result` tinyint(2) COMMENT '结果',
+    `address` varchar(30) NOT NULL COMMENT '工作节点地址',
+    `machine` int(11) NOT NULL COMMENT '执行任务的机器',
+    `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `delete_time` datetime(3) DEFAULT NULL COMMENT '删除时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

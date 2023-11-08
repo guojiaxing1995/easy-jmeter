@@ -5,14 +5,13 @@ import com.corundumstudio.socketio.SocketIOServer;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.CaseMapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.MachineMapper;
+import io.github.guojiaxing1995.easyJmeter.mapper.TaskLogMapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.TaskMapper;
-import io.github.guojiaxing1995.easyJmeter.model.BaseModel;
-import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
-import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
-import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.model.*;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
@@ -40,6 +39,9 @@ public class TaskServiceImpl implements TaskService {
     private MachineMapper machineMapper;
 
     @Autowired
+    private TaskLogMapper taskLogMapper;
+
+    @Autowired
     private SocketIOServer socketServer;
 
     @Override
@@ -55,7 +57,7 @@ public class TaskServiceImpl implements TaskService {
         TaskDO taskDO = new TaskDO();
         taskDO.setTaskId("TASK" + System.currentTimeMillis());
         taskDO.setCreator(LocalUser.getLocalUser().getId());
-        taskDO.setJCase(taskDTO.getJCase());
+        taskDO.setJmeterCase(taskDTO.getJCase());
         taskDO.setJmx(caseDO.getJmx());
         taskDO.setCsv(caseDO.getCsv());
         taskDO.setJar(caseDO.getJar());
@@ -98,6 +100,7 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setRealtime(taskDTO.getRealtime());
         taskDO.setLog(taskDTO.getLog());
         taskDO.setRemark(taskDTO.getRemark());
+        taskDO.setResult(TaskResultEnum.IN_PROGRESS);
 
         if (taskMapper.insert(taskDO) > 0) {
             // 将备选压力机加入room,发送启动命令
@@ -107,9 +110,31 @@ public class TaskServiceImpl implements TaskService {
                 client.joinRoom(taskDO.getTaskId());
             }
             // 向room中的client发送启动命令
-            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("start", taskDO.getTaskId());
+            log.info("========TaskDO=======: {}", taskDO);
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", taskDO);
+            // 锁定机器和case的jmeter状态,记录task机器日志
+            caseDO.setStatus(JmeterStatusEnum.CONFIGURE);
+            caseMapper.updateById(caseDO);
+            for (Integer machine : machines) {
+                MachineDO machineDO = machineMapper.selectById(machine);
+                machineDO.setJmeterStatus(JmeterStatusEnum.CONFIGURE);
+                machineMapper.updateById(machineDO);
+                // 记录task日志
+                taskLogMapper.insert(new TaskLogDO(taskDO.getTaskId(),caseDO.getId(),JmeterStatusEnum.CONFIGURE,null,machineDO.getAddress(),machineDO.getId()));
+            }
         }
 
         return true;
+    }
+
+    @Override
+    public boolean updateTaskResult(TaskDO taskDO, TaskResultEnum result) {
+        taskDO.setResult(result);
+        return taskMapper.updateById(taskDO) > 0;
+    }
+
+    @Override
+    public TaskDO getTaskById(Integer id) {
+        return taskMapper.selectById(id);
     }
 }

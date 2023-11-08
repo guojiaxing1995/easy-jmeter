@@ -1,6 +1,8 @@
 package io.github.guojiaxing1995.easyJmeter.model;
 
+import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,7 +19,7 @@ public class TaskDO extends BaseModel implements Serializable {
 
     private Integer creator;
 
-    private Integer jCase;
+    private Integer jmeterCase;
 
     private String jmx;
 
@@ -44,4 +46,7 @@ public class TaskDO extends BaseModel implements Serializable {
     private Boolean log;
 
     private String remark;
+
+    private TaskResultEnum result;
+
 }

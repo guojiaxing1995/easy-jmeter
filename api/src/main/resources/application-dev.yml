@@ -11,7 +11,7 @@ spring:
     username: "root"
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://www.guojiaxing.red:9081/easy-jmeter?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
+    url: jdbc:mysql://49.235.228.222:9081/easy-jmeter?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
 
 
 # 开启权限拦截
@@ -36,7 +36,7 @@ logging:
     io.github.guojiaxing1995.easyJmeter.mapper: debug
 
 minio:
-  endpoint: http://www.guojiaxing.red:9085
+  endpoint: http://49.235.228.222:9085
   bucketName: dev
   accessKey: root
   secretKey: minio2023

@@ -134,4 +134,10 @@ public class CaseServiceImpl implements CaseService {
 
         return new CaseInfoPlusVO(caseDO, jmxFileList,csvFileList, jarFileList);
     }
+
+    @Override
+    public boolean updateCaseStatus(CaseDO caseDO, JmeterStatusEnum status) {
+        caseDO.setStatus(status);
+        return caseMapper.updateById(caseDO) > 0;
+    }
 }

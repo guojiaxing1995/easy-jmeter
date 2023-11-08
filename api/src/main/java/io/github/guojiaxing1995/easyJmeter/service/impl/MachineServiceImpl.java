@@ -96,4 +96,15 @@ public class MachineServiceImpl implements MachineService {
     public ArrayList<MachineDO> getAll() {
         return machineMapper.selectAll();
     }
+
+    @Override
+    public boolean updateMachineStatus(MachineDO machineDO, JmeterStatusEnum status) {
+        machineDO.setJmeterStatus(status);
+        return machineMapper.updateById(machineDO) > 0;
+    }
+
+    @Override
+    public MachineDO getByAddress(String address) {
+        return machineMapper.selectByAddress(address);
+    }
 }

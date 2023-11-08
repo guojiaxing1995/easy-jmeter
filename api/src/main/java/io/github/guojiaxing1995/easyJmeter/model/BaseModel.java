@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -21,6 +22,7 @@ public class BaseModel {
     private Date createTime;
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @TableField(update = "now()")
     private Date updateTime;
 
     @TableLogic
