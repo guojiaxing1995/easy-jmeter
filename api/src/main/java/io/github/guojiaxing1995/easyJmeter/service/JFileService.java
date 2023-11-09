@@ -8,4 +8,6 @@ public interface JFileService {
     JFileVO createFile(MultipartFile file);
 
     Boolean setFileCut(Integer id, Boolean cut);
+
+    String downloadFile(Integer id);
 }

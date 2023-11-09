@@ -2,11 +2,13 @@ package io.github.guojiaxing1995.easyJmeter.service.impl;
 
 import io.github.guojiaxing1995.easyJmeter.mapper.JFileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
+import io.github.guojiaxing1995.easyJmeter.module.file.FileProperties;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.vo.JFileVO;
 import io.github.talelin.autoconfigure.exception.FailedException;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
+import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+import java.io.File;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 
 @Slf4j
 @Service
@@ -35,6 +42,9 @@ public class JFileServiceImpl implements JFileService {
     public JFileServiceImpl(MinioClient minioClient) {
         this.minioClient = minioClient;
     }
+
+    @Autowired
+    private FileProperties fileProperties;
 
     @Autowired
     private JFileMapper jFileMapper;
@@ -81,4 +91,27 @@ public class JFileServiceImpl implements JFileService {
         jFileDO.setCut(cut);
         return jFileMapper.updateById(jFileDO) > 0;
     }
+
+    @Override
+    public String downloadFile(Integer id){
+        JFileDO jFileDO = jFileMapper.selectById(id);
+        String format = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
+        Path path = Paths.get(fileProperties.getStoreDir(), format).toAbsolutePath();
+        java.io.File file = new File(path.toString());
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        String filePath = Paths.get(path.toString(), String.valueOf(Instant.now().toEpochMilli()) + jFileDO.getName()).toString();
+        String bucket = jFileDO.getPath().split("/")[1];
+        String name = jFileDO.getPath().split("/")[2];
+        try {
+            minioClient.downloadObject(DownloadObjectArgs.builder().bucket(bucket).object(name).filename(filePath).build());
+        } catch (Exception e) {
+            log.error("文件下载异常:" + e.toString());
+        }
+
+        return filePath;
+    }
+
+
 }
