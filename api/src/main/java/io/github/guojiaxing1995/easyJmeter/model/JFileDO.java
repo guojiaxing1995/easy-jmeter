@@ -24,4 +24,8 @@ public class JFileDO extends BaseModel implements Serializable {
     private Long size;
 
     private Boolean cut;
+
+    private Integer originId;
+
+    private String taskId;
 }

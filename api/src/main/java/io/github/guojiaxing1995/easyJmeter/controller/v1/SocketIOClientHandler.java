@@ -8,6 +8,7 @@ import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.ConfigureLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.RunLink;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.units.qual.A;
@@ -63,7 +64,8 @@ public class SocketIOClientHandler {
     // 监听任务配置
     private void taskConfigure() {
         socket.on("taskConfigure", args -> {
-            TaskDO taskDO = JSON.parseObject(args[0].toString(), TaskDO.class);
+            MachineCutFileVO machineCutFileVO = JSON.parseObject(args[0].toString(), MachineCutFileVO.class);
+            TaskDO taskDO = machineCutFileVO.getTaskDO();
             log.info(taskDO.toString());
             log.info("收到启动命令，任务进入配置状态，任务编号：" + taskDO.getTaskId());
             // 配置逻辑

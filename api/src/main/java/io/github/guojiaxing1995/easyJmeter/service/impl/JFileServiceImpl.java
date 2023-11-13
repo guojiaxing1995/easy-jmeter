@@ -18,13 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.nio.file.Path;
 import java.io.File;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -111,6 +111,36 @@ public class JFileServiceImpl implements JFileService {
         }
 
         return filePath;
+    }
+
+    @Override
+    public List<JFileDO> createFiles(Map<Integer, List<String>> fileMap) {
+        Map.Entry<Integer, List<String>> entry = fileMap.entrySet().iterator().next();
+        // 切分文件id
+        Integer fid = entry.getKey();
+        List<String> filePath = entry.getValue();
+        List<JFileDO> jFileDOS = new ArrayList<>();
+        for (String path: filePath) {
+            File file = new File(path);
+            String timestamp = String.valueOf(Instant.now().toEpochMilli());
+            String fileName = timestamp + "_" + file.getName();
+            try {
+                minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(new FileInputStream(file), file.length(), -1).build());
+            } catch (Exception e) {
+                log.error("文件上传异常:" + e.toString());
+            }
+            JFileDO jFileDO = new JFileDO();
+            jFileDO.setName(file.getName());
+            jFileDO.setPath("/" + bucketName + "/" + fileName);
+            jFileDO.setUrl(endpoint + "/" + bucketName + "/" + fileName);
+            jFileDO.setSize(file.length());
+            jFileDO.setType(file.getName().substring(file.getName().lastIndexOf(".")+1));
+            jFileDO.setOriginId(fid);
+            jFileMapper.insert(jFileDO);
+            JFileDO fileDO = jFileMapper.selectById(jFileDO.getId());
+            jFileDOS.add(fileDO);
+        }
+        return jFileDOS;
     }
 
 

@@ -6,13 +6,14 @@ import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
+import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
-import io.github.guojiaxing1995.easyJmeter.mapper.CaseMapper;
-import io.github.guojiaxing1995.easyJmeter.mapper.MachineMapper;
-import io.github.guojiaxing1995.easyJmeter.mapper.TaskLogMapper;
-import io.github.guojiaxing1995.easyJmeter.mapper.TaskMapper;
+import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
+import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
+import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +42,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private SocketIOServer socketServer;
+
+    @Autowired
+    private JFileMapper jFileMapper;
+    
+    @Autowired
+    private JFileService jFileService;
 
     @Override
     @Transactional
@@ -105,13 +110,10 @@ public class TaskServiceImpl implements TaskService {
         if (taskMapper.insert(taskDO) > 0) {
             // 将备选压力机加入room,发送启动命令
             List<String> clientIds = machines.stream().map(mid -> machineMapper.selectById(mid).getClientId()).collect(Collectors.toList());
-            for (int i=0;i<clientIds.size();i++){
-                SocketIOClient client = socketServer.getClient(UUID.fromString(clientIds.get(i)));
+            for (String clientId : clientIds) {
+                SocketIOClient client = socketServer.getClient(UUID.fromString(clientId));
                 client.joinRoom(taskDO.getTaskId());
             }
-            // 向room中的client发送启动命令
-            log.info("========TaskDO=======: {}", taskDO);
-            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", taskDO);
             // 锁定机器和case的jmeter状态,记录task机器日志
             caseDO.setStatus(JmeterStatusEnum.CONFIGURE);
             caseMapper.updateById(caseDO);
@@ -122,6 +124,12 @@ public class TaskServiceImpl implements TaskService {
                 // 记录task日志
                 taskLogMapper.insert(new TaskLogDO(taskDO.getTaskId(),caseDO.getId(),JmeterStatusEnum.CONFIGURE,null,machineDO.getAddress(),machineDO.getId()));
             }
+            // csv切分
+            Map<String, List<CutFileVO>> machineDOCutFileVOListMap = this.cutCsv(taskDO);
+            // 向room中的client发送启动命令
+            log.info("========TaskDO=======: {}", taskDO);
+            MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO);
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
         }
 
         return true;
@@ -136,5 +144,41 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskDO getTaskById(Integer id) {
         return taskMapper.selectById(id);
+    }
+
+    @Override
+    public Map<String, List<CutFileVO>> cutCsv(TaskDO taskDO) {
+        String[] machinesArray = taskDO.getMachine().split(",");
+        String[] csvFileArray = taskDO.getCsv().split(",");
+        List<MachineDO> machines = Arrays.stream(machinesArray).map(Integer::parseInt).map(machineMapper::selectById).collect(Collectors.toList());
+        List<JFileDO> jFiles = Arrays.stream(csvFileArray).map(Integer::parseInt).map(jFileMapper::selectById).collect(Collectors.toList());
+
+        Map<String, List<CutFileVO>> map = new HashMap<>();
+        for (MachineDO machineDO: machines) {
+            map.put(machineDO.getAddress(), new ArrayList<>());
+        }
+        for (JFileDO jFileDO: jFiles) {
+            if (jFileDO.getCut()){
+                List<CutFileVO> cutFileVOList = new ArrayList<>();
+                String csvPath = jFileService.downloadFile(jFileDO.getId());
+                CSVUtil csvUtil = new CSVUtil(csvPath, taskDO.getMachineNum(), jFileDO.getId());
+                Map<Integer, List<String>> fileMap = csvUtil.splitCSVFile();
+                List<JFileDO> cutFiles = jFileService.createFiles(fileMap);
+                for (JFileDO cutFileDO: cutFiles) {
+                    cutFileDO.setTaskId(taskDO.getTaskId());
+                    jFileMapper.updateById(cutFileDO);
+                    JFileDO originFile = jFileMapper.selectById(cutFileDO.getOriginId());
+                    CutFileVO cutFileVO = new CutFileVO(cutFileDO, originFile.getName());
+                    cutFileVOList.add(cutFileVO);
+                }
+                for (int i=0;i<machines.size();i++) {
+                    List<CutFileVO> cutFileVO = map.get(machines.get(i).getAddress());
+                    cutFileVO.add(cutFileVOList.get(i));
+                    map.put(machines.get(i).getAddress(), cutFileVO);
+                }
+
+            }
+        }
+        return map;
     }
 }
