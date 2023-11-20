@@ -4,9 +4,7 @@ import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -35,20 +33,25 @@ public class BasicProperties {
     }
 
     public void version() {
-        ProcessBuilder processBuilder = new ProcessBuilder( System.getenv("JMETER_HOME") + "/bin/jmeter", "--version");
+        ProcessBuilder processBuilder = new ProcessBuilder( this.path + "/bin/jmeter", "--version");
         processBuilder.environment().putAll(System.getenv());
         StringBuilder outputString = new StringBuilder();
+        Process process = null;
         try {
-            Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            process = processBuilder.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
             String line;
             while ((line = reader.readLine()) != null) {
                 outputString.append(line).append("\n");
             }
             int exitCode = process.waitFor();
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException | IOException e) {
+            log.error("获取jmeter版本失败", e);
+        } finally {
+            process.destroy();
         }
         String version_str = outputString.toString().replaceAll("[_|\\\\/\\s\\r\\n]", "");
         String prefix = Pattern.quote("<");
@@ -85,11 +88,10 @@ public class BasicProperties {
             if(addr != null) {
                 this.address = addr.getHostAddress();
             } else {
-                log.info("获取本机ip异常");
+                log.error("获取本机ip异常");
             }
         }catch(SocketException e){
-            log.info("获取本机ip异常");
-            e.printStackTrace();
+            log.error("获取本机ip异常", e);
         }
     }
 
@@ -98,6 +100,34 @@ public class BasicProperties {
             this.online = MachineOnlineEnum.ONLINE;
         } else {
             this.online = MachineOnlineEnum.OFFLINE;
+        }
+    }
+
+    public Boolean isPropertiesExist(String property) {
+        File file = new File(this.path + "/bin/jmeter.properties");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains(property)) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            log.error("读取jmeter.properties文件失败", e);
+            throw new RuntimeException(e);
+        }
+
+        return false;
+    }
+
+    public void setProperties(String property) {
+        if (!this.isPropertiesExist(property)) {
+            File file = new File(this.path + "/bin/jmeter.properties");
+            try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
+                writer.println(property);
+            } catch (IOException e) {
+                log.error("写入jmeter.properties失败，属性：" + property, e);
+            }
         }
     }
 

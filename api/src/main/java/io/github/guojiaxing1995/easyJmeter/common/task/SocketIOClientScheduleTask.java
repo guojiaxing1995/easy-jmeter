@@ -25,10 +25,9 @@ public class SocketIOClientScheduleTask {
     @Scheduled(cron = "${cron:0 0/1 * * * ? }")
     public void heartBeat() throws JsonProcessingException {
         log.info("心跳");
-        ObjectMapper mapper = new ObjectMapper();
         BasicProperties basicProperties = new BasicProperties();
         HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(null,basicProperties.getAddress(),basicProperties.getPath(),basicProperties.getVersion(), MachineOnlineEnum.ONLINE);
-        String heartBeat = mapper.writeValueAsString(heartBeatMachineDTO);
+        String heartBeat = new ObjectMapper().writeValueAsString(heartBeatMachineDTO);
         socket.emit("heartBeat", heartBeat);
     }
 }

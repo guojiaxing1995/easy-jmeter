@@ -17,9 +17,11 @@ public class MinioConfiguration {
 
     @Bean
     public MinioClient minioClient() {
-        return MinioClient.builder()
+        MinioClient client = MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .build();
+        client.setTimeout(10000, 1800000,1800000);
+        return client;
     }
 }

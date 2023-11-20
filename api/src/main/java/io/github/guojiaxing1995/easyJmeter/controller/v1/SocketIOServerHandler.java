@@ -22,12 +22,15 @@ import io.github.guojiaxing1995.easyJmeter.service.CaseService;
 import io.github.guojiaxing1995.easyJmeter.service.MachineService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
+import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -91,8 +94,7 @@ public class SocketIOServerHandler {
     @OnEvent("heartBeat")
     @Transactional
     public void  handleHeartBeatEvent(SocketIOClient client, String heartBeat) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        HeartBeatMachineDTO heartBeatMachineDTO = mapper.readValue(heartBeat, HeartBeatMachineDTO.class);
+        HeartBeatMachineDTO heartBeatMachineDTO = new ObjectMapper().readValue(heartBeat, HeartBeatMachineDTO.class);
         heartBeatMachineDTO.setClientId(client.getSessionId().toString());
         machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.ONLINE);
     }
@@ -101,8 +103,7 @@ public class SocketIOServerHandler {
     @OnEvent("configureFinish")
     public void configureFinish(SocketIOClient client, String message) throws JsonProcessingException {
         log.info("收到完成配置消息" + message);
-        ObjectMapper mapper = new ObjectMapper();
-        TaskMachineDTO taskMachineDTO = mapper.readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -137,8 +138,7 @@ public class SocketIOServerHandler {
     @OnEvent("runFinish")
     public void runFinish(SocketIOClient client, String message) throws JsonProcessingException {
         log.info("收到压测运行完成消息" + message);
-        ObjectMapper mapper = new ObjectMapper();
-        TaskMachineDTO taskMachineDTO = mapper.readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -173,8 +173,7 @@ public class SocketIOServerHandler {
     @OnEvent("collectFinish")
     public void collectFinish(SocketIOClient client, String message) throws JsonProcessingException {
         log.info("收到结果收集完成消息" + message);
-        ObjectMapper mapper = new ObjectMapper();
-        TaskMachineDTO taskMachineDTO = mapper.readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -208,8 +207,7 @@ public class SocketIOServerHandler {
     @OnEvent("cleanFinish")
     public void cleanFinish(SocketIOClient client, String message) throws JsonProcessingException {
         log.info("收到环境清理完成消息" + message);
-        ObjectMapper mapper = new ObjectMapper();
-        TaskMachineDTO taskMachineDTO = mapper.readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -240,8 +238,7 @@ public class SocketIOServerHandler {
     // 接收环节失败消息
     @OnEvent("linkFail")
     public void linkFail(SocketIOClient client, String message) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        TaskMachineDTO taskMachineDTO = mapper.readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
         log.info("收到linkFail:" + taskMachineDTO.toString());
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         // 更新task日志为失败
@@ -252,8 +249,22 @@ public class SocketIOServerHandler {
         taskService.updateTaskResult(task, TaskResultEnum.EXCEPTION);
         // 如果没有发送过终止消息，向所有agent发送消息进行终止和进入下一环节
         if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus())) == null){
-            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
             caffeineCache.put(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), "taskInterrupt");
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
+
+        }
+    }
+
+    @OnEvent("cutCsv")
+    public void cutCsv(SocketIOClient client, String message) throws JsonProcessingException {
+        TaskDO taskDO = new ObjectMapper().readValue(message, TaskDO.class);
+        // 如果是第一次收到指定task的切分，则进行文件切分
+        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_CUT" ) == null){
+            caffeineCache.put(taskDO.getTaskId() + "_CUT", true);
+            log.info("收到cutCsv:" + taskDO.getTaskId());
+            Map<String, List<CutFileVO>> machineDOCutFileVOListMap = taskService.cutCsv(taskDO);
+            MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO, false);
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
         }
     }
 

@@ -6,12 +6,13 @@ import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CleanLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CollectLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.ConfigureLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.RunLink;
+import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +25,9 @@ import java.io.InputStreamReader;
 public class SocketIOClientHandler {
 
     private final Socket socket;
+
+    @Autowired
+    private JFileService jFileService;
 
     @Autowired
     public SocketIOClientHandler(Socket socket){
@@ -69,7 +73,8 @@ public class SocketIOClientHandler {
             log.info(taskDO.toString());
             log.info("收到启动命令，任务进入配置状态，任务编号：" + taskDO.getTaskId());
             // 配置逻辑
-            ConfigureLink configureLink = new ConfigureLink(socket);
+            ConfigureLink configureLink = new ConfigureLink(socket, jFileService);
+            configureLink.setMachineCutFileVO(machineCutFileVO);
             configureLink.setTask(taskDO);
             configureLink.setName(taskDO.getTaskId() + "_" + JmeterStatusEnum.CONFIGURE.getDesc());
             configureLink.start();
@@ -116,33 +121,32 @@ public class SocketIOClientHandler {
     private void taskInterrupt() {
         socket.on("taskInterrupt", args -> {
             TaskMachineDTO taskMachineDTO = JSON.parseObject(args[0].toString(), TaskMachineDTO.class);
-            log.info(taskMachineDTO.getTaskDO().getTaskId() + "的" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()).getDesc() + "环节异常");
+            TaskDO taskDO = taskMachineDTO.getTaskDO();
+            String configureThreadName = taskDO.getTaskId() + "_" + JmeterStatusEnum.CONFIGURE.getDesc();
+            String runThreadName = taskDO.getTaskId() + "_" + JmeterStatusEnum.RUN.getDesc();
+            String collectThreadName = taskDO.getTaskId() + "_" + JmeterStatusEnum.COLLECT.getDesc();
+            String cleanThreadName = taskDO.getTaskId() + "_" + JmeterStatusEnum.CLEAN.getDesc();
+            log.info(taskDO.getTaskId() + "的" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()).getDesc() + "环节异常");
             if (taskMachineDTO.getStatus().equals(JmeterStatusEnum.CONFIGURE.getValue())){
                 // 配置异常终止配置环节进入清理环节
-                ConfigureLink configureLink = new ConfigureLink(socket);
-                configureLink.setTask(taskMachineDTO.getTaskDO());
-                configureLink.interrupt();
+                ThreadUtil.interruptThread(configureThreadName);
                 CleanLink cleanLink = new CleanLink(socket);
-                cleanLink.setName(taskMachineDTO.getTaskDO().getTaskId() + "_" + JmeterStatusEnum.CLEAN.getDesc());
-                cleanLink.setTask(taskMachineDTO.getTaskDO());
+                cleanLink.setName(cleanThreadName);
+                cleanLink.setTask(taskDO);
                 cleanLink.start();
             } else if (taskMachineDTO.getStatus().equals(JmeterStatusEnum.RUN.getValue())) {
                 // 运行异常终止运行环节进入收集环节
-                RunLink runLink = new RunLink(socket);
-                runLink.setTask(taskMachineDTO.getTaskDO());
-                runLink.interrupt();
+                ThreadUtil.interruptThread(runThreadName);
                 CollectLink collectLink = new CollectLink(socket);
-                collectLink.setName(taskMachineDTO.getTaskDO().getTaskId() + "_" + JmeterStatusEnum.COLLECT.getDesc());
-                collectLink.setTask(taskMachineDTO.getTaskDO());
+                collectLink.setName(collectThreadName);
+                collectLink.setTask(taskDO);
                 collectLink.start();
             } else if (taskMachineDTO.getStatus().equals(JmeterStatusEnum.COLLECT.getValue())) {
                 // 收集异常终止收集环节进入清理环节
-                CollectLink collectLink = new CollectLink(socket);
-                collectLink.setTask(taskMachineDTO.getTaskDO());
-                collectLink.interrupt();
+                ThreadUtil.interruptThread(collectThreadName);
                 CleanLink cleanLink = new CleanLink(socket);
-                cleanLink.setName(taskMachineDTO.getTaskDO().getTaskId() + "_" + JmeterStatusEnum.CLEAN.getDesc());
-                cleanLink.setTask(taskMachineDTO.getTaskDO());
+                cleanLink.setName(cleanThreadName);
+                cleanLink.setTask(taskDO);
                 cleanLink.start();
             }
         });

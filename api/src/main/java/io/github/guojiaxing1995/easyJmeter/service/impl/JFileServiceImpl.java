@@ -4,6 +4,7 @@ import io.github.guojiaxing1995.easyJmeter.mapper.JFileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.module.file.FileProperties;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
+import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.JFileVO;
 import io.github.talelin.autoconfigure.exception.FailedException;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
@@ -18,9 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
-import java.io.File;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -93,24 +94,56 @@ public class JFileServiceImpl implements JFileService {
     }
 
     @Override
-    public String downloadFile(Integer id){
+    public String downloadFile(Integer id, String dir){
         JFileDO jFileDO = jFileMapper.selectById(id);
-        String format = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
-        Path path = Paths.get(fileProperties.getStoreDir(), format).toAbsolutePath();
-        java.io.File file = new File(path.toString());
-        if (!file.exists()) {
-            file.mkdirs();
+        String filePath;
+        if (dir == null) {
+            String format = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
+            Path path = Paths.get(fileProperties.getStoreDir(), format).toAbsolutePath();
+            java.io.File file = new File(path.toString());
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            filePath = Paths.get(path.toString(), String.valueOf(Instant.now().toEpochMilli()) + jFileDO.getName()).toString();
+        } else {
+            java.io.File file = new File(dir.toString());
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            filePath = Paths.get(dir, jFileDO.getName()).toString();
+
         }
-        String filePath = Paths.get(path.toString(), String.valueOf(Instant.now().toEpochMilli()) + jFileDO.getName()).toString();
+
         String bucket = jFileDO.getPath().split("/")[1];
         String name = jFileDO.getPath().split("/")[2];
         try {
             minioClient.downloadObject(DownloadObjectArgs.builder().bucket(bucket).object(name).filename(filePath).build());
         } catch (Exception e) {
-            log.error("文件下载异常:" + e.toString());
+            log.error("文件下载异常:" + e);
+            throw new RuntimeException(e);
         }
 
         return filePath;
+    }
+
+    @Override
+    public void downloadCutFile(List<CutFileVO> cutFileVOList, String dir) {
+        java.io.File file = new File(dir);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        for (CutFileVO cutFileVO : cutFileVOList) {
+            JFileDO jFileDO = jFileMapper.selectById(cutFileVO.getId());
+            String bucket = jFileDO.getPath().split("/")[1];
+            String name = jFileDO.getPath().split("/")[2];
+            String filePath = Paths.get(dir, cutFileVO.getOriginName()).toString();
+            try {
+                minioClient.downloadObject(DownloadObjectArgs.builder().bucket(bucket).object(name).filename(filePath).build());
+            } catch (Exception e) {
+                log.error("文件下载异常:" + e);
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -141,6 +174,22 @@ public class JFileServiceImpl implements JFileService {
             jFileDOS.add(fileDO);
         }
         return jFileDOS;
+    }
+
+    @Override
+    public JFileDO searchById(Integer id) {
+        return jFileMapper.selectById(id);
+    }
+
+    @Override
+    public Boolean needCut(String[] fileIds) {
+        for (String id : fileIds) {
+            JFileDO jFileDO = jFileMapper.selectById(Integer.valueOf(id));
+            if (jFileDO.getCut()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

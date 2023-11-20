@@ -43,8 +43,7 @@ public class RunLink extends Thread implements LinkStrategy {
         taskMachineDTO.setTaskDO(taskDO);
         taskMachineDTO.setMachineIp(new BasicProperties().getAddress());
         taskMachineDTO.setResult(true);
-        ObjectMapper mapper = new ObjectMapper();
-        String message = mapper.writeValueAsString(taskMachineDTO);
+        String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
         socket.emit("runFinish", message);
         return true;
     }
@@ -57,9 +56,8 @@ public class RunLink extends Thread implements LinkStrategy {
         taskMachineDTO.setMachineIp(new BasicProperties().getAddress());
         taskMachineDTO.setResult(false);
         taskMachineDTO.setStatus(JmeterStatusEnum.RUN.getValue());
-        ObjectMapper mapper = new ObjectMapper();
         try {
-            String message = mapper.writeValueAsString(taskMachineDTO);
+            String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
             socket.emit("linkFail", message);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

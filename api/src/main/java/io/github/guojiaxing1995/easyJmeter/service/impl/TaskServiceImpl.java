@@ -124,11 +124,11 @@ public class TaskServiceImpl implements TaskService {
                 // 记录task日志
                 taskLogMapper.insert(new TaskLogDO(taskDO.getTaskId(),caseDO.getId(),JmeterStatusEnum.CONFIGURE,null,machineDO.getAddress(),machineDO.getId()));
             }
-            // csv切分
-            Map<String, List<CutFileVO>> machineDOCutFileVOListMap = this.cutCsv(taskDO);
+            // 判断设置是否需要切分并设置切分状态
+            Boolean needCut = (taskDO.getCsv() != null && !taskDO.getCsv().isEmpty()) ? jFileService.needCut(taskDO.getCsv().split(",")) : false;
+            MachineCutFileVO machineCutFileVO = new MachineCutFileVO(null, taskDO, needCut);
             // 向room中的client发送启动命令
             log.info("========TaskDO=======: {}", taskDO);
-            MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO);
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
         }
 
@@ -149,7 +149,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Map<String, List<CutFileVO>> cutCsv(TaskDO taskDO) {
         String[] machinesArray = taskDO.getMachine().split(",");
-        String[] csvFileArray = taskDO.getCsv().split(",");
+        String[] csvFileArray = (taskDO.getCsv() != null && !taskDO.getCsv().isEmpty()) ? taskDO.getCsv().split(",") : new String[]{};
         List<MachineDO> machines = Arrays.stream(machinesArray).map(Integer::parseInt).map(machineMapper::selectById).collect(Collectors.toList());
         List<JFileDO> jFiles = Arrays.stream(csvFileArray).map(Integer::parseInt).map(jFileMapper::selectById).collect(Collectors.toList());
 
@@ -160,7 +160,7 @@ public class TaskServiceImpl implements TaskService {
         for (JFileDO jFileDO: jFiles) {
             if (jFileDO.getCut()){
                 List<CutFileVO> cutFileVOList = new ArrayList<>();
-                String csvPath = jFileService.downloadFile(jFileDO.getId());
+                String csvPath = jFileService.downloadFile(jFileDO.getId(), null);
                 CSVUtil csvUtil = new CSVUtil(csvPath, taskDO.getMachineNum(), jFileDO.getId());
                 Map<Integer, List<String>> fileMap = csvUtil.splitCSVFile();
                 List<JFileDO> cutFiles = jFileService.createFiles(fileMap);

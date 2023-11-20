@@ -1,6 +1,5 @@
 package io.github.guojiaxing1995.easyJmeter.model;
 
-import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import lombok.Data;
