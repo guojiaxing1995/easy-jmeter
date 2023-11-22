@@ -3,7 +3,7 @@ package io.github.guojiaxing1995.easyJmeter.common.jmeter.links;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
-import io.github.guojiaxing1995.easyJmeter.common.jmeter.BasicProperties;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.LinkStrategy;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
@@ -41,7 +41,7 @@ public class RunLink extends Thread implements LinkStrategy {
     public Boolean reportSuccess() throws JsonProcessingException {
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new BasicProperties().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
         taskMachineDTO.setResult(true);
         String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
         socket.emit("runFinish", message);
@@ -53,7 +53,7 @@ public class RunLink extends Thread implements LinkStrategy {
         // 发送失败消息
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new BasicProperties().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
         taskMachineDTO.setResult(false);
         taskMachineDTO.setStatus(JmeterStatusEnum.RUN.getValue());
         try {

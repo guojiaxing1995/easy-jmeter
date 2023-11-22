@@ -3,7 +3,7 @@ package io.github.guojiaxing1995.easyJmeter.common.jmeter.links;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
-import io.github.guojiaxing1995.easyJmeter.common.jmeter.BasicProperties;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.LinkStrategy;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
@@ -52,13 +52,12 @@ public class ConfigureLink extends Thread implements LinkStrategy {
             // 判断给到的数据是否还需要server端去切分，没有切分文件和已经切分都为false，需要切分且未切分为true
             if (!this.machineCutFileVO.getNeedCut()){
                 String tmpDir = Paths.get(System.getenv("JMETER_HOME"), "tmp").toString();
-                new BasicProperties().setProperties("plugin_dependency_paths=../tmp/dependencies/;");
                 String dependencyDir = Paths.get(System.getenv("JMETER_HOME"),"tmp", "dependencies").toString();
                 // 下载分配给本机的切分文件
                 if (this.machineCutFileVO.getMachineDOCutFileVOListMap() != null) {
                     Map<String, List<CutFileVO>> map = this.machineCutFileVO.getMachineDOCutFileVOListMap();
                     for (Map.Entry<String, List<CutFileVO>> entry : map.entrySet()) {
-                        if (entry.getKey().equals(new BasicProperties().getAddress())) {
+                        if (entry.getKey().equals(new JmeterExternal().getAddress())) {
                             jFileService.downloadCutFile(entry.getValue(), tmpDir);
                         }
                     }
@@ -97,7 +96,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
     public Boolean reportSuccess() throws JsonProcessingException {
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new BasicProperties().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
         taskMachineDTO.setResult(true);
         String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
         socket.emit("configureFinish", message);
@@ -109,7 +108,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
         // 发送失败消息
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new BasicProperties().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
         taskMachineDTO.setResult(false);
         taskMachineDTO.setStatus(JmeterStatusEnum.CONFIGURE.getValue());
         try {

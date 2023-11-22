@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 @Data
 @Slf4j
-public class BasicProperties {
+public class JmeterExternal {
 
     private String version;
 
@@ -25,7 +25,7 @@ public class BasicProperties {
 
     private MachineOnlineEnum online;
 
-    public BasicProperties() {
+    public JmeterExternal() {
         this.path = System.getenv("JMETER_HOME");
         this.version();
         this.ipAddress();
@@ -104,7 +104,7 @@ public class BasicProperties {
     }
 
     public Boolean isPropertiesExist(String property) {
-        File file = new File(this.path + "/bin/jmeter.properties");
+        File file = new File(this.path + "/bin/user.properties");
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -113,7 +113,7 @@ public class BasicProperties {
                 }
             }
         } catch (IOException e) {
-            log.error("读取jmeter.properties文件失败", e);
+            log.error("读取user.properties文件失败", e);
             throw new RuntimeException(e);
         }
 
@@ -122,14 +122,17 @@ public class BasicProperties {
 
     public void setProperties(String property) {
         if (!this.isPropertiesExist(property)) {
-            File file = new File(this.path + "/bin/jmeter.properties");
+            File file = new File(this.path + "/bin/user.properties");
             try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
                 writer.println(property);
             } catch (IOException e) {
-                log.error("写入jmeter.properties失败，属性：" + property, e);
+                log.error("写入user.properties失败，属性：" + property, e);
+                throw new RuntimeException(e);
             }
         }
     }
 
-
+    public void loadProperties() {
+        this.setProperties("plugin_dependency_paths=../tmp/dependencies/;");
+    }
 }

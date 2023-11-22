@@ -3,7 +3,7 @@ package io.github.guojiaxing1995.easyJmeter.common.task;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
-import io.github.guojiaxing1995.easyJmeter.common.jmeter.BasicProperties;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +25,8 @@ public class SocketIOClientScheduleTask {
     @Scheduled(cron = "${cron:0 0/1 * * * ? }")
     public void heartBeat() throws JsonProcessingException {
         log.info("心跳");
-        BasicProperties basicProperties = new BasicProperties();
-        HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(null,basicProperties.getAddress(),basicProperties.getPath(),basicProperties.getVersion(), MachineOnlineEnum.ONLINE);
+        JmeterExternal jmeterExternal = new JmeterExternal();
+        HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(null,jmeterExternal.getAddress(),jmeterExternal.getPath(),jmeterExternal.getVersion(), MachineOnlineEnum.ONLINE);
         String heartBeat = new ObjectMapper().writeValueAsString(heartBeatMachineDTO);
         socket.emit("heartBeat", heartBeat);
     }
