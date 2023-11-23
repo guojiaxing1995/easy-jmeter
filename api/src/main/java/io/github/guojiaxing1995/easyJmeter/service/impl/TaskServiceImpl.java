@@ -66,9 +66,9 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setJmx(caseDO.getJmx());
         taskDO.setCsv(caseDO.getCsv());
         taskDO.setJar(caseDO.getJar());
-        taskDO.setThreads(taskDTO.getThreads());
+        taskDO.setNumThreads(taskDTO.getNumThreads());
         taskDO.setDuration(taskDTO.getDuration());
-        taskDO.setWarmupTime(taskDTO.getWarmupTime());
+        taskDO.setRampTime(taskDTO.getRampTime());
         taskDO.setQpsLimit(taskDTO.getQpsLimit());
         // 可用压力机数量小于传入num
         ArrayList<MachineDO> executableMachines = machineMapper.executable();

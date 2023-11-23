@@ -17,13 +17,13 @@ public class CreateOrUpdateTaskDTO {
 
     @NotNull(message = "{task.threads.not-empty}")
     @Min(message = "{task.threads.min}", value = 1)
-    private Integer threads;
+    private Integer numThreads;
 
     @NotNull(message = "{task.duration.not-empty}")
     @Min(message = "{task.duration.min}", value = 1)
     private Integer duration;
 
-    private Integer warmupTime;
+    private Integer rampTime;
 
     private Integer qpsLimit;
 

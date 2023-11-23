@@ -79,6 +79,12 @@ public class ConfigureLink extends Thread implements LinkStrategy {
                     jFileService.downloadFile(Integer.valueOf(jarFileId), dependencyDir);
                 }
 
+                //jmeter jmx文件修改 添加properties
+                JmeterExternal jmeterExternal = new JmeterExternal();
+                jmeterExternal.initJMeterUtils();
+                jmeterExternal.editJmxConfig(taskDO);
+                jmeterExternal.addProperties();
+
                 this.reportSuccess();
             } else {
                 String message = new ObjectMapper().writeValueAsString(taskDO);

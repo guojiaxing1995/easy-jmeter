@@ -178,12 +178,6 @@
             <version>5.5</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.jmeter</groupId>
-            <artifactId>ApacheJMeter_components</artifactId>
-            <version>5.5</version>
-        </dependency>
-
     </dependencies>
 
     <build>

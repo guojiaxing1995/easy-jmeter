@@ -1,16 +1,16 @@
 <template>
   <el-dialog v-model="taskVisible" title="用例执行" width="35%" :close-on-click-modal=false @close="closeDialog"> 
     <el-form :model="task" ref="form" @submit.prevent :rules="rules">
-      <el-form-item label="总线程数" label-width="180px" prop="threads">
-        <el-input-number v-model="task.threads" :min="1" :max="10000" size="large"/>
+      <el-form-item label="总线程数" label-width="180px" prop="num_threads">
+        <el-input-number v-model="task.num_threads" :min="1" :max="10000" size="large"/>
         <div class="unit">个</div>
       </el-form-item>
       <el-form-item label="持续时间" label-width="180px" prop="duration">
         <el-input-number v-model="task.duration" :min="1" :max="1209600" size="large"/>
         <div class="unit">秒</div>
       </el-form-item>
-      <el-form-item label="预热时间" label-width="180px" prop="warmup_time">
-        <el-input-number v-model="task.warmup_time" :min="0" :max="1209600" size="large"/>
+      <el-form-item label="预热时间" label-width="180px" prop="ramp_time">
+        <el-input-number v-model="task.ramp_time" :min="0" :max="1209600" size="large"/>
         <div class="unit">秒</div>
       </el-form-item>
       <el-form-item label="QPS限制" label-width="180px" prop="qps_limit">
@@ -76,7 +76,7 @@
       const machines = ref([])
       const availableMachine = ref(0)
       const form = ref(null)
-      const task = reactive({ threads:10,duration:60,warmup_time:0,jcase:'',qps_limit:0,monitor:false,machine_num:1,machine:[],log:false,realtime:false,remark:''})
+      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,monitor:false,machine_num:1,machine:[],log:false,realtime:false,remark:''})
       const closeDialog = () => {
         context.emit('taskClose')
       }
@@ -156,9 +156,9 @@
       callback()
     }
     const rules = {
-      threads: [{ validator: checkInfo, trigger: 'blur', required: true },{"pattern": /^[0-9]*$/,"message": "只能输入正整数"}],
+      num_threads: [{ validator: checkInfo, trigger: 'blur', required: true },{"pattern": /^[0-9]*$/,"message": "只能输入正整数"}],
       duration: [{ validator: checkInfo, trigger: 'blur', required: true },{"pattern": /^[0-9]*$/,"message": "只能输入正整数"}],
-      warmup_time: [{"pattern": /^(0|[1-9][0-9]*)$/,"message": "只能输入大于等于0的整数"}],
+      ramp_time: [{"pattern": /^(0|[1-9][0-9]*)$/,"message": "只能输入大于等于0的整数"}],
       qps_limit: [{"pattern": /^(0|[1-9][0-9]*)$/,"message": "只能输入大于等于0的整数"}],
       machine_num: [{ validator: checkInfo, trigger: 'blur', required: true },{"pattern": /^[0-9]*$/,"message": "只能输入正整数"}],
     }

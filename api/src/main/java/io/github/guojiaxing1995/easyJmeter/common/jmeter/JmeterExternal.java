@@ -1,15 +1,24 @@
 package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
+import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.jmeter.config.CSVDataSet;
+import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.threads.SetupThreadGroup;
+import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.collections.HashTree;
+import org.apache.jorphan.collections.SearchByClass;
 
 import java.io.*;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -132,7 +141,58 @@ public class JmeterExternal {
         }
     }
 
-    public void loadProperties() {
+    public void addProperties() {
         this.setProperties("plugin_dependency_paths=../tmp/dependencies/;");
+    }
+
+    public void initJMeterUtils() {
+        JMeterUtils.setJMeterHome(this.path);
+        JMeterUtils.loadJMeterProperties(this.path + "/bin/jmeter.properties");
+    }
+
+    public void editJmxConfig(TaskDO taskDO) throws IOException {
+        File directory = new File(this.path + "/tmp/");
+        File[] files = directory.listFiles();
+        File jmxfile = null;
+        List<File> csvFiles = new ArrayList<>();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().toLowerCase().endsWith(".csv")) {
+                    csvFiles.add(file);
+                }
+                if (file.isFile() && file.getName().toLowerCase().endsWith(".jmx")) {
+                    jmxfile = file;
+                }
+            }
+        }
+        if (jmxfile != null) {
+            HashTree testPlanTree = SaveService.loadTree(jmxfile);
+            // 修改jmx中csv配置
+            SearchByClass<CSVDataSet> csvDataSetSearch = new SearchByClass<>(CSVDataSet.class);
+            testPlanTree.traverse(csvDataSetSearch);
+            for (File csvFile : csvFiles) {
+                for (CSVDataSet csvDataSet : csvDataSetSearch.getSearchResults()) {
+                    String csvOldPathName = new File(csvDataSet.getProperty("filename").toString()).getName();
+                    if (csvOldPathName.equals(csvFile.getName())) {
+                        csvDataSet.setProperty("filename", csvFile.getAbsolutePath());
+                    }
+
+                }
+            }
+            // 修改jmx中压测参数
+            SearchByClass<SetupThreadGroup> setupThreadGroupSearch = new SearchByClass<>(SetupThreadGroup.class);
+            testPlanTree.traverse(setupThreadGroupSearch);
+            for (SetupThreadGroup setupThreadGroup : setupThreadGroupSearch.getSearchResults()) {
+                setupThreadGroup.setNumThreads(taskDO.getNumThreads()/taskDO.getMachineNum());
+                setupThreadGroup.setDuration(taskDO.getDuration());
+                setupThreadGroup.setRampUp(taskDO.getRampTime());
+                setupThreadGroup.getSamplerController().setProperty("LoopController.loops", -1);
+            }
+
+            try (FileOutputStream outputStream = new FileOutputStream(new File(this.path + "/tmp/" +taskDO.getTaskId() +".jmx"))) {
+                SaveService.saveTree(testPlanTree, outputStream);
+            }
+
+        }
     }
 }

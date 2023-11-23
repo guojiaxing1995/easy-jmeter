@@ -26,11 +26,11 @@ public class TaskDO extends BaseModel implements Serializable {
 
     private String jar;
 
-    private Integer threads;
+    private Integer numThreads;
 
     private Integer duration;
 
-    private Integer warmupTime;
+    private Integer rampTime;
 
     private Integer qpsLimit;
 
