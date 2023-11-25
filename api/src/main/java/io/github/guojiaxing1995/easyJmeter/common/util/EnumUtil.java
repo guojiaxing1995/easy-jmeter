@@ -33,4 +33,5 @@ public class EnumUtil {
         return Arrays.stream(ts).filter(predicate).findAny();
     }
 
+
 }

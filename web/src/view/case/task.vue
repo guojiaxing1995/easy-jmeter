@@ -28,14 +28,16 @@
         <el-input-number v-model="task.machine_num" :min="1" size="large"/>
         <div class="unit">个</div>
       </el-form-item>
+      <el-form-item label="日志等级" label-width="180px" prop="log_level">
+        <el-select v-model="task.log_level" placeholder="请选择日志级别" size="small" style="width: 180px" :teleported="false">
+          <el-option v-for="item in logLevels" :key="item.value" :label="item.desc" :value="item.value"/>
+        </el-select>
+      </el-form-item>
       <el-form-item label="运行状态监测" label-width="180px" prop="monitor">
         <el-switch v-model="task.monitor" inline-prompt active-text="开启" inactive-text="关闭"/>
       </el-form-item>
       <el-form-item label="实时数据展示" label-width="180px" prop="realtime">
         <el-switch v-model="task.realtime" inline-prompt active-text="开启" inactive-text="关闭"/>
-      </el-form-item>
-      <el-form-item label="详细日志记录" label-width="180px" prop="log">
-        <el-switch v-model="task.log" inline-prompt active-text="开启" inactive-text="关闭"/>
       </el-form-item>
       <el-form-item label="备注" label-width="180px" prop="remark">
         <el-input v-model="task.remark" placeholder=""  size="small" style="width: 280px"/>
@@ -74,20 +76,28 @@
     emits: ['taskClose'],
     setup(props, context) {
       const machines = ref([])
+      const logLevels = ref([])
       const availableMachine = ref(0)
       const form = ref(null)
-      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,monitor:false,machine_num:1,machine:[],log:false,realtime:false,remark:''})
+      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,monitor:false,machine_num:1,machine:[],log_level:null,realtime:false,remark:''})
       const closeDialog = () => {
         context.emit('taskClose')
       }
 
       onUpdated(() => {
         getMachine()
+        getLogLevel()
       })
 
       const getMachine = async () => {
         const res = await get(`/v1/machine/all`, { showBackend: true })
         machines.value = setMachine(res)
+      }
+
+      const getLogLevel = async () => {
+        const res = await get(`/v1/common/enum`, { showBackend: true })
+        logLevels.value = res.LogLevel
+        task.log_level = logLevels.value[3].value
       }
 
       const setMachine = (arr) => {
@@ -135,6 +145,7 @@
         task,
         closeDialog,
         machines,
+        logLevels,
         availableMachine,
         refreshMachines,
         rules,

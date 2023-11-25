@@ -5,6 +5,11 @@ import com.baomidou.mybatisplus.annotation.IEnum;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Getter
 public enum MachineOnlineEnum implements IEnum<Integer> {
 
@@ -26,5 +31,16 @@ public enum MachineOnlineEnum implements IEnum<Integer> {
     @Override
     public Integer getValue() {
         return this.value;
+    }
+
+    public static List<Map<String, Object>> toMapList() {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (MachineOnlineEnum e : MachineOnlineEnum.values()) { // 使用 values() 方法得到所有的枚举常量
+            Map<String, Object> map = new HashMap<>();
+            map.put("value", e.getValue());
+            map.put("desc", e.getDesc());
+            list.add(map);
+        }
+        return list;
     }
 }

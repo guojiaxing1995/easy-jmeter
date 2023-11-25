@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.model;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,7 +43,7 @@ public class TaskDO extends BaseModel implements Serializable {
 
     private Boolean realtime;
 
-    private Boolean log;
+    private LogLevelEnum logLevel;
 
     private String remark;
 

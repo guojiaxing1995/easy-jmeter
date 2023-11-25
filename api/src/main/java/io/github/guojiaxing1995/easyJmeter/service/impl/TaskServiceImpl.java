@@ -4,9 +4,11 @@ import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
+import io.github.guojiaxing1995.easyJmeter.common.util.EnumUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
@@ -103,7 +105,7 @@ public class TaskServiceImpl implements TaskService {
         taskDO.setMachine(machinesStr.substring(0, machinesStr.length() - 1));
         taskDO.setMonitor(taskDTO.getMonitor());
         taskDO.setRealtime(taskDTO.getRealtime());
-        taskDO.setLog(taskDTO.getLog());
+        taskDO.setLogLevel(LogLevelEnum.getEnumByCode(taskDTO.getLogLevel()));
         taskDO.setRemark(taskDTO.getRemark());
         taskDO.setResult(TaskResultEnum.IN_PROGRESS);
 

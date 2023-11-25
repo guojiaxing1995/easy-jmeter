@@ -5,11 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.LinkStrategy;
+import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Slf4j
 @Service
@@ -31,8 +37,19 @@ public class CleanLink extends Thread implements LinkStrategy {
     public void run() {
         try {
             log.info("===" + this.taskDO.getTaskId() + "_" + JmeterStatusEnum.CLEAN.getDesc() + "===");
+            // 如果测试进程仍然存在，则杀掉进程
+            if (ThreadUtil.isProcessContainingName(taskDO.getTaskId()+".jmx")) {
+                ThreadUtil.killProcessContainingName(taskDO.getTaskId()+".jmx");
+            }
+            // 将tmp目录重命名为任务目录
+            Path tmpPath = Paths.get(System.getenv("JMETER_HOME"), "tmp");
+            Path taskPath = Paths.get(System.getenv("JMETER_HOME"), this.taskDO.getTaskId());
+            Files.move(tmpPath, taskPath, StandardCopyOption.REPLACE_EXISTING);
+
             this.reportSuccess();
         } catch (Exception e) {
+            log.error("清理环节发生" + e.getClass().getName() + "异常：" +e.getMessage() + "，任务ID：" + this.taskDO.getTaskId());
+            log.error("error", e);
             this.reportFail();
         }
     }

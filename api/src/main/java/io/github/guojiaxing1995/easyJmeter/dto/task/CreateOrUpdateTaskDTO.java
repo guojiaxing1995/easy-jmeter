@@ -37,7 +37,7 @@ public class CreateOrUpdateTaskDTO {
 
     private Boolean realtime;
 
-    private Boolean log;
+    private Integer logLevel;
 
     @Length(max = 500, message = "{task.remark.length}")
     private String remark;

@@ -293,7 +293,7 @@ CREATE TABLE `task` (
     `machine_num` int(11) NOT NULL DEFAULT 1 COMMENT '压力机数量',
     `monitor` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否开启运行状态监控',
     `realtime` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否显示实时数据',
-    `log` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否记录详细日志',
+    `log_level` tinyint(2) NOT NULL DEFAULT '4' COMMENT 'jmeter运行日志等级 1-OFF|2-ERROR|3-WARN|4-INFO|5-DEBUG',
     `remark` varchar(500) DEFAULT NULL COMMENT '描述',
     `result` tinyint(2) NOT NULL DEFAULT '0' COMMENT '测试执行结果 0-进行中|1-成功|2-异常终止|3-手动终止',
     `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',

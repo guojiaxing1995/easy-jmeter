@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import io.github.guojiaxing1995.easyJmeter.common.util.EnumUtil;
 import lombok.Getter;
 
-import java.util.Optional;
+import java.util.*;
 
 @Getter
 public enum JmeterStatusEnum implements IEnum<Integer> {
@@ -40,5 +40,16 @@ public enum JmeterStatusEnum implements IEnum<Integer> {
     public static JmeterStatusEnum getEnumByCode(Integer code){
         Optional<JmeterStatusEnum> optional = EnumUtil.getEnumObject(JmeterStatusEnum.class, e -> e.getValue().equals(code));
         return optional.isPresent() ? optional.get() : null;
+    }
+
+    public static List<Map<String, Object>> toMapList() {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (JmeterStatusEnum e : JmeterStatusEnum.values()) { // 使用 values() 方法得到所有的枚举常量
+            Map<String, Object> map = new HashMap<>();
+            map.put("value", e.getValue());
+            map.put("desc", e.getDesc());
+            list.add(map);
+        }
+        return list;
     }
 }
