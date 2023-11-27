@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
+import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -42,7 +45,8 @@ public class JmeterExternal {
     }
 
     public void version() {
-        ProcessBuilder processBuilder = new ProcessBuilder( this.path + "/bin/jmeter", "--version");
+        Path jmeterPath = Paths.get(this.path, "/bin/jmeter");
+        ProcessBuilder processBuilder = new ProcessBuilder( jmeterPath.toString(), "--version");
         processBuilder.environment().putAll(System.getenv());
         StringBuilder outputString = new StringBuilder();
         Process process = null;
@@ -113,7 +117,7 @@ public class JmeterExternal {
     }
 
     public Boolean isPropertiesExist(String property) {
-        File file = new File(this.path + "/bin/user.properties");
+        File file = new File(Paths.get(this.path, "/bin/user.properties").toString());
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -131,7 +135,7 @@ public class JmeterExternal {
 
     public void setProperties(String property) {
         if (!this.isPropertiesExist(property)) {
-            File file = new File(this.path + "/bin/user.properties");
+            File file = new File(Paths.get(this.path, "/bin/user.properties").toString());
             try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, true)))) {
                 writer.println(property);
             } catch (IOException e) {
@@ -147,7 +151,7 @@ public class JmeterExternal {
 
     public void initJMeterUtils() {
         JMeterUtils.setJMeterHome(this.path);
-        JMeterUtils.loadJMeterProperties(this.path + "/bin/jmeter.properties");
+        JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
     }
 
     public void editJmxConfig(TaskDO taskDO) throws IOException {
@@ -194,5 +198,41 @@ public class JmeterExternal {
             }
 
         }
+    }
+
+    public void runJmeter(TaskDO taskDO) {
+        String jmeterPath = Paths.get(this.path, "/bin/jmeter").toString();
+        String jmxPath = Paths.get(this.path, "/tmp/" + taskDO.getTaskId() + ".jmx").toString();
+        String logPath = Paths.get(this.path, "/tmp/jmeter.log").toString();
+        String jtlPath = Paths.get(this.path, "/tmp/result.jtl").toString();
+        String reportPath = Paths.get(this.path, "/tmp/report").toString();
+        ProcessBuilder processBuilder =
+                new ProcessBuilder( jmeterPath,"-n","-t",jmxPath,"-j",logPath,"-L","all="+taskDO.getLogLevel().getDesc(),"-l",jtlPath,"-e","-o",reportPath);
+        processBuilder.environment().putAll(System.getenv());
+        StringBuilder outputString = new StringBuilder();
+        try {
+            Process process = processBuilder.start();
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    outputString.append(line).append("\n");
+                    if (Thread.currentThread().isInterrupted()) {
+                        log.info("压测中的jmeter线程被中断");
+                        process.destroy();
+                    }
+                    // 判断是否已经结束但由于开放了beanshell端口导致服务没有停止
+                    File report = new File(reportPath);
+                    if (report.exists() && ThreadUtil.isProcessContainingName(taskDO.getTaskId()+".jmx")) {
+                        ThreadUtil.killProcessContainingName(taskDO.getTaskId()+".jmx");
+                    }
+                    log.info(line);
+                }
+            }
+            int exitCode = process.waitFor();
+
+        } catch (IOException | InterruptedException e) {
+            log.error("执行jmeter失败", e);
+        }
+        log.info(outputString.toString());
     }
 }

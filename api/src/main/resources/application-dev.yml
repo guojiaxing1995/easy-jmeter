@@ -53,3 +53,6 @@ socket:
     serverUrl: http://127.0.0.1:9000
     enable: false
 
+cron:
+  heartBeat: "0 0/1 * * * ?"
+  deleteTaskRecordStorage: "0 0 1 ? * MON"

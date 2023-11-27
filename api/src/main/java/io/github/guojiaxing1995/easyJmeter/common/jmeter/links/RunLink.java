@@ -31,8 +31,12 @@ public class RunLink extends Thread implements LinkStrategy {
     public void run() {
         try {
             log.info("===" + this.taskDO.getTaskId() + "_" + JmeterStatusEnum.RUN.getDesc() + "===");
+            JmeterExternal jmeterExternal = new JmeterExternal();
+            jmeterExternal.runJmeter(taskDO);
             this.reportSuccess();
         } catch (Exception e) {
+            log.error("运行环节发生" + e.getClass().getName() + "异常：" +e.getMessage() + "，任务ID：" + this.taskDO.getTaskId());
+            log.error("error", e);
             this.reportFail();
         }
     }

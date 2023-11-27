@@ -12,6 +12,7 @@ import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoPlusVO;
 import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO;
 import io.github.guojiaxing1995.easyJmeter.vo.JFileVO;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
+import io.github.talelin.autoconfigure.exception.ParameterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,9 @@ public class CaseServiceImpl implements CaseService {
     public boolean updateCase(CaseDO caseDO, CreateOrUpdateCaseDTO caseDTO) {
         if (caseDO == null){
             throw new NotFoundException(12201);
+        }
+        if (caseDO.getStatus() != JmeterStatusEnum.IDLE) {
+            throw new ParameterException(12304);
         }
         caseDO.setName(caseDTO.getName());
         caseDO.setDescription(caseDTO.getDescription());

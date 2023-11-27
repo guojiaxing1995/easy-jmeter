@@ -16,10 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 @Slf4j
 @RestController
 public class SocketIOClientHandler {
@@ -40,9 +36,6 @@ public class SocketIOClientHandler {
         taskCollect();
         taskClean();
         taskInterrupt();
-        test1();
-        test2();
-        test3();
     }
 
     private void eventListeners() {
@@ -151,86 +144,6 @@ public class SocketIOClientHandler {
             }
         });
 
-    }
-
-    private void test1() {
-        socket.on("test1", args -> {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // 线程需要执行的任务代码
-                    System.out.println("子线程开始启动....");
-//                    while (true) {
-//                        log.info("66666666666666666666666666666666");
-//                    }
-//                    for (int i=0; i< 30; i++) {
-//                        try {
-//                            Thread.sleep(3000);
-//                            log.info(String.valueOf(i));
-//                        } catch (InterruptedException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//
-//                    }
-                    ProcessBuilder processBuilder = new ProcessBuilder("sh","/opt/dg/run.sh");
-                    processBuilder.environment().putAll(System.getenv());
-                    StringBuilder outputString = new StringBuilder();
-                    try {
-                        Process process = processBuilder.start();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            outputString.append(line).append("\n");
-                            log.info(String.valueOf(Thread.currentThread().isInterrupted()));
-                            if (Thread.currentThread().isInterrupted()) {
-                                System.out.println("青秧线程被中断，程序退出。");
-                                process.destroy();
-                            }
-                            log.info(String.valueOf(outputString));
-                        }
-                        int exitCode = process.waitFor();
-
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            thread.setName("my_test");
-            thread.start();
-        });
-    }
-
-    private void test2() {
-        socket.on("test2", args -> {
-            ThreadGroup currentGroup = Thread.currentThread().getThreadGroup();
-            int noThreads = currentGroup.activeCount();
-            Thread[] lstThreads = new Thread[noThreads];
-            currentGroup.enumerate(lstThreads);
-            for (int i = 0; i < noThreads; i++) {
-                log.info(lstThreads[i].getName());
-            }
-        });
-    }
-
-    private void test3() {
-        socket.on("test3", args -> {
-            ThreadGroup currentGroup = Thread.currentThread().getThreadGroup();
-            int noThreads = currentGroup.activeCount();
-            Thread[] lstThreads = new Thread[noThreads];
-            currentGroup.enumerate(lstThreads);
-            log.info("---------------------------------");
-            for (int i = 0; i < noThreads; i++) {
-                log.info(lstThreads[i].getName());
-                if (lstThreads[i].getName().equals("my_test")) {
-                    log.info(String.valueOf(lstThreads[i].getState()));
-                    log.info(String.valueOf(lstThreads[i].isInterrupted()));
-                    log.info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                    lstThreads[i].interrupt();
-                    log.info(String.valueOf(lstThreads[i].getState()));
-                    log.info(String.valueOf(lstThreads[i].isInterrupted()));
-                }
-            }
-        });
     }
 
 }
