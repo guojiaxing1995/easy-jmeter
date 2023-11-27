@@ -2,7 +2,6 @@ package io.github.guojiaxing1995.easyJmeter.service.impl;
 
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
-import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.service.CommonService;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ public class CommonServiceImpl implements CommonService {
         map.put("JmeterStatus", JmeterStatusEnum.toMapList());
         map.put("TaskResult", TaskResultEnum.toMapList());
         map.put("LogLevel", LogLevelEnum.toMapList());
-        map.put("MachineOnline", MachineOnlineEnum.toMapList());
 
         return map;
     }

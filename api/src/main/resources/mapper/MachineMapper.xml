@@ -6,8 +6,8 @@
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="address" jdbcType="VARCHAR" property="address"/>
         <result column="path" jdbcType="VARCHAR" property="path"/>
-        <result column="version" jdbcType="VARCHAR" property="version"/>
-        <result column="online" property="online" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="version" jdbcType="VARCHAR" property="path"/>
+        <result column="is_online" jdbcType="BOOLEAN" property="isOnline"/>
         <result column="jmeter_status" property="jmeterStatus" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
         <result column="client_id" jdbcType="VARCHAR" property="clientId"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
@@ -21,7 +21,7 @@
         WHERE m.name LIKE CONCAT('%',#{name},'%')
           AND
             m.delete_time IS NULL
-        ORDER BY m.online DESC, m.create_time DESC
+        ORDER BY m.is_online DESC, m.create_time DESC
     </select>
 
     <select id="selectByAddress" resultMap="BaseResultMap">
@@ -49,7 +49,7 @@
     <select id="executable" resultMap="BaseResultMap">
         SELECT m.*
         FROM machine m
-        WHERE m.online = '${@io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum@ONLINE.value}'
+        WHERE m.is_online = true
           AND
             m.jmeter_status = '${@io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum@IDLE.value}'
           AND

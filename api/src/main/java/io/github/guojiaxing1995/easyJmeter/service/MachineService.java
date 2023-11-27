@@ -2,7 +2,6 @@ package io.github.guojiaxing1995.easyJmeter.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
-import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.CreateOrUpdateMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
@@ -21,7 +20,7 @@ public interface MachineService {
 
     boolean deleteMachine(Integer id);
 
-    void setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, MachineOnlineEnum onlineEnum);
+    void setMachineStatus(HeartBeatMachineDTO heartBeatMachineDTO, Boolean online);
 
     MachineDO getByClientId(String clientId);
 

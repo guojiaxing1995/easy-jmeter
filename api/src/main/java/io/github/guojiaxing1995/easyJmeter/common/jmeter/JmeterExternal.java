@@ -1,6 +1,5 @@
 package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 
-import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import lombok.Data;
@@ -35,7 +34,7 @@ public class JmeterExternal {
 
     private String address;
 
-    private MachineOnlineEnum online;
+    private Boolean isOnline;
 
     public JmeterExternal() {
         this.path = System.getenv("JMETER_HOME");
@@ -109,11 +108,7 @@ public class JmeterExternal {
     }
 
     public void online() {
-        if (!this.version.isEmpty()){
-            this.online = MachineOnlineEnum.ONLINE;
-        } else {
-            this.online = MachineOnlineEnum.OFFLINE;
-        }
+        this.isOnline = !this.version.isEmpty();
     }
 
     public Boolean isPropertiesExist(String property) {

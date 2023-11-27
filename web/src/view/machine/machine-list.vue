@@ -16,8 +16,8 @@
         <el-table-column prop="version" label="版本" width="160" show-overflow-tooltip></el-table-column>
         <el-table-column label="压力机状态" width="150">
           <template #default="scope">
-              <el-tag v-if="scope.row.online==='离线'" type="danger">{{ scope.row.online }}</el-tag>
-              <el-tag v-else type="info">{{ scope.row.online }}</el-tag>
+              <el-tag v-if="scope.row.is_online===false" type="danger">离线</el-tag>
+              <el-tag v-else type="info">在线</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="jmeter_status" label="jmeter状态" width="150"></el-table-column>

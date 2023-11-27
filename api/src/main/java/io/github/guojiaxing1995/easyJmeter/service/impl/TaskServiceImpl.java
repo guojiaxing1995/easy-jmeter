@@ -5,10 +5,8 @@ import com.corundumstudio.socketio.SocketIOServer;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
-import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
-import io.github.guojiaxing1995.easyJmeter.common.util.EnumUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
@@ -97,7 +95,7 @@ public class TaskServiceImpl implements TaskService {
             if (machineDO == null) {
                 throw new ParameterException(12303);
             }
-            if (machineDO.getOnline().equals(MachineOnlineEnum.OFFLINE) || !machineDO.getJmeterStatus().equals(JmeterStatusEnum.IDLE)) {
+            if (machineDO.getIsOnline().equals(false) || !machineDO.getJmeterStatus().equals(JmeterStatusEnum.IDLE)) {
                 throw new ParameterException(12301);
             }
             machinesStr.append(machine).append(",");

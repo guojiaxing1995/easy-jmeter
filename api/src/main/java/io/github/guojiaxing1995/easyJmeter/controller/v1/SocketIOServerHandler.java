@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
-import io.github.guojiaxing1995.easyJmeter.common.enumeration.MachineOnlineEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
@@ -76,7 +75,7 @@ public class SocketIOServerHandler {
         if (machineService.getByClientId(client.getSessionId().toString()) != null){
             // 设置为已下线状态
             HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(client.getSessionId().toString());
-            machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.OFFLINE);
+            machineService.setMachineStatus(heartBeatMachineDTO, false);
             log.info("压力机已经离线:" + client.getSessionId());
         }
 
@@ -96,7 +95,7 @@ public class SocketIOServerHandler {
     public void  handleHeartBeatEvent(SocketIOClient client, String heartBeat) throws JsonProcessingException {
         HeartBeatMachineDTO heartBeatMachineDTO = new ObjectMapper().readValue(heartBeat, HeartBeatMachineDTO.class);
         heartBeatMachineDTO.setClientId(client.getSessionId().toString());
-        machineService.setMachineStatus(heartBeatMachineDTO, MachineOnlineEnum.ONLINE);
+        machineService.setMachineStatus(heartBeatMachineDTO, true);
     }
 
     // 接收配置完成通知
