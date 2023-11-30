@@ -1,11 +1,11 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
-import com.alibaba.fastjson2.JSON;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CleanLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CollectLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.ConfigureLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.RunLink;
+import io.github.guojiaxing1995.easyJmeter.common.serializer.DeserializerObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
@@ -61,7 +61,7 @@ public class SocketIOClientHandler {
     // 监听任务配置
     private void taskConfigure() {
         socket.on("taskConfigure", args -> {
-            MachineCutFileVO machineCutFileVO = JSON.parseObject(args[0].toString(), MachineCutFileVO.class);
+            MachineCutFileVO machineCutFileVO = DeserializerObjectMapper.deserialize(args[0].toString(), MachineCutFileVO.class);
             TaskDO taskDO = machineCutFileVO.getTaskDO();
             log.info(taskDO.toString());
             log.info("收到启动命令，任务进入配置状态，任务编号：" + taskDO.getTaskId());
@@ -77,7 +77,7 @@ public class SocketIOClientHandler {
     // 监听任务运行
     private void taskRun() {
         socket.on("taskRun", args -> {
-            TaskDO taskDO = JSON.parseObject(args[0].toString(), TaskDO.class);
+            TaskDO taskDO = DeserializerObjectMapper.deserialize(args[0].toString(), TaskDO.class);
             log.info("收到运行命令，任务进入压测运行状态，任务编号：" + taskDO.getTaskId());
             RunLink runLink = new RunLink(socket);
             runLink.setName(taskDO.getTaskId() + "_" + JmeterStatusEnum.RUN.getDesc());
@@ -89,7 +89,7 @@ public class SocketIOClientHandler {
     // 监听任务收集
     private void taskCollect() {
         socket.on("taskCollect", args -> {
-            TaskDO taskDO = JSON.parseObject(args[0].toString(), TaskDO.class);
+            TaskDO taskDO = DeserializerObjectMapper.deserialize(args[0].toString(), TaskDO.class);
             log.info("收到收集命令，任务进入压测结果收集状态，任务编号：" + taskDO.getTaskId());
             CollectLink collectLink = new CollectLink(socket);
             collectLink.setName(taskDO.getTaskId() + "_" + JmeterStatusEnum.COLLECT.getDesc());
@@ -101,7 +101,7 @@ public class SocketIOClientHandler {
     // 监听任务清理
     private void taskClean() {
         socket.on("taskClean", args -> {
-            TaskDO taskDO = JSON.parseObject(args[0].toString(), TaskDO.class);
+            TaskDO taskDO = DeserializerObjectMapper.deserialize(args[0].toString(), TaskDO.class);
             log.info("收到清理命令，任务进入环境清理状态，任务编号：" + taskDO.getTaskId());
             CleanLink cleanLink = new CleanLink(socket);
             cleanLink.setName(taskDO.getTaskId() + "_" + JmeterStatusEnum.CLEAN.getDesc());
@@ -113,7 +113,7 @@ public class SocketIOClientHandler {
     // 监听失败后终止
     private void taskInterrupt() {
         socket.on("taskInterrupt", args -> {
-            TaskMachineDTO taskMachineDTO = JSON.parseObject(args[0].toString(), TaskMachineDTO.class);
+            TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(args[0].toString(), TaskMachineDTO.class);
             TaskDO taskDO = taskMachineDTO.getTaskDO();
             String configureThreadName = taskDO.getTaskId() + "_" + JmeterStatusEnum.CONFIGURE.getDesc();
             String runThreadName = taskDO.getTaskId() + "_" + JmeterStatusEnum.RUN.getDesc();

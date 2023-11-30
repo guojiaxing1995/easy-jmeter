@@ -11,6 +11,9 @@ import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.nio.file.Paths;
+
 @Slf4j
 @Service
 public class RunLink extends Thread implements LinkStrategy {
@@ -31,7 +34,7 @@ public class RunLink extends Thread implements LinkStrategy {
     public void run() {
         try {
             log.info("===" + this.taskDO.getTaskId() + "_" + JmeterStatusEnum.RUN.getDesc() + "===");
-            JmeterExternal jmeterExternal = new JmeterExternal();
+            JmeterExternal jmeterExternal = new JmeterExternal(socket);
             jmeterExternal.runJmeter(taskDO);
             this.reportSuccess();
         } catch (Exception e) {
@@ -43,13 +46,18 @@ public class RunLink extends Thread implements LinkStrategy {
 
     @Override
     public Boolean reportSuccess() throws JsonProcessingException {
-        TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
-        taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
-        taskMachineDTO.setResult(true);
-        String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
-        socket.emit("runFinish", message);
-        return true;
+        String reportPath = Paths.get(System.getenv("JMETER_HOME"), "/tmp/report").toString();
+        File report = new File(reportPath);
+        if (report.exists()){
+            TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
+            taskMachineDTO.setTaskDO(taskDO);
+            taskMachineDTO.setMachineIp(new JmeterExternal(socket).getAddress());
+            taskMachineDTO.setResult(true);
+            String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
+            socket.emit("runFinish", message);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -57,7 +65,7 @@ public class RunLink extends Thread implements LinkStrategy {
         // 发送失败消息
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal(socket).getAddress());
         taskMachineDTO.setResult(false);
         taskMachineDTO.setStatus(JmeterStatusEnum.RUN.getValue());
         try {

@@ -1,19 +1,24 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.github.benmanes.caffeine.cache.Cache;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
+import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.TaskProgressVO;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +53,12 @@ public class TaskServiceImpl implements TaskService {
     
     @Autowired
     private JFileService jFileService;
+
+    @Autowired
+    private TaskLogService taskLogService;
+
+    @Autowired
+    Cache<String, Object> caffeineCache;
 
     @Override
     @Transactional
@@ -130,6 +141,9 @@ public class TaskServiceImpl implements TaskService {
             // 向room中的client发送启动命令
             log.info("========TaskDO=======: {}", taskDO);
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
+            // 向web端报告进度
+            TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.CONFIGURE, null, TaskResultEnum.IN_PROGRESS);
+            socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
         }
 
         return true;
@@ -180,5 +194,46 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         return map;
+    }
+
+    @Override
+    public TaskDO getTaskByTaskId(String taskId) {
+        QueryWrapper<TaskDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("task_id", taskId);
+
+        return taskMapper.selectOne(queryWrapper);
+    }
+
+
+    @Override
+    public boolean stopTask(String taskId) {
+        TaskDO taskDO = getTaskByTaskId(taskId);
+        if (taskDO == null) {
+            throw new ParameterException(12305);
+        }
+        CaseDO caseDO = caseMapper.selectById(taskDO.getJmeterCase());
+        if (caseDO.getStatus() == JmeterStatusEnum.IDLE) {
+            throw new ParameterException(12305);
+        }
+
+        // 更新task日志为失败
+        List<TaskLogDO> taskLogs = taskLogService.getTaskLog(taskDO.getTaskId(), taskDO.getJmeterCase(), caseDO.getStatus(), null, null);
+        for (TaskLogDO taskLog: taskLogs) {
+            taskLogService.updateTaskLog(taskLog, false);
+        }
+        // 标记task状态为失败
+        updateTaskResult(taskDO, TaskResultEnum.EXCEPTION);
+
+        // 如果没有发送过终止消息，向所有agent发送消息进行终止和进入下一环节
+        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + caseDO.getStatus()) == null){
+            caffeineCache.put(taskDO.getTaskId() + "_" + caseDO.getStatus(), "taskInterrupt");
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", new TaskMachineDTO(taskDO, null, false, caseDO.getStatus().getValue()));
+        }
+
+        // 向web端报告进度
+        TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.EXCEPTION);
+        socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
+
+        return true;
     }
 }

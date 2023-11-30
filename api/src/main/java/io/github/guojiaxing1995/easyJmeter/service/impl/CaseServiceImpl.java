@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CreateOrUpdateCaseDTO;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,9 @@ public class CaseServiceImpl implements CaseService {
 
     @Autowired
     private JFileMapper fileMapper;
+
+    @Autowired
+    Cache<String, Object> caffeineCache;
 
     @Override
     public boolean createCase(CreateOrUpdateCaseDTO caseDTO) {
@@ -78,7 +83,13 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public List<CaseInfoVO> getAll() {
-        return caseMapper.selectAll();
+        List<CaseInfoVO> caseInfoVOS = caseMapper.selectAll();
+        for (CaseInfoVO caseInfoVO : caseInfoVOS) {
+            if (caseInfoVO.getStatus() == JmeterStatusEnum.RUN) {
+                caseInfoVO.setTaskProgress((HashMap<String, Object>) caffeineCache.getIfPresent(caseInfoVO.getTaskId() + "_PROGRESS"));
+            }
+        }
+        return caseInfoVOS;
     }
 
     @Override

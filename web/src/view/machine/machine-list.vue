@@ -20,7 +20,7 @@
               <el-tag v-else type="info">在线</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="jmeter_status" label="jmeter状态" width="150"></el-table-column>
+        <el-table-column prop="jmeter_status.desc" label="jmeter状态" width="150"></el-table-column>
         <el-table-column label="操作" fixed="right" width="200">
           <template #default="scope">
             <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>

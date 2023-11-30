@@ -11,8 +11,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
+import io.github.guojiaxing1995.easyJmeter.common.serializer.DeserializerObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
@@ -23,11 +25,13 @@ import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.TaskProgressVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,7 +78,8 @@ public class SocketIOServerHandler {
         // 压力机客户端离线后处理
         if (machineService.getByClientId(client.getSessionId().toString()) != null){
             // 设置为已下线状态
-            HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(client.getSessionId().toString());
+            HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO();
+            heartBeatMachineDTO.setClientId(client.getSessionId().toString());
             machineService.setMachineStatus(heartBeatMachineDTO, false);
             log.info("压力机已经离线:" + client.getSessionId());
         }
@@ -100,9 +105,9 @@ public class SocketIOServerHandler {
 
     // 接收配置完成通知
     @OnEvent("configureFinish")
-    public void configureFinish(SocketIOClient client, String message) throws JsonProcessingException {
+    public void configureFinish(SocketIOClient client, String message) {
         log.info("收到完成配置消息" + message);
-        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -123,21 +128,30 @@ public class SocketIOServerHandler {
             caseService.updateCaseStatus(caseDO, JmeterStatusEnum.RUN);
             // 给agent发消息进入压测运行环节
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskRun", taskDO);
-            // 插入task运行日志
+            // 插入task运行日志,初始化运行进度
             String[] machines = taskDO.getMachine().split(",");
+            HashMap<String, Integer> map = new HashMap<>();
             for (String m : machines) {
                 MachineDO machine = machineService.getById(Integer.valueOf(m));
+                // 插入task日志
                 taskLogService.createTaskLog(new TaskLogDO(taskDO.getTaskId(),taskDO.getJmeterCase(),JmeterStatusEnum.RUN,null,machine.getAddress(),machine.getId()));
+                map.put(machine.getAddress(), 0);
             }
+            //将初始化进度写入缓存
+            caffeineCache.put(taskDO.getTaskId() + "_PROGRESS", map);
+
+            // 向web端报告进度
+            TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.RUN, map, TaskResultEnum.IN_PROGRESS);
+            socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
         }
 
     }
 
     // 接收压测运行完成消息
     @OnEvent("runFinish")
-    public void runFinish(SocketIOClient client, String message) throws JsonProcessingException {
+    public void runFinish(SocketIOClient client, String message) {
         log.info("收到压测运行完成消息" + message);
-        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -164,15 +178,19 @@ public class SocketIOServerHandler {
                 MachineDO machine = machineService.getById(Integer.valueOf(m));
                 taskLogService.createTaskLog(new TaskLogDO(taskDO.getTaskId(),taskDO.getJmeterCase(),JmeterStatusEnum.COLLECT,null,machine.getAddress(),machine.getId()));
             }
+
+            // 向web端报告进度
+            TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.COLLECT, null, TaskResultEnum.IN_PROGRESS);
+            socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
         }
 
     }
 
     // 接收结果收集完成消息
     @OnEvent("collectFinish")
-    public void collectFinish(SocketIOClient client, String message) throws JsonProcessingException {
+    public void collectFinish(SocketIOClient client, String message) {
         log.info("收到结果收集完成消息" + message);
-        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -199,14 +217,18 @@ public class SocketIOServerHandler {
                 MachineDO machine = machineService.getById(Integer.valueOf(m));
                 taskLogService.createTaskLog(new TaskLogDO(taskDO.getTaskId(),taskDO.getJmeterCase(),JmeterStatusEnum.CLEAN,null,machine.getAddress(),machine.getId()));
             }
+
+            // 向web端报告进度
+            TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.CLEAN, null, TaskResultEnum.IN_PROGRESS);
+            socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
         }
     }
 
     // 接收环境清理完成消息
     @OnEvent("cleanFinish")
-    public void cleanFinish(SocketIOClient client, String message) throws JsonProcessingException {
+    public void cleanFinish(SocketIOClient client, String message) {
         log.info("收到环境清理完成消息" + message);
-        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
+        TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         CaseDO caseDO = caseService.getById(taskDO.getJmeterCase());
         MachineDO machineDO = machineService.getByAddress(taskMachineDTO.getMachineIp());
@@ -225,19 +247,23 @@ public class SocketIOServerHandler {
         // 如果当前环节所有节点全部完成，修改用例状态
         if (logs.size()==taskDO.getMachineNum()) {
             caseService.updateCaseStatus(caseDO, JmeterStatusEnum.IDLE);
-        }
-        // 标记task状态为成功
-        TaskDO task = taskService.getTaskById(taskDO.getId());
-        if (task.getResult()==TaskResultEnum.IN_PROGRESS) {
-            taskService.updateTaskResult(task, TaskResultEnum.SUCCESS);
+            // 标记task状态为成功
+            TaskDO task = taskService.getTaskById(taskDO.getId());
+            if (task.getResult() == TaskResultEnum.IN_PROGRESS) {
+                taskService.updateTaskResult(task, TaskResultEnum.SUCCESS);
+            }
+
+            // 向web端报告进度
+            TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.IDLE, null, TaskResultEnum.SUCCESS);
+            socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
         }
 
     }
 
     // 接收环节失败消息
     @OnEvent("linkFail")
-    public void linkFail(SocketIOClient client, String message) throws JsonProcessingException {
-        TaskMachineDTO taskMachineDTO = new ObjectMapper().readValue(message, TaskMachineDTO.class);
+    public void linkFail(SocketIOClient client, String message) {
+        TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         log.info("收到linkFail:" + taskMachineDTO.toString());
         TaskDO taskDO = taskMachineDTO.getTaskDO();
         // 更新task日志为失败
@@ -250,13 +276,15 @@ public class SocketIOServerHandler {
         if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus())) == null){
             caffeineCache.put(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), "taskInterrupt");
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
-
         }
+        // 向web端报告进度
+        TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.EXCEPTION);
+        socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
     }
 
     @OnEvent("cutCsv")
-    public void cutCsv(SocketIOClient client, String message) throws JsonProcessingException {
-        TaskDO taskDO = new ObjectMapper().readValue(message, TaskDO.class);
+    public void cutCsv(SocketIOClient client, String message) {
+        TaskDO taskDO = DeserializerObjectMapper.deserialize(message, TaskDO.class);
         // 如果是第一次收到指定task的切分，则进行文件切分
         if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_CUT" ) == null){
             caffeineCache.put(taskDO.getTaskId() + "_CUT", true);
@@ -265,6 +293,18 @@ public class SocketIOServerHandler {
             MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO, false);
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
         }
+    }
+
+    @OnEvent("machineTaskProgress")
+    public void machineTaskProgress(SocketIOClient client, String message) throws JsonProcessingException {
+        TaskProgressMachineDTO taskProgressMachineDTO = new ObjectMapper().readValue(message, TaskProgressMachineDTO.class);
+        HashMap<String, Integer> map = (HashMap<String, Integer>) caffeineCache.get(taskProgressMachineDTO.getTaskId() + "_PROGRESS", key -> new HashMap<>());
+        map.put(taskProgressMachineDTO.getMachineIp(), taskProgressMachineDTO.getProcess());
+        caffeineCache.put(taskProgressMachineDTO.getTaskId() + "_PROGRESS", map);
+
+        // 向web端报告进度
+        TaskProgressVO taskProgressVO = new TaskProgressVO(taskProgressMachineDTO.getTaskId(), JmeterStatusEnum.RUN, map, TaskResultEnum.IN_PROGRESS);
+        socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
     }
 
 }

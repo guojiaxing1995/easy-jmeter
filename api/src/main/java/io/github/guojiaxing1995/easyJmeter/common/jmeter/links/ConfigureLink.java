@@ -57,7 +57,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
                 if (this.machineCutFileVO.getMachineDOCutFileVOListMap() != null) {
                     Map<String, List<CutFileVO>> map = this.machineCutFileVO.getMachineDOCutFileVOListMap();
                     for (Map.Entry<String, List<CutFileVO>> entry : map.entrySet()) {
-                        if (entry.getKey().equals(new JmeterExternal().getAddress())) {
+                        if (entry.getKey().equals(new JmeterExternal(socket).getAddress())) {
                             jFileService.downloadCutFile(entry.getValue(), tmpDir);
                         }
                     }
@@ -80,7 +80,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
                 }
 
                 //jmeter jmx文件修改 添加properties
-                JmeterExternal jmeterExternal = new JmeterExternal();
+                JmeterExternal jmeterExternal = new JmeterExternal(socket);
                 jmeterExternal.initJMeterUtils();
                 jmeterExternal.editJmxConfig(taskDO);
                 jmeterExternal.addProperties();
@@ -102,7 +102,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
     public Boolean reportSuccess() throws JsonProcessingException {
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal(socket).getAddress());
         taskMachineDTO.setResult(true);
         String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
         socket.emit("configureFinish", message);
@@ -114,7 +114,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
         // 发送失败消息
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal(socket).getAddress());
         taskMachineDTO.setResult(false);
         taskMachineDTO.setStatus(JmeterStatusEnum.CONFIGURE.getValue());
         try {

@@ -3,12 +3,15 @@ package io.github.guojiaxing1995.easyJmeter.common.enumeration;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.IEnum;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.github.guojiaxing1995.easyJmeter.common.serializer.JmeterStatusEnumSerializer;
 import io.github.guojiaxing1995.easyJmeter.common.util.EnumUtil;
 import lombok.Getter;
 
 import java.util.*;
 
 @Getter
+@JsonSerialize(using = JmeterStatusEnumSerializer.class)
 public enum JmeterStatusEnum implements IEnum<Integer> {
 
     IDLE(0,"空闲"),
@@ -19,7 +22,9 @@ public enum JmeterStatusEnum implements IEnum<Integer> {
 
     COLLECT(3,"收集"),
 
-    CLEAN(4,"清理");
+    CLEAN(4,"清理"),
+
+    INTERRUPT(5,"中断");
 
     @EnumValue
     private final Integer value;
@@ -51,5 +56,16 @@ public enum JmeterStatusEnum implements IEnum<Integer> {
             list.add(map);
         }
         return list;
+    }
+
+    // 根据 value 和 desc 创建枚举实例的静态方法
+    public static JmeterStatusEnum fromValueAndDesc(int value, String desc) {
+        for (JmeterStatusEnum enumValue : JmeterStatusEnum.values()) {
+            if (enumValue.value == value && enumValue.desc.equals(desc)) {
+                return enumValue;
+            }
+        }
+        // 如果没有匹配的枚举值，你可以根据情况返回默认值或者抛出异常
+        throw new IllegalArgumentException("No matching enum value for value: " + value + " and desc: " + desc);
     }
 }

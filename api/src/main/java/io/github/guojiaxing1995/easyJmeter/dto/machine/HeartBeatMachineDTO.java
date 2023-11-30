@@ -12,6 +12,7 @@ import java.io.Serializable;
 public class HeartBeatMachineDTO implements Serializable {
 
     private static final long serialVersionUID = 877827989345852198L;
+
     private String clientId;
 
     private String address;
@@ -21,8 +22,4 @@ public class HeartBeatMachineDTO implements Serializable {
     private String version;
 
     private Boolean isOnline;
-
-    public HeartBeatMachineDTO(String clientId) {
-        this.clientId = clientId;
-    }
 }

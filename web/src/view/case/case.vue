@@ -25,9 +25,10 @@
                           :row-style="{height: '20px'}">
                   <el-table-column :resizable="false" prop="name" label="文件名" />
                   <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
-                  <el-table-column :resizable="false" label="操作" width="220">
+                  <el-table-column :resizable="false" label="操作" width="255">
                     <template #default="scope">
                       <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'jmx')">删除</el-button>
+                      <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -54,9 +55,10 @@
                           :row-style="{height: '20px'}">
                   <el-table-column :resizable="false" prop="name" label="文件名" />
                   <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
-                  <el-table-column :resizable="false" label="操作" width="220">
+                  <el-table-column :resizable="false" label="操作" width="255">
                     <template #default="scope">
                       <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'csv')">删除</el-button>
+                      <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
                       <el-switch v-model="scope.row.cut" @change="(val) => cutFile(val, scope.row.id)" inline-prompt active-text="切分" inactive-text="不切分"/>
                     </template>
                   </el-table-column>
@@ -84,9 +86,10 @@
                           :row-style="{height: '20px'}">
                   <el-table-column :resizable="false" prop="name" label="文件名" />
                   <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
-                  <el-table-column :resizable="false" label="操作" width="220">
+                  <el-table-column :resizable="false" label="操作" width="255">
                     <template #default="scope">
                       <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'jar')">删除</el-button>
+                      <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -208,28 +211,37 @@
         if(type == 'jmx') {
           for (let i = 0; i < jmxTable.value.length; i++) {
             if(jmxTable.value[i].id == id) {
-              jmxTable.value.splice(i, 1);
+              jmxTable.value.splice(i, 1)
             }
           }
         } else if(type == 'csv') {
           for (let i = 0; i < csvTable.value.length; i++) {
             if(csvTable.value[i].id == id) {
-              csvTable.value.splice(i, 1);
+              csvTable.value.splice(i, 1)
             }
           }
         } else if(type == 'jar') {
           for (let i = 0; i < jarTable.value.length; i++) {
             if(jarTable.value[i].id == id) {
-              jarTable.value.splice(i, 1);
+              jarTable.value.splice(i, 1)
             }
           }
         }
       }
 
+      const downloadFile = (url) => {
+        let link = document.createElement('a')
+        link.style.display = 'none'
+        link.href = url
+        document.body.appendChild(link)
+        link.click()
+      }
+
+
       const setFileStr = () => {
-        jcase.jmx = jmxTable.value.map(element => element.id).join(',');
-        jcase.csv = csvTable.value.map(element => element.id).join(',');
-        jcase.jar = jarTable.value.map(element => element.id).join(',');
+        jcase.jmx = jmxTable.value.map(element => element.id).join(',')
+        jcase.csv = csvTable.value.map(element => element.id).join(',')
+        jcase.jar = jarTable.value.map(element => element.id).join(',')
       }
   
       const getjcase = async () => {
@@ -302,6 +314,7 @@
         setFileStr,
         loading,
         cutFile,
+        downloadFile,
       }
     },
   }

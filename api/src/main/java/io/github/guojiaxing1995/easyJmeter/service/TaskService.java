@@ -17,4 +17,8 @@ public interface TaskService {
     TaskDO getTaskById(Integer id);
 
     Map<String, List<CutFileVO>> cutCsv(TaskDO taskDO);
+
+    TaskDO getTaskByTaskId(String taskId);
+
+    boolean stopTask(String taskId);
 }

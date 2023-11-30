@@ -31,14 +31,23 @@
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
         <result column="delete_time" jdbcType="TIMESTAMP" property="deleteTime"/>
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
+        <result column="task_result" property="taskResult" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
     </resultMap>
 
     <select id="selectAll" resultMap="SearchResultMap">
-        SELECT c.*, p.name as project_name, lu.nickname
+        SELECT c.*, p.name as project_name, lu.nickname, t2.result AS task_result, t2.task_id AS task_id
         FROM `case` c
-            LEFT JOIN project p on c.project = p.id
-            LEFT JOIN lin_user lu on lu.id = c.creator
-        WHERE c.delete_time IS NULL
+                 LEFT JOIN project p ON c.project = p.id
+                 LEFT JOIN lin_user lu ON lu.id = c.creator
+                 LEFT JOIN (
+            SELECT jmeter_case, MAX(create_time) AS max_create_time
+            FROM task
+            WHERE delete_time IS NULL
+            GROUP BY jmeter_case
+        ) t1 ON t1.jmeter_case = c.id
+                 LEFT JOIN task t2 ON t1.jmeter_case = t2.jmeter_case AND t1.max_create_time = t2.create_time
+        WHERE c.delete_time IS NULL;
     </select>
 
     <select id="selectByProject" resultMap="BaseResultMap">

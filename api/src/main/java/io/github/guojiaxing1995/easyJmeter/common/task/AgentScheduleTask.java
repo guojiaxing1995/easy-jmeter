@@ -32,7 +32,7 @@ public class AgentScheduleTask {
     @Scheduled(cron = "${cron.heartBeat:0 0/1 * * * ? }")
     public void heartBeat() throws JsonProcessingException {
         log.info("心跳");
-        JmeterExternal jmeterExternal = new JmeterExternal();
+        JmeterExternal jmeterExternal = new JmeterExternal(socket);
         HeartBeatMachineDTO heartBeatMachineDTO = new HeartBeatMachineDTO(null,jmeterExternal.getAddress(),jmeterExternal.getPath(),jmeterExternal.getVersion(), true);
         String heartBeat = new ObjectMapper().writeValueAsString(heartBeatMachineDTO);
         socket.emit("heartBeat", heartBeat);

@@ -1,7 +1,10 @@
 package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
+import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.socket.client.Socket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jmeter.config.CSVDataSet;
@@ -36,7 +39,10 @@ public class JmeterExternal {
 
     private Boolean isOnline;
 
-    public JmeterExternal() {
+    private final Socket socket;
+
+    public JmeterExternal(Socket socket) {
+        this.socket = socket;
         this.path = System.getenv("JMETER_HOME");
         this.version();
         this.ipAddress();
@@ -220,6 +226,13 @@ public class JmeterExternal {
                     if (report.exists() && ThreadUtil.isProcessContainingName(taskDO.getTaskId()+".jmx")) {
                         ThreadUtil.killProcessContainingName(taskDO.getTaskId()+".jmx");
                     }
+                    // 向主节点发送进度
+                    Integer machineProcess = this.getMachineProcess(line, taskDO);
+                    if (machineProcess !=0 && !Thread.currentThread().isInterrupted()) {
+                        TaskProgressMachineDTO taskProgressMachineDTO = new TaskProgressMachineDTO(taskDO.getTaskId(), this.getAddress(), machineProcess);
+                        String taskProgressMachine = new ObjectMapper().writeValueAsString(taskProgressMachineDTO);
+                        socket.emit("machineTaskProgress", taskProgressMachine);
+                    }
                     log.info(line);
                 }
             }
@@ -229,5 +242,27 @@ public class JmeterExternal {
             log.error("执行jmeter失败", e);
         }
         log.info(outputString.toString());
+    }
+
+    public Integer getMachineProcess(String line, TaskDO taskDO) {
+        String pattern = "\\d{2}:(\\d{2}):(\\d{2})"; // 正则表达式用于匹配时分秒格式
+        Pattern r = Pattern.compile(pattern);
+        if (!line.contains("summary =")) {
+            return 0;
+        }
+        Matcher m = r.matcher(line);
+        if (m.find()) {
+            String time = m.group(0); // 完整匹配结果，即 "00:00:05"
+            String[] parts = time.split(":"); // 使用冒号分割时分秒
+            int hour = Integer.parseInt(parts[0]); // 小时
+            int minute = Integer.parseInt(parts[1]); // 分钟
+            int second = Integer.parseInt(parts[2]); // 秒
+
+            int totalSeconds = hour * 3600 + minute * 60 + second; // 转换为总秒数
+            return Math.round(((float) totalSeconds /taskDO.getDuration())*100);
+
+        } else {
+            return 0;
+        }
     }
 }

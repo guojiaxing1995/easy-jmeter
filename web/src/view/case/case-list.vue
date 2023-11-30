@@ -18,10 +18,16 @@
           </div>
           <div class="line">
             <div class="progress">
-              <el-progress :text-inside="true" :stroke-width="23" :percentage="70" color="#375fcc" striped striped-flow :duration="10"/>
+              <el-progress :text-inside="true" :stroke-width="23" :duration="60"
+              :percentage=getProgressNum(item.task_progress)
+              :color=getProgressColor(item) 
+              :striped=setProgressStriped(item)
+              striped-flow>
+                <span>{{item.status.desc}}</span>
+              </el-progress>
             </div>
             <div class="line-icon">
-              <i class="iconfont icon-stop"></i>
+              <i class="iconfont icon-stop" @click.stop="handleStop(item.task_id)"></i>
               <i class="iconfont icon-config"></i>
             </div>
           </div>
@@ -44,7 +50,7 @@
   
   <script>
     import Utils from 'lin/util/util'
-    import { onMounted, ref ,watch } from 'vue'
+    import { onMounted, ref, watch, inject } from 'vue'
     import { get,_delete } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import Case from './case'
@@ -66,10 +72,26 @@
         const casesRes = ref([])
         const taskVisible = ref(false)
         const taskCaseId = ref(null)
+        const socketio = inject('socketio')
   
         onMounted(() => {
             getProjects()
             getCases()
+        })
+
+        socketio.on('taskProgress', (data) => {
+          console.log('Received data:', data)
+          for (let i = 0; i < cases.value.length; i++) {
+            if (cases.value[i].task_id === data.taskId) {
+              cases.value[i].status = data.status
+              if (data.status.value === 2) {
+                cases.value[i].task_progress = data.taskProgress
+              } else {
+                cases.value[i].task_progress = {'':100}
+              }
+            }
+          }
+          searchCases()
         })
 
         const getProjects = async () => {
@@ -127,6 +149,7 @@
         const closeTask = () => {
           taskVisible.value = false
           taskCaseId.value = null
+          getCases()
         }
 
         const handleDelete = id => {
@@ -143,6 +166,18 @@
           })
         }
 
+        const handleStop = taskId => {
+          let res
+          ElMessageBox.confirm('此操作将停止该用例的执行, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }).then(async () => {
+            res = await get(`/v1/task/stop/`, { taskId: taskId }, { showBackend: true })
+            res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
+          })
+        }
+
         const _debounce =Utils.debounce(()=>{
           searchCases()
         }, 800)
@@ -154,7 +189,49 @@
         watch(projectId, () => {
           _debounce()
         })
-  
+
+        const getProgressColor = c => {
+          switch (c.status.value) {
+            case 0:
+              return '#5698c3'
+            case 1:
+              return '#f1ca17'
+            case 2:
+              return '#96c24e'
+            case 3:
+              return '#ffa60f'
+            case 4:
+              return '#5e616d'
+            case 5:
+              return '#ce5777'
+          }
+        }
+
+        const getProgressNum = progress => {
+          if (progress == null) {
+            return 100
+          } else {
+            return Math.min(...Object.values(progress))
+          }
+        }
+
+        const setProgressStriped = c => {
+          switch (c.status.value) {
+            case 0:
+              return false
+            case 1:
+              return true
+            case 2:
+              return true
+            case 3:
+              return true
+            case 4:
+              return true
+            case 5:
+              return true
+          }
+        }
+
         return {
           cases,
           loading,
@@ -173,6 +250,10 @@
           taskCaseId,
           executeCase,
           closeTask,
+          getProgressColor,
+          getProgressNum,
+          setProgressStriped,
+          handleStop,
       }
   
       },
@@ -215,10 +296,10 @@
     .case {
       width: calc(50% - 32px);
       margin: 15px;
-      border: 1px solid #1177b0;
       border-radius: 5px;
-      background-color: #f5faff;
       box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
+      background-color: #f5faff;
+      border: 1px solid #f5faff;
 
       .line {
         height: 45px;

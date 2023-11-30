@@ -41,7 +41,7 @@ public class CollectLink extends Thread implements LinkStrategy {
     public Boolean reportSuccess() throws JsonProcessingException {
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal(socket).getAddress());
         taskMachineDTO.setResult(true);
         String message = new ObjectMapper().writeValueAsString(taskMachineDTO);
         socket.emit("collectFinish", message);
@@ -53,7 +53,7 @@ public class CollectLink extends Thread implements LinkStrategy {
         // 发送失败消息
         TaskMachineDTO taskMachineDTO = new TaskMachineDTO();
         taskMachineDTO.setTaskDO(taskDO);
-        taskMachineDTO.setMachineIp(new JmeterExternal().getAddress());
+        taskMachineDTO.setMachineIp(new JmeterExternal(socket).getAddress());
         taskMachineDTO.setResult(false);
         taskMachineDTO.setStatus(JmeterStatusEnum.COLLECT.getValue());
         try {

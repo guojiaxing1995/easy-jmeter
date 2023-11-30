@@ -12,7 +12,7 @@ import App from '@/app.vue'
 import store from '@/store'
 import router from '@/router'
 
-import SocketIO from '@/store/socket'
+import SocketIO from "socket.io-client"
 
 import LinNotify from '@/component/notify'
 import LIcon from '@/component/base/icon/lin-icon'
@@ -34,15 +34,13 @@ app.use(LinNotify, {
   reconnectionDelay: 3000,
 })
 
-app.use(SocketIO, {
-  connection: process.env.VUE_APP_SOCKETIO_URL,
-  options: {
-    query: {
-      "client-type": "web"
-    }
+const socketio = SocketIO(process.env.VUE_APP_SOCKETIO_URL, {
+  query: {
+    "client-type": "web"
   }
 })
-
+app.component(socketio)
+app.provide('socketio', socketio)
 // base 组件注册
 app.component('l-icon', LIcon)
 app.component('sticky-top', StickyTop)

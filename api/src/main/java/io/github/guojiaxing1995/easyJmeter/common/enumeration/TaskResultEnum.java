@@ -3,6 +3,8 @@ package io.github.guojiaxing1995.easyJmeter.common.enumeration;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.baomidou.mybatisplus.annotation.IEnum;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.github.guojiaxing1995.easyJmeter.common.serializer.TaskResultEnumSerializer;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
+@JsonSerialize(using = TaskResultEnumSerializer.class)
 public enum TaskResultEnum implements IEnum<Integer> {
     IN_PROGRESS(0, "进行中"),
     SUCCESS(1, "成功"),
@@ -42,5 +45,16 @@ public enum TaskResultEnum implements IEnum<Integer> {
             list.add(map);
         }
         return list;
+    }
+
+    // 根据 value 和 desc 创建枚举实例的静态方法
+    public static TaskResultEnum fromValueAndDesc(int value, String desc) {
+        for (TaskResultEnum enumValue : TaskResultEnum.values()) {
+            if (enumValue.value == value && enumValue.desc.equals(desc)) {
+                return enumValue;
+            }
+        }
+        // 如果没有匹配的枚举值，你可以根据情况返回默认值或者抛出异常
+        throw new IllegalArgumentException("No matching enum value for value: " + value + " and desc: " + desc);
     }
 }
