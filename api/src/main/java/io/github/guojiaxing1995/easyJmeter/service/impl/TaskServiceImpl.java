@@ -225,14 +225,34 @@ public class TaskServiceImpl implements TaskService {
         updateTaskResult(taskDO, TaskResultEnum.EXCEPTION);
 
         // 如果没有发送过终止消息，向所有agent发送消息进行终止和进入下一环节
-        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + caseDO.getStatus()) == null){
-            caffeineCache.put(taskDO.getTaskId() + "_" + caseDO.getStatus(), "taskInterrupt");
-            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", new TaskMachineDTO(taskDO, null, false, caseDO.getStatus().getValue()));
+        synchronized (this) {
+            if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + caseDO.getStatus()) == null) {
+                caffeineCache.put(taskDO.getTaskId() + "_" + caseDO.getStatus(), "taskInterrupt");
+                socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", new TaskMachineDTO(taskDO, null, false, caseDO.getStatus().getValue()));
+            }
         }
 
         // 向web端报告进度
         TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.EXCEPTION);
         socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
+
+        return true;
+    }
+
+    @Override
+    public boolean modifyQPSLimit(String taskId, Integer qpsLimit) {
+        TaskDO taskDO = getTaskByTaskId(taskId);
+        if (taskDO == null) {
+            throw new ParameterException(12305);
+        }
+        CaseDO caseDO = caseMapper.selectById(taskDO.getJmeterCase());
+        if (caseDO.getStatus() != JmeterStatusEnum.RUN) {
+            throw new ParameterException(12306);
+        }
+        taskDO.setQpsLimit(qpsLimit);
+        taskMapper.updateById(taskDO);
+
+        socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("modifyQPSLimit", taskDO);
 
         return true;
     }

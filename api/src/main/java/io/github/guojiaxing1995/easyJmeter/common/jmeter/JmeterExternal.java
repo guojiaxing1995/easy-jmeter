@@ -9,10 +9,15 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jmeter.config.CSVDataSet;
 import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.threads.SetupThreadGroup;
+import org.apache.jmeter.timers.ConstantThroughputTimer;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.SearchByClass;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
 import java.io.*;
 import java.net.Inet4Address;
@@ -29,6 +34,8 @@ import java.util.regex.Pattern;
 
 @Data
 @Slf4j
+@Configuration
+@ConfigurationProperties(prefix = "jmeter")
 public class JmeterExternal {
 
     private String version;
@@ -147,7 +154,11 @@ public class JmeterExternal {
     }
 
     public void addProperties() {
+        // 依赖jar
         this.setProperties("plugin_dependency_paths=../tmp/dependencies/;");
+        // BeanShell Server properties
+        this.setProperties("beanshell.server.port=38927");
+        this.setProperties("beanshell.server.file=../extras/startup.bsh");
     }
 
     public void initJMeterUtils() {
@@ -194,10 +205,23 @@ public class JmeterExternal {
                 setupThreadGroup.getSamplerController().setProperty("LoopController.loops", -1);
             }
 
+            // 添加常数吞吐量定时器
+            int qpsLimit = taskDO.getQpsLimit() ==0 ?  999999999 : taskDO.getQpsLimit();
+            ConstantThroughputTimer constantThroughputTimer = new ConstantThroughputTimer();
+            constantThroughputTimer.setName("Constant Throughput Timer");
+            constantThroughputTimer.setEnabled(true);
+            constantThroughputTimer.setCalcMode(1);
+            constantThroughputTimer.setProperty(new StringProperty(TestElement.GUI_CLASS, "TestBeanGUI"));
+            constantThroughputTimer.setProperty(new StringProperty(TestElement.TEST_CLASS, "ConstantThroughputTimer"));
+            String throughput = "${__jexl3(${__P(throughput, "+ qpsLimit +")}*60,)}";
+            constantThroughputTimer.setProperty("throughput", throughput);
+
+            testPlanTree.add(testPlanTree.getArray()[0], constantThroughputTimer);
+
+
             try (FileOutputStream outputStream = new FileOutputStream(new File(this.path + "/tmp/" +taskDO.getTaskId() +".jmx"))) {
                 SaveService.saveTree(testPlanTree, outputStream);
             }
-
         }
     }
 
@@ -263,6 +287,47 @@ public class JmeterExternal {
 
         } else {
             return 0;
+        }
+    }
+
+    public String createBshFile() {
+        String setPropStr = "import org.apache.jmeter.util.JMeterUtils;\n" +
+                "setProp(p,v){\n" +
+                "    JMeterUtils.getJMeterProperties().setProperty(p, v);\n" +
+                "}\n" +
+                "setProp(args[0], args[1]);";
+        String filePath = Paths.get(this.path, "/tmp/setProp.bsh").toString();
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            writer.write(setPropStr);
+        } catch (IOException e) {
+            log.error("createBshFile", e);
+            throw new RuntimeException(e);
+        }
+        return filePath;
+    }
+
+    public void modifyQPSLimit(TaskDO taskDO) {
+        String clientJarPath = Paths.get(this.path, "/lib/bshclient.jar").toString();
+        Integer qpsLimit = taskDO.getQpsLimit();
+        if (taskDO.getQpsLimit() == 0) {
+            qpsLimit = 999999999;
+        }
+        String bshPath = this.createBshFile();
+        ProcessBuilder processBuilder =
+                new ProcessBuilder("java", "-jar", clientJarPath, "localhost", "38927", bshPath, "throughput", String.valueOf(qpsLimit));
+        processBuilder.environment().putAll(System.getenv());
+        log.info("调节吞吐量:"+"java"+ "-jar"+ clientJarPath+ "localhost"+ 38927+ bshPath+ "throughput"+ qpsLimit.toString());
+        try {
+            Process process = processBuilder.start();
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    log.info(line);
+                }
+            }
+            int exitCode = process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            log.error("调节吞吐量失败", e);
         }
     }
 }

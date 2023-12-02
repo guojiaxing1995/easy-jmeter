@@ -21,4 +21,6 @@ public interface TaskService {
     TaskDO getTaskByTaskId(String taskId);
 
     boolean stopTask(String taskId);
+
+    boolean modifyQPSLimit(String taskId, Integer qpsLimit);
 }

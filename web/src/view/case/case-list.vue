@@ -33,7 +33,6 @@
           </div>
           <div class="line">
             <div class="line-icon">
-              <i class="iconfont icon-clear"></i>
               <i class="iconfont icon-start" @click.stop="executeCase(item.id)"></i>
               <i class="iconfont icon-debug"></i>
               <i class="iconfont icon-modify" @click.stop="handleEdit(item.id)"></i>
@@ -51,7 +50,7 @@
   <script>
     import Utils from 'lin/util/util'
     import { onMounted, ref, watch, inject } from 'vue'
-    import { get,_delete } from '@/lin/plugin/axios'
+    import { get,put,_delete } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import Case from './case'
     import Task from './task'
@@ -173,7 +172,7 @@
             cancelButtonText: '取消',
             type: 'warning',
           }).then(async () => {
-            res = await get(`/v1/task/stop/`, { taskId: taskId }, { showBackend: true })
+            res = await put(`/v1/task/stop/`, { taskId: taskId }, { showBackend: true })
             res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
           })
         }

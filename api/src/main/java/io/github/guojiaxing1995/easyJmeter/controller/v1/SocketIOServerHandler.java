@@ -273,9 +273,11 @@ public class SocketIOServerHandler {
         TaskDO task = taskService.getTaskById(taskDO.getId());
         taskService.updateTaskResult(task, TaskResultEnum.EXCEPTION);
         // 如果没有发送过终止消息，向所有agent发送消息进行终止和进入下一环节
-        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus())) == null){
-            caffeineCache.put(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), "taskInterrupt");
-            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
+        synchronized (this) {
+            if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus())) == null) {
+                caffeineCache.put(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), "taskInterrupt");
+                socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
+            }
         }
         // 向web端报告进度
         TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.EXCEPTION);
@@ -286,12 +288,14 @@ public class SocketIOServerHandler {
     public void cutCsv(SocketIOClient client, String message) {
         TaskDO taskDO = DeserializerObjectMapper.deserialize(message, TaskDO.class);
         // 如果是第一次收到指定task的切分，则进行文件切分
-        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_CUT" ) == null){
-            caffeineCache.put(taskDO.getTaskId() + "_CUT", true);
-            log.info("收到cutCsv:" + taskDO.getTaskId());
-            Map<String, List<CutFileVO>> machineDOCutFileVOListMap = taskService.cutCsv(taskDO);
-            MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO, false);
-            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
+        synchronized (this) {
+            if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_CUT") == null) {
+                caffeineCache.put(taskDO.getTaskId() + "_CUT", true);
+                log.info("收到cutCsv:" + taskDO.getTaskId());
+                Map<String, List<CutFileVO>> machineDOCutFileVOListMap = taskService.cutCsv(taskDO);
+                MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO, false);
+                socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
+            }
         }
     }
 

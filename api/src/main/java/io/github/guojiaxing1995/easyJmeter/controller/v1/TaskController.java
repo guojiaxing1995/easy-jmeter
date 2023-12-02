@@ -28,11 +28,19 @@ public class TaskController {
         return new CreatedVO(16);
     }
 
-    @GetMapping("/stop")
+    @PutMapping("/stop")
     @ApiOperation(value = "终止测试", notes = "手动终止测试")
     @LoginRequired
     public UpdatedVO stopTask(@RequestParam(value = "taskId", required = false, defaultValue = "") String taskId){
         taskService.stopTask(taskId);
         return new UpdatedVO(17);
+    }
+
+    @PutMapping("/modifyQPSLimit")
+    @ApiOperation(value = "修改测试中的qps限制", notes = "动态控制吞吐量")
+    public UpdatedVO modifyQPSLimit(@RequestParam(value = "taskId", required = false, defaultValue = "") String taskId,
+                                  @RequestParam(value = "qpsLimit", required = true) Integer qpsLimit){
+        taskService.modifyQPSLimit(taskId, qpsLimit);
+        return new UpdatedVO(18);
     }
 }

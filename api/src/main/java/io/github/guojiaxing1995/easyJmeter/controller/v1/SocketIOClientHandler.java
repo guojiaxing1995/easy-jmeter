@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CleanLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CollectLink;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.ConfigureLink;
@@ -36,6 +37,7 @@ public class SocketIOClientHandler {
         taskCollect();
         taskClean();
         taskInterrupt();
+        modifyQPSLimit();
     }
 
     private void eventListeners() {
@@ -144,6 +146,14 @@ public class SocketIOClientHandler {
             }
         });
 
+    }
+
+    private void modifyQPSLimit() {
+        socket.on("modifyQPSLimit", args -> {
+            TaskDO taskDO = DeserializerObjectMapper.deserialize(args[0].toString(), TaskDO.class);
+            log.info("收到修改QPS限制命令，任务编号：" + taskDO.getTaskId());
+            new JmeterExternal(socket).modifyQPSLimit(taskDO);
+        });
     }
 
 }
