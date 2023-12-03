@@ -25,6 +25,7 @@ public class CreateOrUpdateTaskDTO {
 
     private Integer rampTime;
 
+    @Min(message = "{task.qpsLimit.min}", value = 0)
     private Integer qpsLimit;
 
     private ArrayList<Integer> machine;

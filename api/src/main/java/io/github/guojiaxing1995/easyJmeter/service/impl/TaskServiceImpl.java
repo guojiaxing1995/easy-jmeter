@@ -10,6 +10,7 @@ import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
@@ -240,8 +241,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public boolean modifyQPSLimit(String taskId, Integer qpsLimit) {
-        TaskDO taskDO = getTaskByTaskId(taskId);
+    public boolean modifyQPSLimit(ModifyTaskDTO validator) {
+        TaskDO taskDO = getTaskByTaskId(validator.getTaskId());
         if (taskDO == null) {
             throw new ParameterException(12305);
         }
@@ -249,7 +250,7 @@ public class TaskServiceImpl implements TaskService {
         if (caseDO.getStatus() != JmeterStatusEnum.RUN) {
             throw new ParameterException(12306);
         }
-        taskDO.setQpsLimit(qpsLimit);
+        taskDO.setQpsLimit(validator.getQpsLimit());
         taskMapper.updateById(taskDO);
 
         socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("modifyQPSLimit", taskDO);

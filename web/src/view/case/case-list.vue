@@ -27,13 +27,13 @@
               </el-progress>
             </div>
             <div class="line-icon">
-              <i class="iconfont icon-stop" @click.stop="handleStop(item.task_id)"></i>
-              <i class="iconfont icon-config"></i>
+              <i class="iconfont icon-start" @click.stop="executeCase(item.id)"></i>
+              <i class="iconfont icon-config" @click.stop="modifyQPSLimit(item.task_id, item.qps_limit)"></i>
             </div>
           </div>
           <div class="line">
             <div class="line-icon">
-              <i class="iconfont icon-start" @click.stop="executeCase(item.id)"></i>
+              <i class="iconfont icon-stop" @click.stop="handleStop(item.task_id)"></i>
               <i class="iconfont icon-debug"></i>
               <i class="iconfont icon-modify" @click.stop="handleEdit(item.id)"></i>
               <i class="iconfont icon-remove" @click.stop="handleDelete(item.id)"></i>
@@ -43,6 +43,7 @@
         </div>
       </div>
       <task :taskVisible="taskVisible" :caseId="taskCaseId" @taskClose="closeTask"></task>
+      <qps-limit :qpsLimitVisible="qpsLimitVisible" :taskId="taskId" @qpsLimitDialogClose="closeQPSLimit"></qps-limit>
     </div>
     <case v-else @editClose="editClose" :editCaseId="editCaseId" :projects="projects"></case>
   </template>
@@ -54,11 +55,13 @@
     import { ElMessageBox, ElMessage } from 'element-plus'
     import Case from './case'
     import Task from './task'
+    import QpsLimit from './qps-limit'
   
     export default {
       components: {
         Case,
-        Task
+        Task,
+        QpsLimit
       },
       setup() {
         const showEdit = ref(false)
@@ -70,7 +73,9 @@
         const projectId = ref('')
         const casesRes = ref([])
         const taskVisible = ref(false)
+        const qpsLimitVisible = ref(false)
         const taskCaseId = ref(null)
+        const taskId = ref('')
         const socketio = inject('socketio')
   
         onMounted(() => {
@@ -145,10 +150,20 @@
           taskCaseId.value = id
         }
 
+        const modifyQPSLimit = (id) => {
+          qpsLimitVisible.value = true
+          taskId.value = id
+        }
+
         const closeTask = () => {
           taskVisible.value = false
           taskCaseId.value = null
           getCases()
+        }
+
+        const closeQPSLimit = () => {
+          qpsLimitVisible.value = false
+          taskId.value = null
         }
 
         const handleDelete = id => {
@@ -246,13 +261,17 @@
           handleEdit,
           handleDelete,
           taskVisible,
+          qpsLimitVisible,
           taskCaseId,
+          taskId,
           executeCase,
+          modifyQPSLimit,
           closeTask,
           getProgressColor,
           getProgressNum,
           setProgressStriped,
           handleStop,
+          closeQPSLimit,
       }
   
       },

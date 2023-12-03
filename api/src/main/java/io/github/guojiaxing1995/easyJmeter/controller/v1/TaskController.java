@@ -1,6 +1,8 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.CreatedVO;
 import io.github.guojiaxing1995.easyJmeter.vo.UpdatedVO;
@@ -38,9 +40,14 @@ public class TaskController {
 
     @PutMapping("/modifyQPSLimit")
     @ApiOperation(value = "修改测试中的qps限制", notes = "动态控制吞吐量")
-    public UpdatedVO modifyQPSLimit(@RequestParam(value = "taskId", required = false, defaultValue = "") String taskId,
-                                  @RequestParam(value = "qpsLimit", required = true) Integer qpsLimit){
-        taskService.modifyQPSLimit(taskId, qpsLimit);
+    public UpdatedVO modifyQPSLimit(@RequestBody @Validated ModifyTaskDTO validator){
+        taskService.modifyQPSLimit(validator);
         return new UpdatedVO(18);
+    }
+
+    @GetMapping("/{taskId}")
+    @ApiOperation(value = "获取一个任务的任务详情", notes = "根据任务taskId获取详情")
+    public TaskDO getTaskById(@PathVariable String taskId){
+        return taskService.getTaskByTaskId(taskId);
     }
 }
