@@ -24,8 +24,10 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -206,7 +208,7 @@ public class JmeterExternal {
             }
 
             // 添加常数吞吐量定时器
-            int qpsLimit = taskDO.getQpsLimit() ==0 ?  999999999 : taskDO.getQpsLimit();
+            int qpsLimit = taskDO.getQpsLimit() ==0 ?  999999999 : Math.round((float) taskDO.getQpsLimit() /taskDO.getMachineNum());
             ConstantThroughputTimer constantThroughputTimer = new ConstantThroughputTimer();
             constantThroughputTimer.setName("Constant Throughput Timer");
             constantThroughputTimer.setEnabled(true);
@@ -308,15 +310,16 @@ public class JmeterExternal {
 
     public void modifyQPSLimit(TaskDO taskDO) {
         String clientJarPath = Paths.get(this.path, "/lib/bshclient.jar").toString();
-        Integer qpsLimit = taskDO.getQpsLimit();
+        Integer qpsLimit;
         if (taskDO.getQpsLimit() == 0) {
             qpsLimit = 999999999;
+        } else {
+            qpsLimit = Math.round((float) taskDO.getQpsLimit() /taskDO.getMachineNum());
         }
         String bshPath = this.createBshFile();
         ProcessBuilder processBuilder =
                 new ProcessBuilder("java", "-jar", clientJarPath, "localhost", "38927", bshPath, "throughput", String.valueOf(qpsLimit));
         processBuilder.environment().putAll(System.getenv());
-        log.info("调节吞吐量:"+"java"+ "-jar"+ clientJarPath+ "localhost"+ 38927+ bshPath+ "throughput"+ qpsLimit.toString());
         try {
             Process process = processBuilder.start();
             try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
@@ -329,5 +332,16 @@ public class JmeterExternal {
         } catch (IOException | InterruptedException e) {
             log.error("调节吞吐量失败", e);
         }
+    }
+
+    public void clean(TaskDO taskDO) throws IOException {
+        // 如果测试进程仍然存在，则杀掉进程
+        if (ThreadUtil.isProcessContainingName(taskDO.getTaskId()+".jmx")) {
+            ThreadUtil.killProcessContainingName(taskDO.getTaskId()+".jmx");
+        }
+        // 将tmp目录重命名为任务目录
+        Path tmpPath = Paths.get(this.path, "tmp");
+        Path taskPath = Paths.get(this.path, taskDO.getTaskId());
+        Files.move(tmpPath, taskPath, StandardCopyOption.REPLACE_EXISTING);
     }
 }

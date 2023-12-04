@@ -2,7 +2,7 @@
     <el-dialog v-model="qpsLimitVisible" title="动态控量" width="35%" :close-on-click-modal=false @close="closeDialog"> 
       <el-form :model="qpsLimitModel" ref="form" @submit.prevent :rules="rules">
         <el-form-item label="QPS限制" label-width="180px" prop="qps_limit">
-          <el-input-number v-model="qpsLimitModel.qpsLimit" :min="0" size="large"/>
+          <el-input-number v-model="qpsLimitModel.qps_limit" :min="0" size="large"/>
           <div class="unit">0代表不限</div>
         </el-form-item>
       </el-form>
@@ -36,11 +36,11 @@
       setup(props, context) {
         const form = ref(null)
         const task = ref({})
-        const qpsLimitModel = reactive({ qpsLimit:0,taskId:'' })
+        const qpsLimitModel = reactive({ qps_limit:0,task_id:'' })
         const closeDialog = () => {
           context.emit('qpsLimitDialogClose')
-          qpsLimitModel.qpsLimit = 0
-          qpsLimitModel.taskId = ''
+          qpsLimitModel.qps_limit = 0
+          qpsLimitModel.task_id = ''
         }
 
         onUpdated(() => {
@@ -54,7 +54,7 @@
         const submitForm = async formName => {
           form.value.validate(async valid => {
             if (valid) {
-                qpsLimitModel.taskId = props.taskId;
+                qpsLimitModel.task_id = props.taskId;
               let res = {}
               res = await put('/v1/task/modifyQPSLimit', qpsLimitModel, { showBackend: true })
               context.emit('qpsLimitDialogClose')
@@ -71,7 +71,7 @@
           const res = await get(`/v1/task/${props.taskId}`, { showBackend: true })
           task.value = res
           if(res.result.value == 0) {
-            qpsLimitModel.qpsLimit = res.qps_limit
+            qpsLimitModel.qps_limit = res.qps_limit
           }
         }
   
