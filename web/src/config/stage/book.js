@@ -7,6 +7,7 @@ const bookRouter = {
   filePath: 'view/book/', // 文件路径
   order: null,
   inNav: true,
+  permission: ['图书管理'],
   children: [
     {
       title: '图书列表',

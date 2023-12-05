@@ -5,6 +5,7 @@ import pluginsConfig from './plugin'
 import projectConfig from './project'
 import machineConfig from './machine'
 import caseConfig from './case'
+import hiddenConfig from './hidden'
 
 // eslint-disable-next-line import/no-mutable-exports
 let homeRouter = [
@@ -26,7 +27,7 @@ let homeRouter = [
     filePath: 'view/log/log.vue',
     inNav: true,
     icon: 'iconfont icon-rizhiguanli',
-    order: 2,
+    order: 8,
     permission: ['查询所有日志'],
   },
   {
@@ -51,7 +52,8 @@ let homeRouter = [
   adminConfig,
   projectConfig,
   machineConfig,
-  caseConfig
+  caseConfig,
+  hiddenConfig
 ]
 
 // 接入插件

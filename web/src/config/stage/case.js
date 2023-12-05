@@ -5,8 +5,9 @@ const caseRouter = {
     type: 'view', // 类型: folder, tab, view
     icon: 'iconfont icon-caseStore',
     filePath: 'view/case/case-list.vue', // 文件路径
-    order: null,
+    order: 2,
     inNav: true,
+    permission: ['用例管理'],
   }
   
   export default caseRouter

@@ -16,8 +16,6 @@ import org.apache.jmeter.timers.ConstantThroughputTimer;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.SearchByClass;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 import java.io.*;
 import java.net.Inet4Address;
@@ -36,8 +34,6 @@ import java.util.regex.Pattern;
 
 @Data
 @Slf4j
-@Configuration
-@ConfigurationProperties(prefix = "jmeter")
 public class JmeterExternal {
 
     private String version;

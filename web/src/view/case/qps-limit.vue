@@ -1,18 +1,18 @@
-<template>
+  <template>
     <el-dialog v-model="qpsLimitVisible" title="动态控量" width="35%" :close-on-click-modal=false @close="closeDialog"> 
       <el-form :model="qpsLimitModel" ref="form" @submit.prevent :rules="rules">
         <el-form-item label="QPS限制" label-width="180px" prop="qps_limit">
           <el-input-number v-model="qpsLimitModel.qps_limit" :min="0" size="large"/>
-          <div class="unit">0代表不限</div>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button type="primary" @click="submitForm">
-            确定
-          </el-button>
-        </span>
-      </template>
+            <div class="unit">0代表不限</div>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button type="primary" @click="submitForm">
+              确定
+            </el-button>
+          </span>
+        </template>
     </el-dialog>
   </template>
   
@@ -109,23 +109,8 @@
   .unit {
     margin-left: 15px;
   }
-  .el-icon {
-    cursor: pointer;
-    margin-left: 5px;
-    color: #3963bc;
-  }
   ::v-deep .el-form-item__content {
     margin-bottom: 0;
-  }
-  ::v-deep .el-tag {
-    color: #3963bc;
-  }
-  ::v-deep .el-tag__close {
-    color: black;
-  }
-  
-  ::v-deep .el-select-dropdown.is-multiple .el-select-dropdown__item.selected {
-    color: #3963bc;
   }
   
   </style>

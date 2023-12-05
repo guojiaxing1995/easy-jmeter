@@ -38,6 +38,8 @@ public class BookController {
     }
 
     @GetMapping("")
+    @GroupRequired
+    @PermissionMeta(value = "图书管理", module = "图书")
     public List<BookDO> getBooks() {
         List<BookDO> books = bookService.findAll();
         return books;

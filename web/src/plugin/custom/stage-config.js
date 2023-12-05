@@ -7,6 +7,7 @@ const CustomRouter = {
   filePath: 'view/custom/',
   order: null,
   inNav: true,
+  permission: ['自定义组件'],
   children: [
     {
       title: 'multiple 多重输入',

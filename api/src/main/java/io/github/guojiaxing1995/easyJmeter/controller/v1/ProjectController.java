@@ -8,7 +8,9 @@ import io.github.guojiaxing1995.easyJmeter.service.ProjectService;
 import io.github.guojiaxing1995.easyJmeter.service.UserService;
 import io.github.guojiaxing1995.easyJmeter.vo.*;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
+import io.github.talelin.core.annotation.GroupRequired;
 import io.github.talelin.core.annotation.LoginRequired;
+import io.github.talelin.core.annotation.PermissionMeta;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,8 @@ public class ProjectController {
     @GetMapping("")
     @ApiOperation(value = "项目查询", notes = "根据项目名称查询项目")
     @LoginRequired
+    @GroupRequired
+    @PermissionMeta(value = "项目管理", module = "项目")
     public PageResponseVO<ProjectInfoVO> searchProject(@RequestParam(value = "name", required = false, defaultValue = "") String name,
                                             @RequestParam(value = "page", required = false, defaultValue = "0") Integer page){
         IPage<ProjectDO> projects = projectService.getProjectByName(page, name);

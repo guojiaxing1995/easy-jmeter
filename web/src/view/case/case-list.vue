@@ -4,14 +4,14 @@
         <div class="newBtn"><el-button type="primary" @click="handleCreate">新 增</el-button></div>
         <div class="search">
           <el-select v-model="projectId" placeholder="请选择工程" clearable filterable>
-            <el-option v-for="item in projects" :key="item.value" :label="item.name" :value="item.id"/>
+            <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id"/>
           </el-select>
           <el-input placeholder="请输入用例名称查询" v-model="name" clearable></el-input>
         </div>
       </div>
       <el-main v-if="loading" v-loading = "loading" element-loading-text="Loading..." element-loading-background="#F9FAFB" style="height: 600px;"/>
       <div class="list" v-else>
-        <div class="case" v-for="(item,index) in casesRes">
+        <div class="case" v-for="(item,index) in casesRes" @click.stop="handleDetail(item)">
           <div class="line line-name">
             <div class="name">{{item.name}}</div>
             <div class="last-run">{{item.creator}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{item.create_time}}</div>
@@ -51,6 +51,7 @@
   <script>
     import Utils from 'lin/util/util'
     import { onMounted, ref, watch, inject } from 'vue'
+    import { useRoute, useRouter } from "vue-router"
     import { get,put,_delete } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import Case from './case'
@@ -77,10 +78,13 @@
         const taskCaseId = ref(null)
         const taskId = ref('')
         const socketio = inject('socketio')
+        const route = useRoute()
+        const router = useRouter()
   
         onMounted(() => {
-            getProjects()
-            getCases()
+          history.replaceState({}, '', '/#'+route.path);
+          getProjects()
+          getCases()
         })
 
         socketio.on('taskProgress', (data) => {
@@ -99,6 +103,9 @@
         })
 
         const getProjects = async () => {
+          if (route.query.projectId) {
+            projectId.value = parseInt(route.query.projectId, 10)
+          }
           let res
           try {
             res = await get('/v1/project/all', { showBackend: true })
@@ -143,6 +150,13 @@
         const handleEdit = id => {
           showEdit.value = true
           editCaseId.value = id
+        }
+
+        const handleDetail = item => {
+          router.push({
+            path: '/case/detail',
+            state: {case: JSON.parse(JSON.stringify(item))}
+          })
         }
 
         const executeCase = id => {
@@ -272,6 +286,7 @@
           setProgressStriped,
           handleStop,
           closeQPSLimit,
+          handleDetail,
       }
   
       },

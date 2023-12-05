@@ -10,7 +10,9 @@ import io.github.guojiaxing1995.easyJmeter.vo.DeletedVO;
 import io.github.guojiaxing1995.easyJmeter.vo.PageResponseVO;
 import io.github.guojiaxing1995.easyJmeter.vo.UpdatedVO;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
+import io.github.talelin.core.annotation.GroupRequired;
 import io.github.talelin.core.annotation.LoginRequired;
+import io.github.talelin.core.annotation.PermissionMeta;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,8 @@ public class MachineController {
     @GetMapping("")
     @ApiOperation(value = "压力机查询", notes = "根据名称查询压力机")
     @LoginRequired
+    @GroupRequired
+    @PermissionMeta(value = "压力机管理", module = "压力机")
     public PageResponseVO<MachineDO> searchMachine(@RequestParam(value = "name", required = false, defaultValue = "") String name,
                                                        @RequestParam(value = "page", required = false, defaultValue = "0") Integer page){
         IPage<MachineDO> machines = machineService.getMachineByName(page, name);

@@ -5,8 +5,9 @@ const projectRouter = {
     type: 'view', // 类型: folder, tab, view
     icon: 'iconfont icon-project',
     filePath: 'view/project/project-list.vue', // 文件路径
-    order: null,
+    order: 4,
     inNav: true,
+    permission: ['项目管理'],
   }
   
   export default projectRouter

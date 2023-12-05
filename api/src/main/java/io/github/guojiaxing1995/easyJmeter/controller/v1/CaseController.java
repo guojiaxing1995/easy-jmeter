@@ -4,7 +4,9 @@ import io.github.guojiaxing1995.easyJmeter.dto.jcase.CreateOrUpdateCaseDTO;
 import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.service.CaseService;
 import io.github.guojiaxing1995.easyJmeter.vo.*;
+import io.github.talelin.core.annotation.GroupRequired;
 import io.github.talelin.core.annotation.LoginRequired;
+import io.github.talelin.core.annotation.PermissionMeta;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,8 @@ public class CaseController {
     @GetMapping("")
     @ApiOperation(value = "用例列表", notes = "返回所有用例")
     @LoginRequired
+    @GroupRequired
+    @PermissionMeta(value = "用例管理", module = "用例")
     public List<CaseInfoVO> getAllCases() {
         return caseService.getAll();
     }

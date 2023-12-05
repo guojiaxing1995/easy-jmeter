@@ -14,7 +14,7 @@
         <el-table-column prop="create_time" label="创建时间" width="230"></el-table-column>
         <el-table-column label="操作" fixed="right" width="265">
           <template #default="scope">
-            <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">用例</el-button>
+            <el-button plain size="small" type="primary" @click="handleCase(scope.row.id)">用例</el-button>
             <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>
             <el-button plain size="small" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
           </template>
@@ -32,6 +32,7 @@
 <script>
   import Utils from 'lin/util/util'
   import { onMounted, ref ,watch } from 'vue'
+  import { useRouter } from "vue-router"
   import { get,_delete } from '@/lin/plugin/axios'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import Project from './project'
@@ -47,6 +48,7 @@
       const pageData = ref({ total: 0, page: 0 })
       const loading = ref(false)
       const editProjectId = ref(null)
+      const router = useRouter()
 
       onMounted(() => {
         getProjects()
@@ -98,6 +100,10 @@
         editProjectId.value = id
       }
 
+      const handleCase = id => {
+        router.push({ path: '/case/list', query: { projectId: id } }) 
+      }
+
       const handleCreate = () => {
         showEdit.value = true
         editProjectId.value = null
@@ -124,6 +130,7 @@
         editClose,
         handleEdit,
         handleCreate,
+        handleCase,
     }
 
     },
