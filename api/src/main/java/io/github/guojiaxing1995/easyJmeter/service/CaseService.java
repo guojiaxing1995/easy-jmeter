@@ -18,7 +18,7 @@ public interface CaseService {
 
     boolean deleteCase(Integer id);
 
-    List<CaseInfoVO> getAll();
+    List<CaseInfoVO> selectCase(Integer id);
 
     CaseInfoPlusVO getCaseInfoById(Integer id);
 

@@ -33,8 +33,8 @@ public class TaskController {
     @PutMapping("/stop")
     @ApiOperation(value = "终止测试", notes = "手动终止测试")
     @LoginRequired
-    public UpdatedVO stopTask(@RequestParam(value = "taskId", required = false, defaultValue = "") String taskId){
-        taskService.stopTask(taskId);
+    public UpdatedVO stopTask(@RequestBody @Validated ModifyTaskDTO validator){
+        taskService.stopTask(validator.getTaskId());
         return new UpdatedVO(17);
     }
 

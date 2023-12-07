@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface CaseMapper extends BaseMapper<CaseDO> {
-    List<CaseInfoVO> selectAll();
+    List<CaseInfoVO> select(Integer id);
 
     List<CaseDO> selectByProject(Integer project);
 }

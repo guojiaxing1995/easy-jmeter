@@ -35,6 +35,7 @@ deepTravel(stageConfig, viewConfig => {
     permission: viewConfig.permission,
     type: viewConfig.type,
     blueBaseColor: viewConfig.blueBaseColor ? 'viewConfig.blueBaseColor' : '',
+    keepAlive: viewConfig.keepAlive,
   }
   homeRouter.push(viewRouter)
 })

@@ -51,12 +51,12 @@ public class CaseController {
     }
 
     @GetMapping("")
-    @ApiOperation(value = "用例列表", notes = "返回所有用例")
+    @ApiOperation(value = "用例列表", notes = "可根据id查询，id非必填")
     @LoginRequired
     @GroupRequired
     @PermissionMeta(value = "用例管理", module = "用例")
-    public List<CaseInfoVO> getAllCases() {
-        return caseService.getAll();
+    public List<CaseInfoVO> getCases(@RequestParam(value = "id", required = false, defaultValue = "") Integer id) {
+        return caseService.selectCase(id);
     }
 
     @GetMapping("/{id}")

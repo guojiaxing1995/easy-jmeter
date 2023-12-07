@@ -147,7 +147,7 @@ public class JFileServiceImpl implements JFileService {
     }
 
     @Override
-    public List<JFileDO> createFiles(Map<Integer, List<String>> fileMap) {
+    public List<JFileDO> createCsvCutFiles(Map<Integer, List<String>> fileMap) {
         Map.Entry<Integer, List<String>> entry = fileMap.entrySet().iterator().next();
         // 切分文件id
         Integer fid = entry.getKey();
@@ -160,17 +160,17 @@ public class JFileServiceImpl implements JFileService {
             try {
                 minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(new FileInputStream(file), file.length(), -1).build());
             } catch (Exception e) {
-                log.error("文件上传异常:" + e.toString());
+                log.error("上传切分文件异常:" + e);
             }
-            JFileDO jFileDO = new JFileDO();
-            jFileDO.setName(file.getName());
-            jFileDO.setPath("/" + bucketName + "/" + fileName);
-            jFileDO.setUrl(endpoint + "/" + bucketName + "/" + fileName);
-            jFileDO.setSize(file.length());
-            jFileDO.setType(file.getName().substring(file.getName().lastIndexOf(".")+1));
-            jFileDO.setOriginId(fid);
-            jFileMapper.insert(jFileDO);
-            JFileDO fileDO = jFileMapper.selectById(jFileDO.getId());
+            JFileDO cutfile = new JFileDO();
+            cutfile.setName(file.getName());
+            cutfile.setPath("/" + bucketName + "/" + fileName);
+            cutfile.setUrl(endpoint + "/" + bucketName + "/" + fileName);
+            cutfile.setSize(file.length());
+            cutfile.setType(file.getName().substring(file.getName().lastIndexOf(".")+1));
+            cutfile.setOriginId(fid);
+            jFileMapper.insert(cutfile);
+            JFileDO fileDO = jFileMapper.selectById(cutfile.getId());
             jFileDOS.add(fileDO);
         }
         return jFileDOS;
@@ -192,5 +192,29 @@ public class JFileServiceImpl implements JFileService {
         return false;
     }
 
+    @Override
+    public JFileDO createFile(String filePath) {
+        File file = new File(filePath);
+        String fileName = Instant.now().toEpochMilli() + "_" + file.getName();
+        try {
+            minioClient.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(new FileInputStream(file), file.length(), -1).build());
+        } catch (Exception e) {
+            log.error("文件上传异常:" + e);
+            throw new RuntimeException(e);
+        }
+        JFileDO jFileDO = new JFileDO();
+        jFileDO.setPath("/" + bucketName + "/" + fileName);
+        jFileDO.setName(file.getName());
+        jFileDO.setUrl(endpoint + "/" + bucketName + "/" + fileName);
+        jFileDO.setSize(file.length());
+        jFileDO.setType(file.getName().substring(file.getName().lastIndexOf(".")+1));
+        jFileMapper.insert(jFileDO);
+        return jFileMapper.selectById(jFileDO.getId());
+    }
+
+    @Override
+    public Boolean updateById(JFileDO jFileDO) {
+        return jFileMapper.updateById(jFileDO) > 0;
+    }
 
 }

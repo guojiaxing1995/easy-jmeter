@@ -1,9 +1,14 @@
 <template>
   <el-scrollbar class="container" tag="section">
     <div class="wrapper" id="wrapper">
-      <router-view v-slot="{ Component }" :key="$route.fullPath">
+      <router-view v-slot="{ Component }" >
         <transition appear name="fade-transform" mode="out-in">
-          <component :is="Component" />
+          <keep-alive>
+            <component :is="Component" :key="$route.fullPath" v-if="$route.meta.keepAlive"/>
+          </keep-alive>
+        </transition>
+        <transition appear name="fade-transform" mode="out-in">
+          <component :is="Component" :key="$route.fullPath" v-if="!$route.meta.keepAlive"/>
         </transition>
       </router-view>
     </div>

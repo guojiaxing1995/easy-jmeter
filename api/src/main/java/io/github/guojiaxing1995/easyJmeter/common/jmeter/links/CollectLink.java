@@ -7,6 +7,7 @@ import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.LinkStrategy;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,11 +16,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class CollectLink extends Thread implements LinkStrategy {
 
+    private final JFileService jFileService;
     private final Socket socket;
     private TaskDO taskDO;
 
-    public CollectLink(Socket socket) {
+    public CollectLink(Socket socket, JFileService jFileService) {
         this.socket = socket;
+        this.jFileService = jFileService;
     }
 
     @Override
@@ -31,8 +34,11 @@ public class CollectLink extends Thread implements LinkStrategy {
     public void run() {
         try {
             log.info("===" + this.taskDO.getTaskId() + "_" + JmeterStatusEnum.COLLECT.getDesc() + "===");
+            new JmeterExternal(socket).collect(this.taskDO, jFileService);
             this.reportSuccess();
         } catch (Exception e) {
+            log.error("收集环节发生" + e.getClass().getName() + "异常：" +e.getMessage() + "，任务ID：" + this.taskDO.getTaskId());
+            log.error("error", e);
             this.reportFail();
         }
     }

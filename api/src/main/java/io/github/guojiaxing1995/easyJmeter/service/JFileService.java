@@ -18,9 +18,14 @@ public interface JFileService {
 
     void downloadCutFile(List<CutFileVO> cutFileVOList, String dir);
 
-    List<JFileDO> createFiles(Map<Integer, List<String>> fileMp);
+    List<JFileDO> createCsvCutFiles(Map<Integer, List<String>> fileMp);
 
     JFileDO searchById(Integer id);
 
     Boolean needCut(String[] fileIds);
+
+    JFileDO createFile(String filePath);
+
+    Boolean updateById(JFileDO jFileDO);
+
 }

@@ -82,8 +82,8 @@ public class CaseServiceImpl implements CaseService {
     }
 
     @Override
-    public List<CaseInfoVO> getAll() {
-        List<CaseInfoVO> caseInfoVOS = caseMapper.selectAll();
+    public List<CaseInfoVO> selectCase(Integer id) {
+        List<CaseInfoVO> caseInfoVOS = caseMapper.select(id);
         for (CaseInfoVO caseInfoVO : caseInfoVOS) {
             if (caseInfoVO.getStatus() == JmeterStatusEnum.RUN) {
                 caseInfoVO.setTaskProgress((HashMap<String, Object>) caffeineCache.getIfPresent(caseInfoVO.getTaskId() + "_PROGRESS"));

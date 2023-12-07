@@ -88,7 +88,6 @@
         })
 
         socketio.on('taskProgress', (data) => {
-          console.log('Received data:', data)
           for (let i = 0; i < cases.value.length; i++) {
             if (cases.value[i].task_id === data.taskId) {
               cases.value[i].status = data.status
@@ -155,7 +154,7 @@
         const handleDetail = item => {
           router.push({
             path: '/case/detail',
-            state: {case: JSON.parse(JSON.stringify(item))}
+            state: {detail: {caseId: item.id, taskId: item.task_id}}
           })
         }
 
@@ -201,7 +200,7 @@
             cancelButtonText: '取消',
             type: 'warning',
           }).then(async () => {
-            res = await put(`/v1/task/stop/`, { taskId: taskId }, { showBackend: true })
+            res = await put(`/v1/task/stop/`, { task_id: taskId }, { showBackend: true })
             res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
           })
         }

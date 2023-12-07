@@ -3,7 +3,11 @@ package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
+import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.service.JFileService;
+import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import io.socket.client.Socket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +33,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -339,5 +344,47 @@ public class JmeterExternal {
         Path tmpPath = Paths.get(this.path, "tmp");
         Path taskPath = Paths.get(this.path, taskDO.getTaskId());
         Files.move(tmpPath, taskPath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    public void collect(TaskDO taskDO, JFileService jFileService) {
+        // 上传jmeter日志
+        File jmeterLogPath = new File(Paths.get(this.path, "tmp", "jmeter.log").toString());
+        File newLogPath = new File(Paths.get(this.path, "tmp", this.address+"_jmeter.log").toString());
+        boolean rename = jmeterLogPath.renameTo(newLogPath);
+        if (rename) {
+            JFileDO file = jFileService.createFile(newLogPath.getAbsolutePath());
+            file.setTaskId(taskDO.getTaskId());
+            jFileService.updateById(file);
+        }
+    }
+
+    public void downloadConfigFile(TaskDO taskDO, JFileService jFileService, MachineCutFileVO machineCutFileVO) {
+        String tmpDir = Paths.get(this.path, "tmp").toString();
+        String dependencyDir = Paths.get(this.path,"tmp", "dependencies").toString();
+        // 下载分配给本机的切分文件
+        if (machineCutFileVO.getMachineDOCutFileVOListMap() != null) {
+            Map<String, List<CutFileVO>> map = machineCutFileVO.getMachineDOCutFileVOListMap();
+            for (Map.Entry<String, List<CutFileVO>> entry : map.entrySet()) {
+                if (entry.getKey().equals(new JmeterExternal(socket).getAddress())) {
+                    jFileService.downloadCutFile(entry.getValue(), tmpDir);
+                }
+            }
+        }
+        // 下载无需切分的文件
+        String[] csvFileIds = (taskDO.getCsv() != null && !taskDO.getCsv().isEmpty()) ? taskDO.getCsv().split(",") : new String[]{};
+        for (String csvFileId : csvFileIds){
+            JFileDO jFileCsvDO = jFileService.searchById(Integer.valueOf(csvFileId));
+            if (!jFileCsvDO.getCut()){
+                jFileService.downloadFile(Integer.valueOf(csvFileId), tmpDir);
+            }
+        }
+        String[] jmxFileIds = (taskDO.getJmx() != null && !taskDO.getJmx().isEmpty()) ? taskDO.getJmx().split(",") : new String[]{};
+        for (String jmxFileId : jmxFileIds){
+            jFileService.downloadFile(Integer.valueOf(jmxFileId), tmpDir);
+        }
+        String[] jarFileIds = (taskDO.getJar()!= null &&!taskDO.getJar().isEmpty())? taskDO.getJar().split(",") : new String[]{};
+        for (String jarFileId : jarFileIds){
+            jFileService.downloadFile(Integer.valueOf(jarFileId), dependencyDir);
+        }
     }
 }

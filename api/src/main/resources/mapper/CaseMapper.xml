@@ -35,7 +35,7 @@
         <result column="task_result" property="taskResult" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
     </resultMap>
 
-    <select id="selectAll" resultMap="SearchResultMap">
+    <select id="select" resultMap="SearchResultMap">
         SELECT c.*, p.name as project_name, lu.nickname, t2.result AS task_result, t2.task_id AS task_id
         FROM `case` c
                  LEFT JOIN project p ON c.project = p.id
@@ -47,7 +47,10 @@
             GROUP BY jmeter_case
         ) t1 ON t1.jmeter_case = c.id
                  LEFT JOIN task t2 ON t1.jmeter_case = t2.jmeter_case AND t1.max_create_time = t2.create_time
-        WHERE c.delete_time IS NULL;
+        WHERE c.delete_time IS NULL
+        <if test="id !=null and id !=''">
+            AND c.id = #{id};
+        </if>
     </select>
 
     <select id="selectByProject" resultMap="BaseResultMap">

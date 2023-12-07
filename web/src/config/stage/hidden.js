@@ -1,6 +1,6 @@
 const hiddenRouter = {
     route: null,
-    name: null,
+    name: 'hidden',
     title: '',
     type: 'folder', // 类型: folder, tab, view
     icon: 'iconfont icon-iconset0103',
@@ -16,6 +16,7 @@ const hiddenRouter = {
         filePath: 'view/case/detail.vue',
         inNav: false,
         icon: 'iconfont icon-iconset0103',
+        keepAlive: true,
       },
     ],
   }

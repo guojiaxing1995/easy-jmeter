@@ -93,7 +93,7 @@ public class SocketIOClientHandler {
         socket.on("taskCollect", args -> {
             TaskDO taskDO = DeserializerObjectMapper.deserialize(args[0].toString(), TaskDO.class);
             log.info("收到收集命令，任务进入压测结果收集状态，任务编号：" + taskDO.getTaskId());
-            CollectLink collectLink = new CollectLink(socket);
+            CollectLink collectLink = new CollectLink(socket, jFileService);
             collectLink.setName(taskDO.getTaskId() + "_" + JmeterStatusEnum.COLLECT.getDesc());
             collectLink.setTask(taskDO);
             collectLink.start();
@@ -132,7 +132,7 @@ public class SocketIOClientHandler {
             } else if (taskMachineDTO.getStatus().equals(JmeterStatusEnum.RUN.getValue())) {
                 // 运行异常终止运行环节进入收集环节
                 ThreadUtil.interruptThread(runThreadName);
-                CollectLink collectLink = new CollectLink(socket);
+                CollectLink collectLink = new CollectLink(socket, jFileService);
                 collectLink.setName(collectThreadName);
                 collectLink.setTask(taskDO);
                 collectLink.start();

@@ -178,7 +178,7 @@ public class TaskServiceImpl implements TaskService {
                 String csvPath = jFileService.downloadFile(jFileDO.getId(), null);
                 CSVUtil csvUtil = new CSVUtil(csvPath, taskDO.getMachineNum(), jFileDO.getId());
                 Map<Integer, List<String>> fileMap = csvUtil.splitCSVFile();
-                List<JFileDO> cutFiles = jFileService.createFiles(fileMap);
+                List<JFileDO> cutFiles = jFileService.createCsvCutFiles(fileMap);
                 for (JFileDO cutFileDO: cutFiles) {
                     cutFileDO.setTaskId(taskDO.getTaskId());
                     jFileMapper.updateById(cutFileDO);
