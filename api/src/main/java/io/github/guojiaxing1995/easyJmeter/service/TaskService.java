@@ -5,6 +5,7 @@ import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.TaskInfoVO;
 
 import java.util.List;
 import java.util.Map;
@@ -24,5 +25,7 @@ public interface TaskService {
     boolean stopTask(String taskId);
 
     boolean modifyQPSLimit(ModifyTaskDTO validator);
+
+    TaskInfoVO getTaskInfo(String taskId);
 
 }

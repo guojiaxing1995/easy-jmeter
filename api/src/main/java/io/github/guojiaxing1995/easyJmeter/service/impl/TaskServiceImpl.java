@@ -17,9 +17,7 @@ import io.github.guojiaxing1995.easyJmeter.model.*;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
-import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
-import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
-import io.github.guojiaxing1995.easyJmeter.vo.TaskProgressVO;
+import io.github.guojiaxing1995.easyJmeter.vo.*;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +37,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private CaseMapper caseMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     private MachineMapper machineMapper;
@@ -201,8 +202,12 @@ public class TaskServiceImpl implements TaskService {
     public TaskDO getTaskByTaskId(String taskId) {
         QueryWrapper<TaskDO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("task_id", taskId);
+        TaskDO taskDO = taskMapper.selectOne(queryWrapper);
+        if (taskDO == null) {
+            throw new ParameterException(12307);
+        }
 
-        return taskMapper.selectOne(queryWrapper);
+        return taskDO;
     }
 
 
@@ -256,5 +261,46 @@ public class TaskServiceImpl implements TaskService {
         socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("modifyQPSLimit", taskDO);
 
         return true;
+    }
+
+    @Override
+    public TaskInfoVO getTaskInfo(String taskId) {
+        TaskDO taskDO = this.getTaskByTaskId(taskId);
+        String[] csvFileIds = (taskDO.getCsv() != null && !taskDO.getCsv().isEmpty()) ? taskDO.getCsv().split(",") : new String[]{};
+        List<JFileDO> csvFileList = new ArrayList<>();
+        for (String csvFileId : csvFileIds){
+            JFileDO jFileCsvDO = jFileService.searchById(Integer.valueOf(csvFileId));
+            if (jFileCsvDO!= null) {
+                csvFileList.add(jFileCsvDO);
+            }
+        }
+        String[] jmxFileIds = (taskDO.getJmx() != null && !taskDO.getJmx().isEmpty()) ? taskDO.getJmx().split(",") : new String[]{};
+        List<JFileDO> jmxFileList = new ArrayList<>();
+        for (String jmxFileId : jmxFileIds){
+            JFileDO jFileJmxDO = jFileService.searchById(Integer.valueOf(jmxFileId));
+            if (jFileJmxDO!= null) {
+                jmxFileList.add(jFileJmxDO);
+            }
+        }
+        String[] jarFileIds = (taskDO.getJar() != null && !taskDO.getJar().isEmpty()) ? taskDO.getJar().split(",") : new String[]{};
+        List<JFileDO> jarFileList = new ArrayList<>();
+        for (String jarFileId : jarFileIds){
+            JFileDO jFileJarDO = jFileService.searchById(Integer.valueOf(jarFileId));
+            if (jFileJarDO != null) {
+                jarFileList.add(jFileJarDO);
+            }
+        }
+        String[] machineIds = taskDO.getMachine().split(",");
+        List<MachineDO> machineList = new ArrayList<>();
+        for (String machineId : machineIds){
+            MachineDO machineDO = machineMapper.selectById(Integer.valueOf(machineId));
+            if (machineDO != null) {
+                machineList.add(machineDO);
+            }
+        }
+        CaseDO caseDO = caseMapper.selectById(taskDO.getJmeterCase());
+        UserDO userDO = userMapper.selectById(taskDO.getCreator());
+
+        return new TaskInfoVO(taskDO, caseDO, userDO, jmxFileList, csvFileList, jarFileList, machineList);
     }
 }

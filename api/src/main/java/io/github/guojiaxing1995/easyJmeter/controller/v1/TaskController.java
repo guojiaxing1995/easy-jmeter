@@ -5,6 +5,7 @@ import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.CreatedVO;
+import io.github.guojiaxing1995.easyJmeter.vo.TaskInfoVO;
 import io.github.guojiaxing1995.easyJmeter.vo.UpdatedVO;
 import io.github.talelin.core.annotation.LoginRequired;
 import io.swagger.annotations.Api;
@@ -46,8 +47,14 @@ public class TaskController {
     }
 
     @GetMapping("/{taskId}")
-    @ApiOperation(value = "获取一个任务的任务详情", notes = "根据任务taskId获取详情")
+    @ApiOperation(value = "获取一个任务", notes = "根据任务taskId获取任务")
     public TaskDO getTaskById(@PathVariable String taskId){
         return taskService.getTaskByTaskId(taskId);
+    }
+
+    @GetMapping("/info/{taskId}")
+    @ApiOperation(value = "获取一个任务的详细信息", notes = "根据任务taskId获取任务的详细信息")
+    public TaskInfoVO getTaskInfoById(@PathVariable String taskId){
+        return taskService.getTaskInfo(taskId);
     }
 }

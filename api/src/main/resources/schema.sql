@@ -302,6 +302,8 @@ CREATE TABLE `task` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
+CREATE INDEX idx_task_task_id ON task (task_id);
+
 -- ----------------------------
 -- 任务日志表
 -- ----------------------------
