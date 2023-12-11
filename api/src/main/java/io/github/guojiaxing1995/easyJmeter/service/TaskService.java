@@ -28,4 +28,6 @@ public interface TaskService {
 
     TaskInfoVO getTaskInfo(String taskId);
 
+    List<Map<String, Object>> getTaskLogByTaskId(String taskId);
+
 }

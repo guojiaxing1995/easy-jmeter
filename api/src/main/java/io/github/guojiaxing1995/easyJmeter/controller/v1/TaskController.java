@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/v1/task")
 @Api(tags = "任务管理")
@@ -56,5 +59,11 @@ public class TaskController {
     @ApiOperation(value = "获取一个任务的详细信息", notes = "根据任务taskId获取任务的详细信息")
     public TaskInfoVO getTaskInfoById(@PathVariable String taskId){
         return taskService.getTaskInfo(taskId);
+    }
+
+    @GetMapping("/log/{taskId}")
+    @ApiOperation(value = "获取任务日志", notes = "根据任务taskId获取一个任务的日志")
+    public List<Map<String, Object>> getTaskLogById(@PathVariable String taskId){
+        return taskService.getTaskLogByTaskId(taskId);
     }
 }

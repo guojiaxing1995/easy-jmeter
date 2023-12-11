@@ -136,6 +136,8 @@ public class TaskServiceImpl implements TaskService {
                 machineMapper.updateById(machineDO);
                 // 记录task日志
                 taskLogMapper.insert(new TaskLogDO(taskDO.getTaskId(),caseDO.getId(),JmeterStatusEnum.CONFIGURE,null,machineDO.getAddress(),machineDO.getId()));
+                // 向web端发送task日志
+                socketServer.getRoomOperations("web").sendEvent("taskLogs", this.getTaskLogByTaskId(taskDO.getTaskId()));
             }
             // 判断设置是否需要切分并设置切分状态
             Boolean needCut = (taskDO.getCsv() != null && !taskDO.getCsv().isEmpty()) ? jFileService.needCut(taskDO.getCsv().split(",")) : false;
@@ -302,5 +304,24 @@ public class TaskServiceImpl implements TaskService {
         UserDO userDO = userMapper.selectById(taskDO.getCreator());
 
         return new TaskInfoVO(taskDO, caseDO, userDO, jmxFileList, csvFileList, jarFileList, machineList);
+    }
+
+    @Override
+    public List<Map<String, Object>> getTaskLogByTaskId(String taskId) {
+        QueryWrapper<TaskLogDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("status as status, min(DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:%s')) as create_time").eq("task_id", taskId).groupBy("status");
+        List<Map<String, Object>> levelList = taskLogMapper.selectMaps(queryWrapper);
+        for (Map<String, Object> level : levelList) {
+            QueryWrapper<TaskLogDO> query = new QueryWrapper<>();
+            query.select("*").eq("task_id", taskId).eq("status", level.get("status"));
+            List<TaskLogDO> taskLogDOS = taskLogMapper.selectList(query);
+            level.put("logs", taskLogDOS);
+            JmeterStatusEnum status = JmeterStatusEnum.getEnumByCode((Integer) level.get("status"));
+            level.put("status", status);
+        }
+        log.info(levelList.toString());
+
+
+        return levelList;
     }
 }

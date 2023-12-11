@@ -119,6 +119,8 @@ public class SocketIOServerHandler {
         } else {
             taskLogService.updateTaskLog(taskLogs.get(0), taskMachineDTO.getResult());
         }
+        // 向web端发送task日志
+        socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         // 获取task当前环节已完成的日志记录
         List<TaskLogDO> logs = taskLogService.getTaskLog(taskDO.getTaskId(), taskDO.getJmeterCase(), JmeterStatusEnum.CONFIGURE, null, true);
         // 修改机器节点jmeter状态
@@ -143,6 +145,8 @@ public class SocketIOServerHandler {
             // 向web端报告进度
             TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.RUN, map, TaskResultEnum.IN_PROGRESS);
             socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
+            // 向web端发送task日志
+            socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         }
 
     }
@@ -163,6 +167,8 @@ public class SocketIOServerHandler {
         } else {
             taskLogService.updateTaskLog(taskLogs.get(0), taskMachineDTO.getResult());
         }
+        // 向web端发送task日志
+        socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         // 获取task当前环节已完成的日志记录
         List<TaskLogDO> logs = taskLogService.getTaskLog(taskDO.getTaskId(), taskDO.getJmeterCase(), JmeterStatusEnum.RUN, null, true);
         // 修改机器节点jmeter状态
@@ -182,6 +188,8 @@ public class SocketIOServerHandler {
             // 向web端报告进度
             TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.COLLECT, null, TaskResultEnum.IN_PROGRESS);
             socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
+            // 向web端发送task日志
+            socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         }
 
     }
@@ -202,6 +210,8 @@ public class SocketIOServerHandler {
         } else {
             taskLogService.updateTaskLog(taskLogs.get(0), taskMachineDTO.getResult());
         }
+        // 向web端发送task日志
+        socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         // 获取task当前环节已完成的日志记录
         List<TaskLogDO> logs = taskLogService.getTaskLog(taskDO.getTaskId(), taskDO.getJmeterCase(), JmeterStatusEnum.COLLECT, null, true);
         // 修改机器节点jmeter状态
@@ -221,6 +231,8 @@ public class SocketIOServerHandler {
             // 向web端报告进度
             TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.CLEAN, null, TaskResultEnum.IN_PROGRESS);
             socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
+            // 向web端发送task日志
+            socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         }
     }
 
@@ -240,6 +252,8 @@ public class SocketIOServerHandler {
         } else {
             taskLogService.updateTaskLog(taskLogs.get(0), taskMachineDTO.getResult());
         }
+        // 向web端发送task日志
+        socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         // 获取task当前环节已完成的日志记录
         List<TaskLogDO> logs = taskLogService.getTaskLog(taskDO.getTaskId(), taskDO.getJmeterCase(), JmeterStatusEnum.CLEAN, null, true);
         // 修改机器节点jmeter状态
@@ -269,6 +283,8 @@ public class SocketIOServerHandler {
         // 更新task日志为失败
         TaskLogDO taskLog = taskLogService.getTaskLog(taskDO.getTaskId(), taskDO.getJmeterCase(), JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), taskMachineDTO.getMachineIp(), null).get(0);
         taskLogService.updateTaskLog(taskLog, taskMachineDTO.getResult());
+        // 向web端发送task日志
+        socketServer.getRoomOperations("web").sendEvent("taskLogs", taskService.getTaskLogByTaskId(taskDO.getTaskId()));
         // 标记task状态为失败
         TaskDO task = taskService.getTaskById(taskDO.getId());
         taskService.updateTaskResult(task, TaskResultEnum.EXCEPTION);

@@ -45,13 +45,13 @@
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">测试人员：{{ task.creator_name }}</el-col>
             <el-col :span="6" class="text-content">测试用例：{{ task.case_name }}</el-col>
-            <el-col :span="6" class="text-content">压测开始时间：</el-col>
-            <el-col :span="6" class="text-content">压测结束时间：</el-col>
+            <el-col :span="6" class="text-content">压测开始时间：{{ startTime }}</el-col>
+            <el-col :span="6" class="text-content">压测结束时间：{{ endTime }}</el-col>
           </el-row>
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">日志等级：{{ task.log_level }}</el-col>
             <el-col :span="6" class="text-content">jmeter日志：</el-col>
-            <el-col :span="12" class="text-content">压力机({{task.machine_num}}台)：{{ machine_str }}</el-col>
+            <el-col :span="12" class="text-content">压力机({{task.machine_num}}台)：{{ machineStr }}</el-col>
           </el-row>
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">jmx文件：
@@ -72,22 +72,16 @@
         </el-tab-pane>
         <el-tab-pane label="环节日志" name="linkLog">
           <el-timeline>
-            <el-timeline-item timestamp="2018/4/12" placement="top">
+            <el-timeline-item v-for="(item, index) in taskLog" :key="index" :timestamp="item.create_time" placement="top">
               <el-card>
-                <h4>Update Github template</h4>
-                <p>Tom committed 2018/4/12 20:46</p>
-              </el-card>
-            </el-timeline-item>
-            <el-timeline-item timestamp="2018/4/3" placement="top">
-              <el-card>
-                <h4>Update Github template</h4>
-                <p>Tom committed 2018/4/3 20:46</p>
-              </el-card>
-            </el-timeline-item>
-            <el-timeline-item timestamp="2018/4/2" placement="top">
-              <el-card>
-                <h4>Update Github template</h4>
-                <p>Tom committed 2018/4/2 20:46</p>
+                <p>{{ item.status.desc }}</p>
+                <p v-for="(log, index) in item.logs" :key="index" class="log" >
+                  <span v-if="log.result !== null && log.result!== undefined">
+                    压力机{{ log.address }} 在 {{ log.update_time }}{{ log.updateTime }} 环节结束，结果为：
+                    <el-text type="success" v-if="log.result">成功</el-text>
+                    <el-text type="danger" v-else>失败</el-text>
+                </span>
+                </p>
               </el-card>
             </el-timeline-item>
           </el-timeline>
@@ -123,6 +117,7 @@
         const caseLoading = ref(false)
         const taskLoading = ref(false)
         const activeName = ref('testDetail')
+        const taskLog = ref([{ logs: [], status: { value: '' }, create_time: '' }])
 
 
         onMounted(() => {
@@ -143,13 +138,16 @@
           if (detailIds.value && detailIds.value.caseId !== jcase.value.id){
             getCase()
           }
-          if (detailIds.value && detailIds.value.taskId){
+          if (detailIds.value && detailIds.value.taskId !== jcase.value.task_id){
+            getCase()
+          }
+          if (detailIds.value && detailIds.value.taskId && history.state.detail){
             getTaskInfo()
+            getTaskLog()
           }
         })
 
         socketio.on('taskProgress', (data) => {
-          console.log('Received data:', data)
           if (jcase.value.task_id === data.taskId) {
             jcase.value.status = data.status
             jcase.value.task_result = data.taskResult
@@ -160,6 +158,10 @@
               jcase.value.task_progress = {'':100}
             }
           }
+        })
+
+        socketio.on('taskLogs', (data) => {
+          taskLog.value = JSON.parse(JSON.stringify(data))
         })
 
         const getCase = async () => {
@@ -177,9 +179,14 @@
 
         const getTaskInfo = async () => {
           taskLoading.value = true
-          const res = await get(`/v1/task/info/${history.state.detail.taskId}`, { showBackend: true })
+          const res = await get(`/v1/task/info/${detailIds.value.taskId}`, { showBackend: true })
           task.value = JSON.parse(JSON.stringify(res))
           taskLoading.value = false
+        }
+
+        const getTaskLog = async () => {
+          const res = await get(`/v1/task/log/${detailIds.value.taskId}`, { showBackend: true })
+          taskLog.value = JSON.parse(JSON.stringify(res))
         }
 
         const getProgressNum = progress => {
@@ -190,12 +197,28 @@
           }
         }
 
-        const machine_str = computed(() => {
+        const machineStr = computed(() => {
           let str = ''
           for(var index in task.value.machine_list) {
               str += task.value.machine_list[index].address + ' '
           }
           return str
+        })
+
+        const startTime = computed(() => {
+          for(var index in taskLog.value) {
+              if (taskLog.value[index].status.value === 2) {
+                  return taskLog.value[index].create_time
+              }
+          }
+        })
+
+        const endTime = computed(() => {
+          for(var index in taskLog.value) {
+              if (taskLog.value[index].status.value === 3) {
+                  return taskLog.value[index].create_time
+              }
+          }
         })
 
         const getProgressColor = c => {
@@ -261,8 +284,12 @@
           activeName,
           getTaskInfo,
           task,
-          machine_str,
+          machineStr,
           downloadFile,
+          taskLog,
+          getTaskLog,
+          startTime,
+          endTime,
         }
       },
   
@@ -329,6 +356,9 @@
             font-size: 1.1rem;
           }
         }
+      }
+      .log {
+        margin: 10px 0;
       }
     }
     .logo {
