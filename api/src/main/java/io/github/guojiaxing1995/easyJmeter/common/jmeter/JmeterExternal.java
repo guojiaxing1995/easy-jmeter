@@ -350,9 +350,18 @@ public class JmeterExternal {
         // 上传jmeter日志
         File jmeterLogPath = new File(Paths.get(this.path, "tmp", "jmeter.log").toString());
         File newLogPath = new File(Paths.get(this.path, "tmp", this.address+"_jmeter.log").toString());
-        boolean rename = jmeterLogPath.renameTo(newLogPath);
-        if (rename) {
+        boolean LogRename = jmeterLogPath.renameTo(newLogPath);
+        if (LogRename) {
             JFileDO file = jFileService.createFile(newLogPath.getAbsolutePath());
+            file.setTaskId(taskDO.getTaskId());
+            jFileService.updateById(file);
+        }
+        // 上传jtl文件
+        File jtlPath = new File(Paths.get(this.path, "tmp", "result.jtl").toString());
+        File newJtlPath = new File(Paths.get(this.path, "tmp", this.address + taskDO.getTaskId() +"_result.jtl").toString());
+        boolean jtlRename = jtlPath.renameTo(newJtlPath);
+        if (jtlRename) {
+            JFileDO file = jFileService.createFile(newJtlPath.getAbsolutePath());
             file.setTaskId(taskDO.getTaskId());
             jFileService.updateById(file);
         }

@@ -1,9 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.common.util;
 
 
-import io.github.guojiaxing1995.easyJmeter.module.file.FileProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -24,9 +22,6 @@ public class CSVUtil {
         this.splitNum = splitNum;
         this.fid = fid;
     }
-
-    @Autowired
-    private FileProperties fileProperties;
 
     public Map<Integer, List<String>> splitCSVFile(){
         List<String> files = new ArrayList<>();
