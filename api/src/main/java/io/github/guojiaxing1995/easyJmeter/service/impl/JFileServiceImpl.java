@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.JFileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.module.file.FileProperties;
@@ -10,17 +11,19 @@ import io.github.talelin.autoconfigure.exception.FailedException;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
 import io.minio.DownloadObjectArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -49,6 +52,8 @@ public class JFileServiceImpl implements JFileService {
 
     @Autowired
     private JFileMapper jFileMapper;
+
+    private static final int BUFFER_SIZE = 1024 * 1024 * 2;
 
     @Override
     public JFileVO createFile(MultipartFile file) {
@@ -215,6 +220,34 @@ public class JFileServiceImpl implements JFileService {
     @Override
     public Boolean updateById(JFileDO jFileDO) {
         return jFileMapper.updateById(jFileDO) > 0;
+    }
+
+    @Override
+    public void downLoadJmeterLogZip(String taskId, OutputStream outputStream) throws IOException {
+        QueryWrapper<JFileDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("task_id", taskId).eq("type", "log");
+        List<JFileDO> jFileDOS = jFileMapper.selectList(queryWrapper);
+        try (ZipArchiveOutputStream zipOut = new ZipArchiveOutputStream(outputStream)) {
+            for (JFileDO fileDO : jFileDOS){
+                String fileName = new File(fileDO.getPath()).getName();
+                log.info(fileName);
+                try {
+                    InputStream stream = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(fileName).build());
+                    ZipArchiveEntry entry = new ZipArchiveEntry(fileName);
+                    zipOut.putArchiveEntry(entry);
+                    byte[] buffer = new byte[BUFFER_SIZE];
+                    int bytesRead;
+                    while ((bytesRead = stream.read(buffer)) != -1) {
+                        zipOut.write(buffer, 0, bytesRead);
+                    }
+                    zipOut.closeArchiveEntry();
+                } catch (Exception e) {
+                    log.error("文件上传异常:" + e);
+                    throw new RuntimeException(e);
+                }
+            }
+            zipOut.finish();
+        }
     }
 
 }

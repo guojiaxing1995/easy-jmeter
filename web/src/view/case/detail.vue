@@ -50,7 +50,7 @@
           </el-row>
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">日志等级：{{ task.log_level }}</el-col>
-            <el-col :span="6" class="text-content">jmeter日志：</el-col>
+            <el-col :span="6" class="text-content">jmeter日志：<el-button type="primary" plain size="small" @click="downloadJmeterLog()">下载</el-button></el-col>
             <el-col :span="12" class="text-content">压力机({{task.machine_num}}台)：{{ machineStr }}</el-col>
           </el-row>
           <el-row :gutter="20" class="row-content">
@@ -189,6 +189,16 @@
           taskLog.value = JSON.parse(JSON.stringify(res))
         }
 
+        const downloadJmeterLog = async () => {
+          let url = process.env.VUE_APP_BASE_URL + `v1/file/jmeterLog/${detailIds.value.taskId}`
+          let logLink = document.createElement('a')
+          logLink.style.display = 'none'
+          logLink.href = url
+          document.body.appendChild(logLink)
+          logLink.click()
+          ElMessage.success("启动下载成功")
+        }
+
         const getProgressNum = progress => {
           if (progress == null) {
             return 100
@@ -266,6 +276,7 @@
           link.href = url
           document.body.appendChild(link)
           link.click()
+          ElMessage.success("启动下载成功")
         }
   
         return {
@@ -290,6 +301,7 @@
           getTaskLog,
           startTime,
           endTime,
+          downloadJmeterLog,
         }
       },
   
