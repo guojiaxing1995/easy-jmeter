@@ -31,4 +31,8 @@ public interface JFileService {
     Boolean updateById(JFileDO jFileDO);
 
     void downLoadJmeterLogZip(String taskId, OutputStream outputStream) throws IOException;
+
+    List<JFileDO> searchJtlByTaskId(String taskId);
+
+    String getStoreDir();
 }

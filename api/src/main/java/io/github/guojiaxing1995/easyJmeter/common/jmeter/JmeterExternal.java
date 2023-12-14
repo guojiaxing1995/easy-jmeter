@@ -396,4 +396,67 @@ public class JmeterExternal {
             jFileService.downloadFile(Integer.valueOf(jarFileId), dependencyDir);
         }
     }
+
+    public String mergeJtlFile(TaskDO taskDO, JFileService jFileService) {
+        List<JFileDO> jFileDOS = jFileService.searchJtlByTaskId(taskDO.getTaskId());
+        List<String> filePaths = new ArrayList<>();
+        for (JFileDO file : jFileDOS) {
+            String filePath = jFileService.downloadFile(file.getId(), null);
+            filePaths.add(filePath);
+        }
+        // 获取文件首行
+        String firstLine = "";
+        if (!filePaths.isEmpty()) {
+            ProcessBuilder processBuilder = new ProcessBuilder("head", "-1", filePaths.get(0));
+            processBuilder.environment().putAll(System.getenv());
+            try {
+                Process process = processBuilder.start();
+                try(BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    firstLine = reader.readLine();
+                }
+                int exitCode = process.waitFor();
+            } catch (IOException | InterruptedException e) {
+                log.error("获取jtl文件首行失败", e);
+            }
+        }
+        // 所有文件去除首行
+        for (String filePath : filePaths) {
+            ProcessBuilder processBuilder = new ProcessBuilder("sed", "-i", "1d", filePath);
+            processBuilder.environment().putAll(System.getenv());
+            try {
+                Process process = processBuilder.start();
+                int exitCode = process.waitFor();
+            } catch (IOException | InterruptedException e) {
+                log.error("删除jtl文件首行失败", e);
+            }
+        }
+        // 加入文件第一行
+        String newJtlPath = Paths.get(jFileService.getStoreDir(), taskDO.getTaskId() + ".jtl").toString();
+        File newJtlFile = new File(newJtlPath);
+        try {
+            newJtlFile.createNewFile();
+        } catch (IOException e) {
+            log.error("创建jtl文件失败");
+        }
+        try (PrintWriter writer = new PrintWriter(newJtlFile)) {
+            writer.println(firstLine);
+        } catch (IOException e) {
+            log.error("写入首行失败", e);
+        }
+        // 合并所有文件
+        filePaths.add(0, "cat");
+        filePaths.add(">>");
+        filePaths.add(newJtlPath);
+        String commandString = String.join(" ", filePaths);
+        ProcessBuilder processBuilder = new ProcessBuilder("sh","-c",commandString);
+        processBuilder.environment().putAll(System.getenv());
+        try {
+            Process process = processBuilder.start();
+            List<String> command = processBuilder.command();
+            int exitCode = process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            log.error("jtl文件聚会失败", e);
+        }
+        return newJtlPath;
+    }
 }

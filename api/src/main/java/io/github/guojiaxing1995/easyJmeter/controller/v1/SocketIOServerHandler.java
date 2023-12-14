@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.serializer.DeserializerObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
@@ -19,13 +20,11 @@ import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskLogDO;
-import io.github.guojiaxing1995.easyJmeter.service.CaseService;
-import io.github.guojiaxing1995.easyJmeter.service.MachineService;
-import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
-import io.github.guojiaxing1995.easyJmeter.service.TaskService;
+import io.github.guojiaxing1995.easyJmeter.service.*;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.TaskProgressVO;
+import io.socket.client.Socket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +37,8 @@ import java.util.Map;
 @Slf4j
 @RestController
 public class SocketIOServerHandler {
+
+    private final Socket socket;
 
     @Autowired
     private SocketIOServer socketServer;
@@ -56,6 +57,13 @@ public class SocketIOServerHandler {
 
     @Autowired
     Cache<String, Object> caffeineCache;
+
+    @Autowired
+    private JFileService jFileService;
+
+    public SocketIOServerHandler(Socket socket) {
+        this.socket = socket;
+    }
 
     @OnConnect
     public void onConnect(SocketIOClient client) {
@@ -218,8 +226,11 @@ public class SocketIOServerHandler {
         machineService.updateMachineStatus(machineDO, JmeterStatusEnum.CLEAN);
         // 如果当前环节所有节点全部完成，修改机器、用例状态，发送下一环节指令
         if (logs.size()==taskDO.getMachineNum()) {
+            // 服务端对收集结果处理
+            JmeterExternal jmeterExternal = new JmeterExternal(socket);
+            String jrlPath = jmeterExternal.mergeJtlFile(taskDO, jFileService);
             caseService.updateCaseStatus(caseDO, JmeterStatusEnum.CLEAN);
-            // 给agent发消息进入结果收集环节
+            // 给agent发消息进入清理环节
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskClean", taskDO);
             // 插入task清理日志
             String[] machines = taskDO.getMachine().split(",");

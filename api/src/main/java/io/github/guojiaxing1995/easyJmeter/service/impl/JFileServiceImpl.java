@@ -103,15 +103,10 @@ public class JFileServiceImpl implements JFileService {
         JFileDO jFileDO = jFileMapper.selectById(id);
         String filePath;
         if (dir == null) {
-            String format = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
-            Path path = Paths.get(fileProperties.getStoreDir(), format).toAbsolutePath();
-            java.io.File file = new File(path.toString());
-            if (!file.exists()) {
-                file.mkdirs();
-            }
-            filePath = Paths.get(path.toString(), String.valueOf(Instant.now().toEpochMilli()) + jFileDO.getName()).toString();
+            String storeDir = this.getStoreDir();
+            filePath = Paths.get(storeDir, String.valueOf(Instant.now().toEpochMilli()) + jFileDO.getName()).toString();
         } else {
-            java.io.File file = new File(dir.toString());
+            java.io.File file = new File(dir);
             if (!file.exists()) {
                 file.mkdirs();
             }
@@ -248,6 +243,25 @@ public class JFileServiceImpl implements JFileService {
             }
             zipOut.finish();
         }
+    }
+
+    @Override
+    public List<JFileDO> searchJtlByTaskId(String taskId) {
+        QueryWrapper<JFileDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("task_id", taskId).eq("type", "jtl");
+
+        return jFileMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public String getStoreDir() {
+        String format = new SimpleDateFormat("yyyy/MM/dd").format(new Date());
+        Path path = Paths.get(fileProperties.getStoreDir(), format).toAbsolutePath();
+        java.io.File file = new File(path.toString());
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return path.toString();
     }
 
 }
