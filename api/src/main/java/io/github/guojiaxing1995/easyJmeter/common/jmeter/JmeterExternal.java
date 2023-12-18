@@ -2,6 +2,7 @@ package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
+import io.github.guojiaxing1995.easyJmeter.common.util.ZipUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
@@ -12,6 +13,9 @@ import io.socket.client.Socket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jmeter.config.CSVDataSet;
+import org.apache.jmeter.report.config.ConfigurationException;
+import org.apache.jmeter.report.dashboard.GenerationException;
+import org.apache.jmeter.report.dashboard.ReportGenerator;
 import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.StringProperty;
@@ -36,6 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.Locale.ENGLISH;
+import static org.apache.jmeter.JMeter.JMETER_REPORT_OUTPUT_DIR_PROPERTY;
 
 @Data
 @Slf4j
@@ -167,6 +174,15 @@ public class JmeterExternal {
     public void initJMeterUtils() {
         JMeterUtils.setJMeterHome(this.path);
         JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
+    }
+
+    public void initServerJmeterUtils() {
+        String jmeterHome = System.getProperty("user.dir") + "/apache-jmeter";
+        log.info(jmeterHome);
+        JMeterUtils.setJMeterHome(jmeterHome);
+        JMeterUtils.loadJMeterProperties(jmeterHome + "/bin/jmeter.properties");
+        JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", "3000");
+        JMeterUtils.setLocale(ENGLISH);
     }
 
     public void editJmxConfig(TaskDO taskDO) throws IOException {
@@ -458,5 +474,42 @@ public class JmeterExternal {
             log.error("jtl文件聚会失败", e);
         }
         return newJtlPath;
+    }
+
+    public String generateReport(TaskDO taskDO, String jtlPath, JFileService jFileService) {
+        // 设置报告输出路径
+        String outputReportPath = Paths.get(jFileService.getStoreDir(), "report_" + taskDO.getTaskId()).toString();
+        JMeterUtils.setProperty(JMETER_REPORT_OUTPUT_DIR_PROPERTY, outputReportPath);
+
+        try {
+            ReportGenerator generator = new ReportGenerator(jtlPath, null);
+            generator.generate();
+        } catch (ConfigurationException | GenerationException e) {
+            log.error("生成报告失败", e);
+            throw new RuntimeException(e);
+        }
+        return outputReportPath;
+    }
+
+    public JFileDO compressReportAndUpload(TaskDO taskDO, String reportPath, JFileService jFileService) {
+        String reportZipPath = Paths.get(jFileService.getStoreDir(), "report_" + taskDO.getTaskId() + ".zip").toString();
+        try {
+            ZipUtil.zipFolderWithArchiveOutputStream(reportPath, reportZipPath);
+        } catch (IOException e) {
+            log.error("压缩报告失败", e);
+            throw new RuntimeException(e);
+        }
+        // 上传压缩文件到minio
+        JFileDO file = jFileService.createFile(reportZipPath);
+        file.setTaskId(taskDO.getTaskId());
+        jFileService.updateById(file);
+        return file;
+    }
+
+    public void serverCollect(TaskDO taskDO, JFileService jFileService) {
+        this.initServerJmeterUtils();
+        String jtlPath = this.mergeJtlFile(taskDO, jFileService);
+        String outputReportPath = this.generateReport(taskDO, jtlPath, jFileService);
+        this.compressReportAndUpload(taskDO, outputReportPath, jFileService);
     }
 }

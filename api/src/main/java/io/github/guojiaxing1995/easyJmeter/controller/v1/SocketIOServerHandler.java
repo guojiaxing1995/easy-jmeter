@@ -227,8 +227,8 @@ public class SocketIOServerHandler {
         // 如果当前环节所有节点全部完成，修改机器、用例状态，发送下一环节指令
         if (logs.size()==taskDO.getMachineNum()) {
             // 服务端对收集结果处理
-            JmeterExternal jmeterExternal = new JmeterExternal(socket);
-            String jrlPath = jmeterExternal.mergeJtlFile(taskDO, jFileService);
+            new JmeterExternal(socket).serverCollect(taskDO, jFileService);
+
             caseService.updateCaseStatus(caseDO, JmeterStatusEnum.CLEAN);
             // 给agent发消息进入清理环节
             socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskClean", taskDO);
