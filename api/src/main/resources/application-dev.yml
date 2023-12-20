@@ -12,6 +12,14 @@ spring:
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://49.235.228.222:9081/easy-jmeter?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
+  data:
+    mongodb:
+      database: easyJmeter
+      host: 49.235.228.222
+      port: 9090
+      username: root
+      password: mongo2020
+      authentication-database: admin
 
 
 # 开启权限拦截

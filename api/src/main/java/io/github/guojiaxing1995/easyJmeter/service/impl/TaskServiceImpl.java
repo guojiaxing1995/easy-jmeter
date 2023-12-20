@@ -14,6 +14,7 @@ import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
+import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
@@ -61,6 +62,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     Cache<String, Object> caffeineCache;
+
+    @Autowired
+    private ReportRepository reportRepository;
 
     @Override
     @Transactional
@@ -323,5 +327,10 @@ public class TaskServiceImpl implements TaskService {
 
 
         return levelList;
+    }
+
+    @Override
+    public ReportDO getTaskReportByTaskId(String taskId) {
+        return reportRepository.findById(taskId).orElse(null);
     }
 }

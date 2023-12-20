@@ -2,6 +2,7 @@ package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.CreatedVO;
@@ -65,5 +66,11 @@ public class TaskController {
     @ApiOperation(value = "获取任务日志", notes = "根据任务taskId获取一个任务的日志")
     public List<Map<String, Object>> getTaskLogById(@PathVariable String taskId){
         return taskService.getTaskLogByTaskId(taskId);
+    }
+
+    @GetMapping("/report/{taskId}")
+    @ApiOperation(value = "获取任务报告", notes = "根据任务taskId获取一个任务的报告数据")
+    public ReportDO getTaskReportById(@PathVariable String taskId){
+        return taskService.getTaskReportByTaskId(taskId);
     }
 }

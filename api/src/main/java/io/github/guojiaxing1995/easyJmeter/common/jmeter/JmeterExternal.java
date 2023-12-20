@@ -5,7 +5,9 @@ import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.common.util.ZipUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
+import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
@@ -220,6 +222,7 @@ public class JmeterExternal {
             for (SetupThreadGroup setupThreadGroup : setupThreadGroupSearch.getSearchResults()) {
                 setupThreadGroup.setNumThreads(taskDO.getNumThreads()/taskDO.getMachineNum());
                 setupThreadGroup.setDuration(taskDO.getDuration());
+                setupThreadGroup.setScheduler(true);
                 setupThreadGroup.setRampUp(taskDO.getRampTime());
                 setupThreadGroup.getSamplerController().setProperty("LoopController.loops", -1);
             }
@@ -506,10 +509,13 @@ public class JmeterExternal {
         return file;
     }
 
-    public void serverCollect(TaskDO taskDO, JFileService jFileService) {
+    public void serverCollect(TaskDO taskDO, JFileService jFileService, ReportRepository reportRepository) {
         this.initServerJmeterUtils();
         String jtlPath = this.mergeJtlFile(taskDO, jFileService);
         String outputReportPath = this.generateReport(taskDO, jtlPath, jFileService);
-        this.compressReportAndUpload(taskDO, outputReportPath, jFileService);
+        JFileDO jFileDO = this.compressReportAndUpload(taskDO, outputReportPath, jFileService);
+        ReportDO data = new ReportDataProcess().getData(taskDO, outputReportPath, jFileDO);
+        // 数据保存至mongodb
+        reportRepository.save(data);
     }
 }

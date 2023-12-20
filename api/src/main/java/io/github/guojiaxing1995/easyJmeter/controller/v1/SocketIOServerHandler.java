@@ -20,6 +20,7 @@ import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskLogDO;
+import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.*;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
@@ -60,6 +61,9 @@ public class SocketIOServerHandler {
 
     @Autowired
     private JFileService jFileService;
+
+    @Autowired
+    private ReportRepository reportRepository;
 
     public SocketIOServerHandler(Socket socket) {
         this.socket = socket;
@@ -227,7 +231,7 @@ public class SocketIOServerHandler {
         // 如果当前环节所有节点全部完成，修改机器、用例状态，发送下一环节指令
         if (logs.size()==taskDO.getMachineNum()) {
             // 服务端对收集结果处理
-            new JmeterExternal(socket).serverCollect(taskDO, jFileService);
+            new JmeterExternal(socket).serverCollect(taskDO, jFileService, reportRepository);
 
             caseService.updateCaseStatus(caseDO, JmeterStatusEnum.CLEAN);
             // 给agent发消息进入清理环节
