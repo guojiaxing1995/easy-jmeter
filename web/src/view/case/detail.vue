@@ -69,6 +69,40 @@
             <el-col :span="6" class="text-content">运行状态监控：<span v-if="task.monitor">是</span><span v-else>否</span></el-col>
             <el-col :span="12" class="text-content">测试备注：{{ task.remark }}</el-col>
           </el-row>
+          <div class="row-report" v-if="jcase.task_result &&jcase.task_result.value === 1">
+            <div class="report-title">聚合报告</div>
+            <el-table :data="taskReport.dash_board_data.statisticsTable"
+                      :header-row-style="{height: '35px'}"
+                      :header-cell-style="{background: '#ecf5ff', 'border-color':'#d3c7c7'}"
+                      width="100%"
+                      :row-style="{background: '#ffffff', 'border-color':'#d3c7c7'}"
+                      stripe>
+              <el-table-column label="请求">
+                <el-table-column prop="label" label="label" width="220" show-overflow-tooltip />
+              </el-table-column>
+              <el-table-column label="执行">
+                <el-table-column prop="samples" label="样本" width="130" show-overflow-tooltip />
+                <el-table-column prop="fail" label="失败" width="100" show-overflow-tooltip />
+                <el-table-column prop="error" label="错误率" width="100" :formatter="toFixedPercent" show-overflow-tooltip />
+              </el-table-column>
+              <el-table-column label="响应时间（毫秒）">
+                <el-table-column prop="average" label="平均" width="100" :formatter="toFixed" show-overflow-tooltip />
+                <el-table-column prop="min" label="最小" width="100" show-overflow-tooltip />
+                <el-table-column prop="max" label="最大" width="100" show-overflow-tooltip />
+                <el-table-column prop="median" label="中位数" width="100" show-overflow-tooltip />
+                <el-table-column prop="90th" label="90th pct" width="100" show-overflow-tooltip />
+                <el-table-column prop="95th" label="95th pct" width="100" show-overflow-tooltip />
+                <el-table-column prop="99th" label="99th pct" width="100" show-overflow-tooltip />
+              </el-table-column>
+              <el-table-column label="吞吐量">
+                <el-table-column prop="transactions" label="事务/s" width="100" :formatter="toFixed" show-overflow-tooltip />
+              </el-table-column>
+              <el-table-column label="网络（kb/s）">
+                <el-table-column prop="received" label="接收数据" width="100" :formatter="toFixed" show-overflow-tooltip />
+                <el-table-column prop="Sent" label="发送数据" width="100" :formatter="toFixed" show-overflow-tooltip />
+              </el-table-column>
+            </el-table>
+          </div>
         </el-tab-pane>
         <el-tab-pane label="环节日志" name="linkLog">
           <el-timeline>
@@ -87,7 +121,52 @@
           </el-timeline>
         </el-tab-pane>
         <el-tab-pane label="实时信息" name="realTimeInformation"></el-tab-pane>
-        <el-tab-pane label="图表报告" name="chartInformation"></el-tab-pane>
+        <el-tab-pane label="图表报告" name="chartInformation">
+          <div v-if="jcase.task_result &&jcase.task_result.value === 1">
+            <div class="report-html">
+              <el-tooltip content="下载报告" placement="top">
+                <div class="report-icon" @click="downloadFile(taskReport.file.url)"><l-icon name="HTMLreport" height="1.9em" width="1.9em" /></div>
+              </el-tooltip>
+            </div>
+          <div class="row-report">
+              <div class="report-title">压测错误</div>
+              <el-table :data="taskReport.dash_board_data.errorsTable"
+                        :header-row-style="{height: '35px'}"
+                        :header-cell-style="{background: '#ecf5ff', 'border-color':'#d3c7c7'}"
+                        width="100%"
+                        :row-style="{background: '#ffffff', 'border-color':'#d3c7c7'}"
+                        stripe>
+                <el-table-column prop="type" label="错误类型" show-overflow-tooltip />
+                <el-table-column prop="number" label="错误数" width="150" show-overflow-tooltip />
+                <el-table-column prop="currentPercent" label="错误占比" width="100" :formatter="toFixedPercent" show-overflow-tooltip />
+                <el-table-column prop="allPercent" label="总数占比" width="100" :formatter="toFixedPercent" show-overflow-tooltip />
+              </el-table>
+            </div>
+            <div class="row-report">
+              <div class="report-title">场景错误排行榜top5</div>
+              <el-table :data="taskReport.dash_board_data.top5ErrorsBySamplerTable"
+                        :header-row-style="{height: '35px'}"
+                        :header-cell-style="{background: '#ecf5ff', 'border-color':'#d3c7c7'}"
+                        width="100%"
+                        :row-style="{background: '#ffffff', 'border-color':'#d3c7c7'}"
+                        stripe>
+                <el-table-column prop="sample" label="sample"  show-overflow-tooltip />
+                <el-table-column prop="samples" label="samples" width="100" show-overflow-tooltip />
+                <el-table-column prop="errors" label="errors" width="80" show-overflow-tooltip />
+                <el-table-column prop="errorA" label="errorA" show-overflow-tooltip />
+                <el-table-column prop="errorsA" label="errorsA" width="80" show-overflow-tooltip />
+                <el-table-column prop="errorB" label="errorB" show-overflow-tooltip />
+                <el-table-column prop="errorsB" label="errorsB" width="80" show-overflow-tooltip />
+                <el-table-column prop="errorC" label="errorC" show-overflow-tooltip />
+                <el-table-column prop="errorsC" label="errorsC" width="80" show-overflow-tooltip />
+                <el-table-column prop="errorD" label="errorD" show-overflow-tooltip />
+                <el-table-column prop="errorsD" label="errorsD" width="80" show-overflow-tooltip />
+                <el-table-column prop="errorE" label="errorE" show-overflow-tooltip />
+                <el-table-column prop="errorsE" label="errorsE" width="80" show-overflow-tooltip />
+              </el-table>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
       <qps-limit :qpsLimitVisible="qpsLimitVisible" :taskId="taskId" @qpsLimitDialogClose="closeQPSLimit"></qps-limit>
   </div>
@@ -97,7 +176,7 @@
   </template>
   
   <script>
-    import { inject,ref,onMounted,getCurrentInstance,onActivated, computed } from 'vue'
+    import { inject,ref,onMounted,getCurrentInstance,onActivated, computed, watch } from 'vue'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import { get,put } from '@/lin/plugin/axios'
     import QpsLimit from './qps-limit'
@@ -118,6 +197,7 @@
         const taskLoading = ref(false)
         const activeName = ref('testDetail')
         const taskLog = ref([{ logs: [], status: { value: '' }, create_time: '' }])
+        const taskReport = ref({"file": {"url": ""},"dash_board_data": {"statisticsTable": [],"errorsTable": [],"top5ErrorsBySamplerTable": []}})
 
 
         onMounted(() => {
@@ -140,6 +220,7 @@
           }
           if (detailIds.value && detailIds.value.taskId !== jcase.value.task_id){
             getCase()
+            getTaskReport()
           }
           if (detailIds.value && detailIds.value.taskId && history.state.detail){
             getTaskInfo()
@@ -189,6 +270,13 @@
           taskLog.value = JSON.parse(JSON.stringify(res))
         }
 
+        const getTaskReport = async () => {
+          if (jcase.value.task_result.value === 1) {
+            const res = await get(`/v1/task/report/${detailIds.value.taskId}`, { showBackend: true })
+            taskReport.value = JSON.parse(JSON.stringify(res))
+          }
+        }
+
         const downloadJmeterLog = async () => {
           let url = process.env.VUE_APP_BASE_URL + `v1/file/jmeterLog/${detailIds.value.taskId}`
           let logLink = document.createElement('a')
@@ -205,6 +293,14 @@
           } else {
             return Math.min(...Object.values(progress))
           }
+        }
+
+        const toFixed = (row, column, cellValue) => {
+          return parseFloat(cellValue).toFixed(2)
+        }
+
+        const toFixedPercent = (row, column, cellValue) => {
+          return parseFloat(cellValue).toFixed(2) + '%'
         }
 
         const machineStr = computed(() => {
@@ -271,6 +367,7 @@
         }
 
         const downloadFile = (url) => {
+          console.log(url)
           let link = document.createElement('a')
           link.style.display = 'none'
           link.href = url
@@ -278,6 +375,11 @@
           link.click()
           ElMessage.success("启动下载成功")
         }
+
+        watch( () => jcase.value.task_result.value,() => {
+          getTaskReport()
+        })
+        
   
         return {
           getCase,
@@ -298,10 +400,14 @@
           machineStr,
           downloadFile,
           taskLog,
+          taskReport,
           getTaskLog,
           startTime,
           endTime,
           downloadJmeterLog,
+          getTaskReport,
+          toFixed,
+          toFixedPercent,
         }
       },
   
@@ -340,6 +446,7 @@
     }
     .tabs {
       margin-top: 15px;
+      margin-bottom: 8px;
       ::v-deep .el-tabs__item {
         font-weight: 600;
       }
@@ -367,6 +474,23 @@
             margin-right: 8px;
             font-size: 1.1rem;
           }
+        }
+      }
+      .row-report {
+        padding: 15px 0 0 0;
+        .report-title {
+          text-align: center;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+      }
+      .report-html {
+        position: relative;
+        .report-icon {
+          cursor: pointer;
+          right: 30px;
+          position: absolute;
         }
       }
       .log {
