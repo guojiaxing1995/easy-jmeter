@@ -23,6 +23,8 @@ import '@/assets/style/index.scss'
 import 'element-plus/dist/index.css'
 import '@/assets/style/realize/element-variable.scss'
 
+import echarts from '@/config/echarts'
+
 const app = createApp(App)
 
 app.use(store)
@@ -47,6 +49,7 @@ app.component('sticky-top', StickyTop)
 app.component('source-code', SourceCode)
 
 app.config.globalProperties.$filters = filters
+app.config.globalProperties.$echarts = echarts
 
 app.directive('permission', permissionDirective)
 

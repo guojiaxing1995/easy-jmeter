@@ -12,9 +12,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ReportDataProcess {
@@ -68,6 +71,7 @@ public class ReportDataProcess {
             List<JSONObject> top5ErrorsBySamplerTable = this.matchList(top5Errors);
             map.put("top5ErrorsBySamplerTable", top5ErrorsBySamplerTable);
         }
+        log.info("获取DashBoardData完成");
         return map;
     }
     public List<JSONObject> matchList(JSONObject jsonObject) {
@@ -120,7 +124,8 @@ public class ReportDataProcess {
                 map.put(key, data.getJSONObject("result"));
             }
         }
-        return map;
+        log.info("获取GraphData完成");
+        return this.dealGraphData(map);
     }
 
     public ReportDO getData(TaskDO taskDO, String reportPath, JFileDO jFileDO) {
@@ -133,5 +138,41 @@ public class ReportDataProcess {
         reportDO.setFile(jFileDO);
 
         return reportDO;
+    }
+
+    // 数据处理，适配echarts
+    public Map<String, JSONObject> dealGraphData(Map<String, JSONObject> graphData) {
+        JSONObject responseTimesOverTimeInfos = graphData.get("responseTimesOverTimeInfos");
+        responseTimesOverTimeInfos.put("titleCN", "响应时间");
+        responseTimesOverTimeInfos.put("yName", "平均响应时间(ms)");
+        JSONObject responseTimesOverTime = this.dealSeries(responseTimesOverTimeInfos);
+        graphData.put("responseTimesOverTimeInfos", responseTimesOverTime);
+        log.info("dealGraphData完成");
+        return graphData;
+    }
+
+    public JSONObject dealSeries(JSONObject infos) {
+        List<String> labels = new ArrayList<>();
+        List<JSONObject> series = infos.getJSONArray("series").toJavaList(JSONObject.class);
+        for (JSONObject seriesItem : series) {
+            seriesItem.put("name", seriesItem.get("label"));
+            seriesItem.put("type", "line");
+            labels.add(seriesItem.get("label").toString());
+            JSONArray seriesItemData = seriesItem.getJSONArray("data");
+            List<List<Long>> sortedData = seriesItemData.stream()
+                    .map(item -> (JSONArray) item)
+                    .map(array -> {
+                        Long a = ((Number) array.get(0)).longValue();
+                        Long bLong = ((BigDecimal) array.get(1)).setScale(0, RoundingMode.HALF_UP).longValueExact();
+                        return List.of(a, bLong);
+                    })
+                    .collect(Collectors.toList());
+            Collections.sort(sortedData, Comparator.comparingLong(list -> list.get(0)));
+            seriesItem.put("data", sortedData);
+        }
+        infos.put("series", series);
+        infos.put("labels", labels);
+
+        return infos;
     }
 }

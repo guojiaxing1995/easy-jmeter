@@ -476,6 +476,7 @@ public class JmeterExternal {
         } catch (IOException | InterruptedException e) {
             log.error("jtl文件聚会失败", e);
         }
+        log.info("合并jtl成功");
         return newJtlPath;
     }
 
@@ -491,6 +492,7 @@ public class JmeterExternal {
             log.error("生成报告失败", e);
             throw new RuntimeException(e);
         }
+        log.info("生成report报告成功");
         return outputReportPath;
     }
 
@@ -506,6 +508,7 @@ public class JmeterExternal {
         JFileDO file = jFileService.createFile(reportZipPath);
         file.setTaskId(taskDO.getTaskId());
         jFileService.updateById(file);
+        log.info("压缩上传报告成功");
         return file;
     }
 
@@ -517,5 +520,6 @@ public class JmeterExternal {
         ReportDO data = new ReportDataProcess().getData(taskDO, outputReportPath, jFileDO);
         // 数据保存至mongodb
         reportRepository.save(data);
+        log.info("report上传mongodb成功");
     }
 }

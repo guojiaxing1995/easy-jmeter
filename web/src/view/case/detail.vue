@@ -27,7 +27,7 @@
           </div>
         </el-col>
       </el-row>
-      <el-tabs v-model="activeName" type="border-card" class="tabs">
+      <el-tabs v-model="activeName" type="border-card" class="tabs" @tab-click="handleTableClick">
         <el-tab-pane label="测试详情" name="testDetail" v-loading="taskLoading">
           <el-row :gutter="20" class="row-title">
             <el-col :span="24"><span class="title">{{task.task_id}} |  {{task.create_time}}</span></el-col>
@@ -128,7 +128,8 @@
                 <div class="report-icon" @click="downloadFile(taskReport.file.url)"><l-icon name="HTMLreport" height="1.9em" width="1.9em" /></div>
               </el-tooltip>
             </div>
-          <div class="row-report">
+            <div id="respoonseTimesOverTimeChart" style="width: 100%; height: 35vh;"></div>
+            <div class="row-report">
               <div class="report-title">压测错误</div>
               <el-table :data="taskReport.dash_board_data.errorsTable"
                         :header-row-style="{height: '35px'}"
@@ -176,7 +177,7 @@
   </template>
   
   <script>
-    import { inject,ref,onMounted,getCurrentInstance,onActivated, computed, watch } from 'vue'
+    import { inject,ref,onMounted,getCurrentInstance,onActivated,onBeforeUnmount,computed,watch } from 'vue'
     import { ElMessageBox, ElMessage } from 'element-plus'
     import { get,put } from '@/lin/plugin/axios'
     import QpsLimit from './qps-limit'
@@ -197,9 +198,9 @@
         const taskLoading = ref(false)
         const activeName = ref('testDetail')
         const taskLog = ref([{ logs: [], status: { value: '' }, create_time: '' }])
-        const taskReport = ref({"file": {"url": ""},"dash_board_data": {"statisticsTable": [],"errorsTable": [],"top5ErrorsBySamplerTable": []}})
-
-
+        const taskReport = ref({"graph_data":{},"file": {"url": ""},"dash_board_data": {"statisticsTable": [],"errorsTable": [],"top5ErrorsBySamplerTable": []}})
+        const {proxy} = getCurrentInstance()
+        
         onMounted(() => {
           detailIds.value = history.state.detail
           if (!detailIds.value){
@@ -208,6 +209,10 @@
             const ctx = getCurrentInstance()
             ctx.refs.logo.style.height = `${clientHeight - headerHeight}px`
           }
+        })
+
+        onBeforeUnmount(() => {
+          window.removeEventListener('resize', resizeHandler)
         })
 
         onActivated(() => {
@@ -344,6 +349,15 @@
           }
         }
 
+        const handleTableClick = (tab, event) => {
+          if (tab.paneName === 'chartInformation') {
+            setTimeout( function(){
+              initChart()
+              setChartOption()
+            }, 500 )
+          }
+        }
+
         const handleStop = taskId => {
           let res
           ElMessageBox.confirm('此操作将停止该用例的执行, 是否继续?', '提示', {
@@ -380,6 +394,82 @@
           getTaskReport()
         })
         
+        const initChart = () => {
+          let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
+          if (respoonseTimesOverTimeEChart == null) {
+            respoonseTimesOverTimeEChart= proxy.$echarts.init(document.getElementById('respoonseTimesOverTimeChart'))
+            window.addEventListener("resize", resizeHandler)
+          }
+        }
+
+        const resizeHandler = () => {
+          let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
+          respoonseTimesOverTimeEChart.resize()
+        }
+
+        const setChartOption = () => {
+          let responseTimesOverTimeOption = getOption("responseTimesOverTimeInfos")
+          let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
+          respoonseTimesOverTimeEChart.setOption(responseTimesOverTimeOption)
+        }
+
+        const getOption = (infos) => {
+          const option = {
+            title: {
+              text: "",
+              left: "center",
+            },
+            grid: {
+              left: '2%',
+              right: '3%',
+              bottom: '3%',
+              containLabel: true
+            },
+            xAxis: {
+              type: 'time',
+              axisLabel: {
+                interval: 'auto',
+                rotate: 35,
+                formatter: function (value, index) {
+                  var date = new Date(value)
+                  return date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
+                }
+              },
+              name: '时间',
+            },
+            yAxis: {
+              name: '',
+            },
+            tooltip: {
+              trigger: 'axis'
+            },
+            toolbox: {
+              show: true,
+              top: 20,
+              feature: {
+                dataZoom: {
+                  yAxisIndex: 'none',
+                  title: {
+                    zoom: '区域缩放',
+                    back: '缩放还原'
+                  },
+                },
+              }
+            },
+            legend: {
+              data: [],
+              bottom: 0,
+            },
+            series: [],
+          }
+          console.log(taskReport.value)
+          option.series = taskReport.value.graph_data[infos].series
+          option.title.text = taskReport.value.graph_data[infos].titleCN
+          option.legend.data = taskReport.value.graph_data[infos].labels
+          option.yAxis.name = taskReport.value.graph_data[infos].yName
+          return option
+        }
+
   
         return {
           getCase,
@@ -408,6 +498,12 @@
           getTaskReport,
           toFixed,
           toFixedPercent,
+          handleTableClick,
+          proxy,
+          setChartOption,
+          initChart,
+          resizeHandler,
+          getOption,
         }
       },
   
@@ -487,6 +583,8 @@
       }
       .report-html {
         position: relative;
+        height: 30px;
+        z-index: 9999999;
         .report-icon {
           cursor: pointer;
           right: 30px;
