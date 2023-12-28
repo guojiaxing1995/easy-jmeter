@@ -33,8 +33,12 @@
           <el-option v-for="item in logLevels" :key="item.value" :label="item.desc" :value="item.value"/>
         </el-select>
       </el-form-item>
-      <el-form-item label="运行状态监测" label-width="180px" prop="monitor">
-        <el-switch v-model="task.monitor" inline-prompt active-text="开启" inactive-text="关闭"/>
+      <el-form-item label="报告时间颗粒度" label-width="180px" prop="granularity">
+        <el-input-number v-model="task.granularity" :min="0" size="large"/>
+        <div class="unit">秒</div>
+        <el-tooltip content="设置生成报告图表的时间采样频率，默认0为系统内置采样率，为0时系统会根据压测时间来设置采样间隔" placement="top">
+          <el-icon :size="18" ><InfoFilled /></el-icon>
+        </el-tooltip>
       </el-form-item>
       <el-form-item label="实时数据展示" label-width="180px" prop="realtime">
         <el-switch v-model="task.realtime" inline-prompt active-text="开启" inactive-text="关闭"/>
@@ -57,11 +61,12 @@
   import { reactive,ref,onUpdated } from 'vue'
   import { get,post } from '@/lin/plugin/axios'
   import { ElMessage } from 'element-plus'
-  import { Refresh } from '@element-plus/icons-vue'
+  import { Refresh, InfoFilled } from '@element-plus/icons-vue'
 
   export default {
     components: {
         Refresh,
+        InfoFilled,
       },
     props: {
       caseId: {
@@ -79,7 +84,7 @@
       const logLevels = ref([])
       const availableMachine = ref(0)
       const form = ref(null)
-      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,monitor:false,machine_num:1,machine:[],log_level:null,realtime:false,remark:''})
+      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,granularity:0,machine_num:1,machine:[],log_level:null,realtime:false,remark:''})
       const closeDialog = () => {
         context.emit('taskClose')
       }

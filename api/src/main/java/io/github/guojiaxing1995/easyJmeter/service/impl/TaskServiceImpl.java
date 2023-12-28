@@ -118,7 +118,7 @@ public class TaskServiceImpl implements TaskService {
             machinesStr.append(machine).append(",");
         }
         taskDO.setMachine(machinesStr.substring(0, machinesStr.length() - 1));
-        taskDO.setMonitor(taskDTO.getMonitor());
+        taskDO.setGranularity(taskDTO.getGranularity());
         taskDO.setRealtime(taskDTO.getRealtime());
         taskDO.setLogLevel(LogLevelEnum.getEnumByCode(taskDTO.getLogLevel()));
         taskDO.setRemark(taskDTO.getRemark());

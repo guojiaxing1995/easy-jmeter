@@ -46,7 +46,7 @@ public class TaskInfoVO {
 
     private Integer machineNum;
 
-    private Boolean monitor;
+    private Integer granularity;
 
     private Boolean realtime;
 

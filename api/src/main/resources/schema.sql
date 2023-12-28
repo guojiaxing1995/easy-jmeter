@@ -291,7 +291,7 @@ CREATE TABLE `task` (
     `qpsLimit` int(11) DEFAULT 0 COMMENT 'QPS限制',
     `machine` varchar(50) DEFAULT NULL COMMENT '压力机文件id,逗号分割',
     `machine_num` int(11) NOT NULL DEFAULT 1 COMMENT '压力机数量',
-    `monitor` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否开启运行状态监控',
+    `granularity` int(11) NOT NULL DEFAULT '0' COMMENT '生成报告的时间采样颗粒度',
     `realtime` tinyint(2) NOT NULL DEFAULT '0' COMMENT '是否显示实时数据',
     `log_level` tinyint(2) NOT NULL DEFAULT '4' COMMENT 'jmeter运行日志等级 1-OFF|2-ERROR|3-WARN|4-INFO|5-DEBUG',
     `remark` varchar(500) DEFAULT NULL COMMENT '描述',

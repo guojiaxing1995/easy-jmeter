@@ -39,7 +39,7 @@ public class TaskDO extends BaseModel implements Serializable {
 
     private Integer machineNum;
 
-    private Boolean monitor;
+    private Integer granularity;
 
     private Boolean realtime;
 

@@ -34,7 +34,8 @@ public class CreateOrUpdateTaskDTO {
     @Min(message = "{task.machine-num.min}", value = 1)
     private Integer machineNum;
 
-    private Boolean monitor;
+    @Min(message = "{task.granularity.min}", value = 0)
+    private Integer granularity;
 
     private Boolean realtime;
 

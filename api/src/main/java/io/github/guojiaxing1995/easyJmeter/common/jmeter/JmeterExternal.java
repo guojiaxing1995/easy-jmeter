@@ -178,12 +178,25 @@ public class JmeterExternal {
         JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
     }
 
-    public void initServerJmeterUtils() {
+    public void initServerJmeterUtils(TaskDO taskDO) {
         String jmeterHome = System.getProperty("user.dir") + "/apache-jmeter";
         log.info(jmeterHome);
         JMeterUtils.setJMeterHome(jmeterHome);
         JMeterUtils.loadJMeterProperties(jmeterHome + "/bin/jmeter.properties");
-        JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", "3000");
+        Integer granularity = taskDO.getGranularity();
+        if (granularity == 0) {
+            Integer duration = taskDO.getDuration();
+            if (duration/60 <= 15) {
+                granularity = 3;
+            } else if (duration/60 > 15 && duration/60 <= 30) {
+                granularity = 6;
+            } else if (duration/60 > 30 && duration/60 <= 60) {
+                granularity = 10;
+            } else {
+                granularity = 30;
+            }
+        }
+        JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", String.valueOf(granularity*1000));
         JMeterUtils.setLocale(ENGLISH);
     }
 
@@ -513,7 +526,7 @@ public class JmeterExternal {
     }
 
     public void serverCollect(TaskDO taskDO, JFileService jFileService, ReportRepository reportRepository) {
-        this.initServerJmeterUtils();
+        this.initServerJmeterUtils(taskDO);
         String jtlPath = this.mergeJtlFile(taskDO, jFileService);
         String outputReportPath = this.generateReport(taskDO, jtlPath, jFileService);
         JFileDO jFileDO = this.compressReportAndUpload(taskDO, outputReportPath, jFileService);
