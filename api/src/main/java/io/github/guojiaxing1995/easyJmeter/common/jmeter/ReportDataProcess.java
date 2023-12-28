@@ -142,32 +142,63 @@ public class ReportDataProcess {
 
     // 数据处理，适配echarts
     public Map<String, JSONObject> dealGraphData(Map<String, JSONObject> graphData) {
+        // responseTimesOverTimeInfos
         JSONObject responseTimesOverTimeInfos = graphData.get("responseTimesOverTimeInfos");
-        responseTimesOverTimeInfos.put("titleCN", "响应时间");
+        responseTimesOverTimeInfos.put("titleCN", "平均响应时间");
         responseTimesOverTimeInfos.put("yName", "平均响应时间(ms)");
-        JSONObject responseTimesOverTime = this.dealSeries(responseTimesOverTimeInfos);
+        JSONObject responseTimesOverTime = this.dealSeries(responseTimesOverTimeInfos, false);
         graphData.put("responseTimesOverTimeInfos", responseTimesOverTime);
+        // transactionsPerSecondInfos
+        JSONObject transactionsPerSecondInfos = graphData.get("transactionsPerSecondInfos");
+        transactionsPerSecondInfos.put("titleCN", "TPS");
+        transactionsPerSecondInfos.put("yName", "事务数/秒");
+        JSONObject transactionsPerSecond = this.dealSeries(transactionsPerSecondInfos, false);
+        graphData.put("transactionsPerSecondInfos", transactionsPerSecond);
+        // activeThreadsOverTimeInfos
+        JSONObject activeThreadsOverTimeInfos = graphData.get("activeThreadsOverTimeInfos");
+        activeThreadsOverTimeInfos.put("titleCN", "活动线程数");
+        activeThreadsOverTimeInfos.put("yName", "线程数");
+        JSONObject activeThreadsOverTime = this.dealSeries(activeThreadsOverTimeInfos, true);
+        graphData.put("activeThreadsOverTimeInfos", activeThreadsOverTime);
+        // totalTPSInfos
+        JSONObject totalTPSInfos = graphData.get("totalTPSInfos");
+        totalTPSInfos.put("titleCN", "总TPS");
+        totalTPSInfos.put("yName", "事务数/秒");
+        JSONObject totalTPS = this.dealSeries(totalTPSInfos, false);
+        graphData.put("totalTPSInfos", totalTPS);
+        // responseTimePercentilesOverTimeInfos
+        JSONObject responseTimePercentilesOverTimeInfos = graphData.get("responseTimePercentilesOverTimeInfos");
+        responseTimePercentilesOverTimeInfos.put("titleCN", "随时间变化的响应时间百分位数（成功响应）");
+        responseTimePercentilesOverTimeInfos.put("yName", "响应时间(ms)");
+        JSONObject responseTimePercentilesOverTime = this.dealSeries(responseTimePercentilesOverTimeInfos, true);
+        graphData.put("responseTimePercentilesOverTimeInfos", responseTimePercentilesOverTime);
+
         log.info("dealGraphData完成");
         return graphData;
     }
 
-    public JSONObject dealSeries(JSONObject infos) {
+    public JSONObject dealSeries(JSONObject infos, boolean areaStyle) {
         List<String> labels = new ArrayList<>();
         List<JSONObject> series = infos.getJSONArray("series").toJavaList(JSONObject.class);
         for (JSONObject seriesItem : series) {
             seriesItem.put("name", seriesItem.get("label"));
             seriesItem.put("type", "line");
+            if (areaStyle) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("opacity", 0.6);
+                seriesItem.put("areaStyle", jsonObject);
+            }
             labels.add(seriesItem.get("label").toString());
             JSONArray seriesItemData = seriesItem.getJSONArray("data");
-            List<List<Long>> sortedData = seriesItemData.stream()
+            List<List<Object>> sortedData = seriesItemData.stream()
                     .map(item -> (JSONArray) item)
                     .map(array -> {
-                        Long a = ((Number) array.get(0)).longValue();
-                        Long bLong = ((BigDecimal) array.get(1)).setScale(0, RoundingMode.HALF_UP).longValueExact();
-                        return List.of(a, bLong);
+                        Object a = ((Number)array.get(0)).longValue();
+                        BigDecimal b = ((BigDecimal) array.get(1)).setScale(1, RoundingMode.HALF_UP);
+                        return List.of(a, b);
                     })
                     .collect(Collectors.toList());
-            Collections.sort(sortedData, Comparator.comparingLong(list -> list.get(0)));
+            Collections.sort(sortedData, Comparator.comparingLong(list -> (long) list.get(0)));
             seriesItem.put("data", sortedData);
         }
         infos.put("series", series);

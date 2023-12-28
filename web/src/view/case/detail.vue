@@ -66,7 +66,7 @@
           </el-row>
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">实时数据展示：<span v-if="task.realtime">是</span><span v-else>否</span></el-col>
-            <el-col :span="6" class="text-content">运行状态监控：<span v-if="task.monitor">是</span><span v-else>否</span></el-col>
+            <el-col :span="6" class="text-content">报告时间采样颗粒度：{{ task.granularity }}秒</el-col>
             <el-col :span="12" class="text-content">测试备注：{{ task.remark }}</el-col>
           </el-row>
           <div class="row-report" v-if="jcase.task_result &&jcase.task_result.value === 1">
@@ -128,7 +128,11 @@
                 <div class="report-icon" @click="downloadFile(taskReport.file.url)"><l-icon name="HTMLreport" height="1.9em" width="1.9em" /></div>
               </el-tooltip>
             </div>
-            <div id="respoonseTimesOverTimeChart" style="width: 100%; height: 35vh;"></div>
+            <div id="transactionsPerSecondChart" class="report-echarts"></div>
+            <div id="respoonseTimesOverTimeChart" class="report-echarts"></div>
+            <div id="totalTPSChart" class="report-echarts"></div>
+            <div id="responseTimePercentilesOverTimeChart" class="report-echarts"></div>
+            <div id="activeThreadsOverTimeChart" class="report-echarts"></div>
             <div class="row-report">
               <div class="report-title">压测错误</div>
               <el-table :data="taskReport.dash_board_data.errorsTable"
@@ -351,6 +355,9 @@
 
         const handleTableClick = (tab, event) => {
           if (tab.paneName === 'chartInformation') {
+            if (document.getElementById('respoonseTimesOverTimeChart') == null) {
+              return
+            }
             setTimeout( function(){
               initChart()
               setChartOption()
@@ -381,7 +388,6 @@
         }
 
         const downloadFile = (url) => {
-          console.log(url)
           let link = document.createElement('a')
           link.style.display = 'none'
           link.href = url
@@ -398,19 +404,69 @@
           let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
           if (respoonseTimesOverTimeEChart == null) {
             respoonseTimesOverTimeEChart= proxy.$echarts.init(document.getElementById('respoonseTimesOverTimeChart'))
-            window.addEventListener("resize", resizeHandler)
           }
+          
+          let transactionsPerSecondEChart = proxy.$echarts.getInstanceByDom(document.getElementById('transactionsPerSecondChart'))
+          if (transactionsPerSecondEChart == null) {
+            transactionsPerSecondEChart= proxy.$echarts.init(document.getElementById('transactionsPerSecondChart'))
+          }
+          
+          let responseTimePercentilesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('responseTimePercentilesOverTimeChart'))
+          if (responseTimePercentilesOverTimeEChart == null) {
+            responseTimePercentilesOverTimeEChart= proxy.$echarts.init(document.getElementById('responseTimePercentilesOverTimeChart'))
+          }
+
+          let totalTPSEChart = proxy.$echarts.getInstanceByDom(document.getElementById('totalTPSChart'))
+          if (totalTPSEChart == null) {
+            totalTPSEChart= proxy.$echarts.init(document.getElementById('totalTPSChart'))
+          }
+          
+          let activeThreadsOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('activeThreadsOverTimeChart'))
+          if (activeThreadsOverTimeEChart == null) {
+            activeThreadsOverTimeEChart= proxy.$echarts.init(document.getElementById('activeThreadsOverTimeChart'))
+          }
+
+          window.addEventListener("resize", resizeHandler)
         }
 
         const resizeHandler = () => {
           let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
           respoonseTimesOverTimeEChart.resize()
+          let transactionsPerSecondEChart = proxy.$echarts.getInstanceByDom(document.getElementById('transactionsPerSecondChart'))
+          transactionsPerSecondEChart.resize()
+          let totalTPSEChart = proxy.$echarts.getInstanceByDom(document.getElementById('totalTPSChart'))
+          totalTPSEChart.resize()
+          let responseTimePercentilesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('responseTimePercentilesOverTimeChart'))
+          responseTimePercentilesOverTimeEChart.resize()
+          let activeThreadsOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('activeThreadsOverTimeChart'))
+          activeThreadsOverTimeEChart.resize()
         }
 
         const setChartOption = () => {
-          let responseTimesOverTimeOption = getOption("responseTimesOverTimeInfos")
-          let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
-          respoonseTimesOverTimeEChart.setOption(responseTimesOverTimeOption)
+          if (Object.keys(taskReport.value.graph_data).length === 0) {
+            setTimeout(setChartOption, 1000)
+          } else {
+            let responseTimesOverTimeOption = getOption("responseTimesOverTimeInfos")
+            let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
+            respoonseTimesOverTimeEChart.setOption(responseTimesOverTimeOption)
+
+            let transactionsPerSecondOption = getOption("transactionsPerSecondInfos")
+            let transactionsPerSecondEChart = proxy.$echarts.getInstanceByDom(document.getElementById('transactionsPerSecondChart'))
+            transactionsPerSecondEChart.setOption(transactionsPerSecondOption)
+
+            let totalTPSOption = getOption("totalTPSInfos")
+            let totalTPSEChart = proxy.$echarts.getInstanceByDom(document.getElementById('totalTPSChart'))
+            totalTPSEChart.setOption(totalTPSOption)
+            
+            let responseTimePercentilesOverTimeOption = getOption("responseTimePercentilesOverTimeInfos")
+            console.log(responseTimePercentilesOverTimeOption)
+            let responseTimePercentilesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('responseTimePercentilesOverTimeChart'))
+            responseTimePercentilesOverTimeEChart.setOption(responseTimePercentilesOverTimeOption)
+
+            let activeThreadsOverTimeOption = getOption("activeThreadsOverTimeInfos")
+            let activeThreadsOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('activeThreadsOverTimeChart'))
+            activeThreadsOverTimeEChart.setOption(activeThreadsOverTimeOption)
+          }
         }
 
         const getOption = (infos) => {
@@ -439,6 +495,7 @@
             },
             yAxis: {
               name: '',
+              scale:true
             },
             tooltip: {
               trigger: 'axis'
@@ -458,11 +515,10 @@
             },
             legend: {
               data: [],
-              bottom: 0,
+              bottom: -5,
             },
             series: [],
           }
-          console.log(taskReport.value)
           option.series = taskReport.value.graph_data[infos].series
           option.title.text = taskReport.value.graph_data[infos].titleCN
           option.legend.data = taskReport.value.graph_data[infos].labels
@@ -590,6 +646,11 @@
           right: 30px;
           position: absolute;
         }
+      }
+      .report-echarts {
+        width: 100%; 
+        height: 35vh;
+        margin: 20px 0;
       }
       .log {
         margin: 10px 0;
