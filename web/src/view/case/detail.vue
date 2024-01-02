@@ -75,6 +75,7 @@
                       :header-row-style="{height: '35px'}"
                       :header-cell-style="{background: '#ecf5ff', 'border-color':'#d3c7c7'}"
                       width="100%"
+                      v-loading="reportLoading"
                       :row-style="{background: '#ffffff', 'border-color':'#d3c7c7'}"
                       stripe>
               <el-table-column label="请求">
@@ -122,12 +123,13 @@
         </el-tab-pane>
         <el-tab-pane label="实时信息" name="realTimeInformation"></el-tab-pane>
         <el-tab-pane label="图表报告" name="chartInformation">
-          <div v-if="jcase.task_result &&jcase.task_result.value === 1">
+          <div v-if="jcase.task_result && jcase.task_result.value === 1">
             <div class="report-html">
               <el-tooltip content="下载报告" placement="top">
                 <div class="report-icon" @click="downloadFile(taskReport.file.url)"><l-icon name="HTMLreport" height="1.9em" width="1.9em" /></div>
               </el-tooltip>
             </div>
+            <el-row v-loading="chartInfoLoading" style="height: 500px;" v-if="chartInfoLoading"></el-row>
             <div id="transactionsPerSecondChart" class="report-echarts"></div>
             <div id="respoonseTimesOverTimeChart" class="report-echarts"></div>
             <div id="totalTPSChart" class="report-echarts"></div>
@@ -204,6 +206,8 @@
         const taskLog = ref([{ logs: [], status: { value: '' }, create_time: '' }])
         const taskReport = ref({"graph_data":{},"file": {"url": ""},"dash_board_data": {"statisticsTable": [],"errorsTable": [],"top5ErrorsBySamplerTable": []}})
         const {proxy} = getCurrentInstance()
+        const chartInfoLoading = ref(false)
+        const reportLoading = ref(false)
         
         onMounted(() => {
           detailIds.value = history.state.detail
@@ -281,8 +285,10 @@
 
         const getTaskReport = async () => {
           if (jcase.value.task_result.value === 1) {
+            reportLoading.value = true
             const res = await get(`/v1/task/report/${detailIds.value.taskId}`, { showBackend: true })
             taskReport.value = JSON.parse(JSON.stringify(res))
+            reportLoading.value = false
           }
         }
 
@@ -443,6 +449,7 @@
         }
 
         const setChartOption = () => {
+          chartInfoLoading.value = true
           if (Object.keys(taskReport.value.graph_data).length === 0) {
             setTimeout(setChartOption, 1000)
           } else {
@@ -466,6 +473,7 @@
             let activeThreadsOverTimeOption = getOption("activeThreadsOverTimeInfos")
             let activeThreadsOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('activeThreadsOverTimeChart'))
             activeThreadsOverTimeEChart.setOption(activeThreadsOverTimeOption)
+            chartInfoLoading.value = false
           }
         }
 
@@ -560,6 +568,8 @@
           initChart,
           resizeHandler,
           getOption,
+          chartInfoLoading,
+          reportLoading,
         }
       },
   

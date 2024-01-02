@@ -152,6 +152,10 @@
         }
 
         const handleDetail = item => {
+        if (!item.task_id) {
+          ElMessage.warning('请先执行用例')
+          return
+        }
           router.push({
             path: '/case/detail',
             state: {detail: {caseId: item.id, taskId: item.task_id}}
