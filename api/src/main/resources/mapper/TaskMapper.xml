@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="io.github.guojiaxing1995.easyJmeter.mapper.TaskMapper">
+    <resultMap id="SearchResultMap" type="io.github.guojiaxing1995.easyJmeter.vo.HistoryTaskVO">
+        <result column="task_id" jdbcType="VARCHAR" property="taskId"/>
+        <result column="jmeter_case" jdbcType="VARCHAR" property="jmeterCase"/>
+        <result column="result" property="result" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
+        <result column="num_threads" jdbcType="INTEGER" property="numThreads"/>
+        <result column="duration" jdbcType="INTEGER" property="duration"/>
+        <result column="creator" jdbcType="VARCHAR" property="creator"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+    </resultMap>
 
+    <select id="selectHistory" resultMap="SearchResultMap">
+        select t.task_id, t.duration, t.create_time, t.num_threads, t.result, c.name as jmeter_case, lu.username as creator
+        from task t
+        left join `case` c on c.id = t.jmeter_case
+        left join lin_user lu on lu.id = t.creator
+        where t.delete_time is null
+          and t.result != 0
+        <if test="taskId!=null and taskId!=''">
+            and t.task_id like CONCAT('%', #{taskId,jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="jmeterCase!=null and jmeterCase!=''">
+            and c.name like CONCAT('%', #{jmeterCase,jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="result!=null and result!=''">
+            and t.result = #{result}
+        </if>
+        <if test="startTime!=null and startTime!=''">
+            and date_format(t.create_time, '%Y-%m-%d %H:%i:%s') >= #{startTime}
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and #{endTime} >= date_format(t.create_time, '%Y-%m-%d %H:%i:%s')
+        </if>
+        order by t.create_time desc
+    </select>
 </mapper>

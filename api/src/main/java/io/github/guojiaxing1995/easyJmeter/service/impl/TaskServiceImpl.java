@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -8,6 +9,7 @@ import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.LogLevelEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
+import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
 import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
@@ -332,5 +334,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public ReportDO getTaskReportByTaskId(String taskId) {
         return reportRepository.findById(taskId).orElse(null);
+    }
+
+    @Override
+    public IPage<HistoryTaskVO> getHistoryTask(Integer current, String jmeterCase, String taskId, String startTime, String endTime, Integer result) {
+        Page page = new Page(current, 10);
+        return taskMapper.selectHistory(page, taskId, startTime, endTime, result, jmeterCase);
     }
 }

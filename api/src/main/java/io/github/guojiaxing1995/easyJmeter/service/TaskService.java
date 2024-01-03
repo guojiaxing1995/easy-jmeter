@@ -1,11 +1,13 @@
 package io.github.guojiaxing1995.easyJmeter.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
+import io.github.guojiaxing1995.easyJmeter.vo.HistoryTaskVO;
 import io.github.guojiaxing1995.easyJmeter.vo.TaskInfoVO;
 
 import java.util.List;
@@ -32,5 +34,7 @@ public interface TaskService {
     List<Map<String, Object>> getTaskLogByTaskId(String taskId);
 
     ReportDO getTaskReportByTaskId(String taskId);
+
+    IPage<HistoryTaskVO> getHistoryTask(Integer current,String jmeterCase, String taskId, String startTime, String endTime, Integer result);
 
 }
