@@ -37,7 +37,7 @@
               <i class="iconfont icon-debug"></i>
               <i class="iconfont icon-modify" @click.stop="handleEdit(item.id)"></i>
               <i class="iconfont icon-remove" @click.stop="handleDelete(item.id)"></i>
-              <i class="iconfont icon-history"></i>
+              <i class="iconfont icon-history" @click.stop="handleHistory(item.name)"></i>
             </div>
           </div>
         </div>
@@ -152,13 +152,20 @@
         }
 
         const handleDetail = item => {
-        if (!item.task_id) {
-          ElMessage.warning('请先执行用例')
-          return
-        }
+          if (!item.task_id) {
+            ElMessage.warning('请先执行用例')
+            return
+          }
           router.push({
             path: '/case/detail',
-            state: {detail: {caseId: item.id, taskId: item.task_id}}
+            state: {detail: {caseId: item.id, taskId: item.task_id, latest: true}}
+          })
+        }
+
+        const handleHistory = name => {
+          router.push({
+            path: '/task/history',
+            state: {case: {caseName: name}}
           })
         }
 
@@ -290,6 +297,7 @@
           handleStop,
           closeQPSLimit,
           handleDetail,
+          handleHistory,
       }
   
       },

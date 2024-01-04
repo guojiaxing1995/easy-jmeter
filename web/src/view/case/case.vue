@@ -1,128 +1,128 @@
 <template>
-    <div class="container">
-      <div class="title" v-if="!editCaseId">
-        <span>新建用例</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
-      </div>
-      <div class="title" v-else>
-        <span>修改用例</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
-      </div>
-  
-      <div class="wrap">
-        <el-row v-loading="loading">
-          <el-col :lg="16" :md="20" :sm="24" :xs="24">
-            <el-form :model="jcase" status-icon ref="form" label-width="100px" @submit.prevent :rules="rules">
-              <el-form-item label="用例名称" prop="name">
-                <el-input v-model="jcase.name" placeholder="请填写用例名称"></el-input>
-              </el-form-item>
-              <el-form-item label="项目" prop="project">
-                <el-select v-model="jcase.project" placeholder="请选择工程" clearable filterable style="width: 100%;">
-                  <el-option v-for="item in projects" :key="item.value" :label="item.name" :value="item.id"/>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="jmx文件" prop="jmx">
-                <el-table :data="jmxTable" border stripe show-overflow-tooltip 
-                          :header-row-style="{height: '20px'}"
-                          :row-style="{height: '20px'}">
-                  <el-table-column :resizable="false" prop="name" label="文件名" />
-                  <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
-                  <el-table-column :resizable="false" label="操作" width="255">
-                    <template #default="scope">
-                      <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'jmx')">删除</el-button>
-                      <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
-                    </template>
-                  </el-table-column>
-                </el-table>
-                <el-upload
-                  :action="actionUrl"
-                  :headers="myHeaders"
-                  :show-file-list="false"
-                  :on-error="uploadFileError"
-                  :on-success="(file,fileList)=>{return uploadFileSuccess(file,fileList,'jmx')}"
-                  :on-change="(file,fileList)=>{return uploadFileChange(file,fileList,'jmx')}"
-                >
-                  <template #default>
-                    <div class="upload-btn">
-                      <el-button plain type="primary" v-loading="uploadLoading.jmx">
-                        上传<el-icon class="el-icon--right"><Upload /></el-icon>
-                      </el-button>
-                    </div>
-                  </template>
-                </el-upload>
-              </el-form-item>
-              <el-form-item label="csv文件" prop="csv">
-                <el-table :data="csvTable" border stripe show-overflow-tooltip 
-                          :header-row-style="{height: '20px'}"
-                          :row-style="{height: '20px'}">
-                  <el-table-column :resizable="false" prop="name" label="文件名" />
-                  <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
-                  <el-table-column :resizable="false" label="操作" width="255">
-                    <template #default="scope">
-                      <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'csv')">删除</el-button>
-                      <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
-                      <el-switch v-model="scope.row.cut" @change="(val) => cutFile(val, scope.row.id)" inline-prompt active-text="切分" inactive-text="不切分"/>
-                    </template>
-                  </el-table-column>
-                </el-table>
-                <el-upload
-                  :action="actionUrl"
-                  :headers="myHeaders"
-                  :show-file-list="false"
-                  :on-error="uploadFileError"
-                  :on-success="(file,fileList)=>{return uploadFileSuccess(file,fileList,'csv')}"
-                  :on-change="(file,fileList)=>{return uploadFileChange(file,fileList,'csv')}"
-                >
-                  <template #default>
-                    <div class="upload-btn">
-                      <el-button plain type="primary" v-loading="uploadLoading.csv">
-                        上传<el-icon class="el-icon--right"><Upload /></el-icon>
-                      </el-button>
-                    </div>
-                  </template>
-                </el-upload>
-              </el-form-item>
-              <el-form-item label="jar文件" prop="jar">
-                <el-table :data="jarTable" border stripe show-overflow-tooltip 
-                          :header-row-style="{height: '20px'}"
-                          :row-style="{height: '20px'}">
-                  <el-table-column :resizable="false" prop="name" label="文件名" />
-                  <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
-                  <el-table-column :resizable="false" label="操作" width="255">
-                    <template #default="scope">
-                      <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'jar')">删除</el-button>
-                      <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
-                    </template>
-                  </el-table-column>
-                </el-table>
-                <el-upload
-                  :action="actionUrl"
-                  :headers="myHeaders"
-                  :show-file-list="false"
-                  :on-error="uploadFileError"
-                  :on-success="(file,fileList)=>{return uploadFileSuccess(file,fileList,'jar')}"
-                  :on-change="(file,fileList)=>{return uploadFileChange(file,fileList,'jar')}"
-                >
-                  <template #default>
-                    <div class="upload-btn">
-                      <el-button plain type="primary" v-loading="uploadLoading.jar">
-                        上传<el-icon class="el-icon--right"><Upload /></el-icon>
-                      </el-button>
-                    </div>
-                  </template>
-                </el-upload>
-              </el-form-item>
-              <el-form-item label="用例描述" prop="description">
-                <el-input placeholder="请输入用例描述" v-model="jcase.description" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }"></el-input>
-              </el-form-item>
-              <el-form-item class="submit">
-                <el-button type="primary" @click="submitForm">保 存</el-button>
-                <el-button @click="resetForm">重 置</el-button>
-              </el-form-item>
-            </el-form>
-          </el-col>
-        </el-row>
-      </div>
+  <div class="container">
+    <div class="title" v-if="!editCaseId">
+      <span>新建用例</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
     </div>
-  </template>
+    <div class="title" v-else>
+      <span>修改用例</span> <span class="back" @click="back"> <i class="iconfont icon-fanhui"></i> 返回 </span>
+    </div>
+  
+    <div class="wrap">
+      <el-row v-loading="loading">
+        <el-col :lg="16" :md="20" :sm="24" :xs="24">
+          <el-form :model="jcase" status-icon ref="form" label-width="100px" @submit.prevent :rules="rules">
+            <el-form-item label="用例名称" prop="name">
+              <el-input v-model="jcase.name" placeholder="请填写用例名称"></el-input>
+            </el-form-item>
+            <el-form-item label="项目" prop="project">
+              <el-select v-model="jcase.project" placeholder="请选择工程" clearable filterable style="width: 100%;">
+                <el-option v-for="item in projects" :key="item.value" :label="item.name" :value="item.id"/>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="jmx文件" prop="jmx">
+              <el-table :data="jmxTable" border stripe show-overflow-tooltip 
+                        :header-row-style="{height: '20px'}"
+                        :row-style="{height: '20px'}">
+                <el-table-column :resizable="false" prop="name" label="文件名" />
+                <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
+                <el-table-column :resizable="false" label="操作" width="255">
+                  <template #default="scope">
+                    <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'jmx')">删除</el-button>
+                    <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-upload
+                :action="actionUrl"
+                :headers="myHeaders"
+                :show-file-list="false"
+                :on-error="uploadFileError"
+                :on-success="(file,fileList)=>{return uploadFileSuccess(file,fileList,'jmx')}"
+                :on-change="(file,fileList)=>{return uploadFileChange(file,fileList,'jmx')}"
+              >
+                <template #default>
+                  <div class="upload-btn">
+                    <el-button plain type="primary" v-loading="uploadLoading.jmx">
+                      上传<el-icon class="el-icon--right"><Upload /></el-icon>
+                    </el-button>
+                  </div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="csv文件" prop="csv">
+              <el-table :data="csvTable" border stripe show-overflow-tooltip 
+                        :header-row-style="{height: '20px'}"
+                        :row-style="{height: '20px'}">
+                <el-table-column :resizable="false" prop="name" label="文件名" />
+                <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
+                <el-table-column :resizable="false" label="操作" width="255">
+                  <template #default="scope">
+                    <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'csv')">删除</el-button>
+                    <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
+                    <el-switch v-model="scope.row.cut" @change="(val) => cutFile(val, scope.row.id)" inline-prompt active-text="切分" inactive-text="不切分"/>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-upload
+                :action="actionUrl"
+                :headers="myHeaders"
+                :show-file-list="false"
+                :on-error="uploadFileError"
+                :on-success="(file,fileList)=>{return uploadFileSuccess(file,fileList,'csv')}"
+                :on-change="(file,fileList)=>{return uploadFileChange(file,fileList,'csv')}"
+              >
+                <template #default>
+                  <div class="upload-btn">
+                    <el-button plain type="primary" v-loading="uploadLoading.csv">
+                      上传<el-icon class="el-icon--right"><Upload /></el-icon>
+                    </el-button>
+                  </div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="jar文件" prop="jar">
+              <el-table :data="jarTable" border stripe show-overflow-tooltip 
+                        :header-row-style="{height: '20px'}"
+                        :row-style="{height: '20px'}">
+                <el-table-column :resizable="false" prop="name" label="文件名" />
+                <el-table-column :resizable="false" prop="size" label="文件大小" width="160" />
+                <el-table-column :resizable="false" label="操作" width="255">
+                  <template #default="scope">
+                    <el-button plain size="small" type="danger" @click="deleteFile(scope.row.id,'jar')">删除</el-button>
+                    <el-button plain size="small" type="primary" @click="downloadFile(scope.row.url)" style="margin-left: 30px;">下载</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-upload
+                :action="actionUrl"
+                :headers="myHeaders"
+                :show-file-list="false"
+                :on-error="uploadFileError"
+                :on-success="(file,fileList)=>{return uploadFileSuccess(file,fileList,'jar')}"
+                :on-change="(file,fileList)=>{return uploadFileChange(file,fileList,'jar')}"
+              >
+                <template #default>
+                  <div class="upload-btn">
+                    <el-button plain type="primary" v-loading="uploadLoading.jar">
+                      上传<el-icon class="el-icon--right"><Upload /></el-icon>
+                    </el-button>
+                  </div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="用例描述" prop="description">
+              <el-input placeholder="请输入用例描述" v-model="jcase.description" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }"></el-input>
+            </el-form-item>
+            <el-form-item class="submit">
+              <el-button type="primary" @click="submitForm">保 存</el-button>
+              <el-button @click="resetForm">重 置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
   
   <script>
   import { reactive, ref, onMounted } from 'vue'

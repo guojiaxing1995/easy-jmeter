@@ -121,7 +121,7 @@
             </el-timeline-item>
           </el-timeline>
         </el-tab-pane>
-        <el-tab-pane label="实时信息" name="realTimeInformation"></el-tab-pane>
+        <el-tab-pane label="实时信息" name="realTimeInformation" v-if="detailIds.latest"></el-tab-pane>
         <el-tab-pane label="图表报告" name="chartInformation">
           <div v-if="jcase.task_result && jcase.task_result.value === 1">
             <div class="report-html">
@@ -228,14 +228,15 @@
           if (history.state.detail){
             detailIds.value = history.state.detail
           }
-          if (detailIds.value && detailIds.value.caseId !== jcase.value.id){
-            getCase()
-          }
-          if (detailIds.value && detailIds.value.taskId !== jcase.value.task_id){
+          if (history.state.detail && detailIds.value.caseId !== jcase.value.id){
             getCase()
             getTaskReport()
+            getTaskInfo()
+            getTaskLog()
           }
-          if (detailIds.value && detailIds.value.taskId && history.state.detail){
+          if (history.state.detail && detailIds.value.taskId !== taskId.value){
+            activeName.value = 'testDetail'
+            getTaskReport()
             getTaskInfo()
             getTaskLog()
           }
@@ -286,6 +287,7 @@
         const getTaskReport = async () => {
           if (jcase.value.task_result.value === 1) {
             reportLoading.value = true
+            
             const res = await get(`/v1/task/report/${detailIds.value.taskId}`, { showBackend: true })
             taskReport.value = JSON.parse(JSON.stringify(res))
             reportLoading.value = false
@@ -455,24 +457,23 @@
           } else {
             let responseTimesOverTimeOption = getOption("responseTimesOverTimeInfos")
             let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
-            respoonseTimesOverTimeEChart.setOption(responseTimesOverTimeOption)
+            respoonseTimesOverTimeEChart.setOption(responseTimesOverTimeOption, true)
 
             let transactionsPerSecondOption = getOption("transactionsPerSecondInfos")
             let transactionsPerSecondEChart = proxy.$echarts.getInstanceByDom(document.getElementById('transactionsPerSecondChart'))
-            transactionsPerSecondEChart.setOption(transactionsPerSecondOption)
+            transactionsPerSecondEChart.setOption(transactionsPerSecondOption, true)
 
             let totalTPSOption = getOption("totalTPSInfos")
             let totalTPSEChart = proxy.$echarts.getInstanceByDom(document.getElementById('totalTPSChart'))
-            totalTPSEChart.setOption(totalTPSOption)
+            totalTPSEChart.setOption(totalTPSOption, true)
             
             let responseTimePercentilesOverTimeOption = getOption("responseTimePercentilesOverTimeInfos")
-            console.log(responseTimePercentilesOverTimeOption)
             let responseTimePercentilesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('responseTimePercentilesOverTimeChart'))
-            responseTimePercentilesOverTimeEChart.setOption(responseTimePercentilesOverTimeOption)
+            responseTimePercentilesOverTimeEChart.setOption(responseTimePercentilesOverTimeOption, true)
 
             let activeThreadsOverTimeOption = getOption("activeThreadsOverTimeInfos")
             let activeThreadsOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('activeThreadsOverTimeChart'))
-            activeThreadsOverTimeEChart.setOption(activeThreadsOverTimeOption)
+            activeThreadsOverTimeEChart.setOption(activeThreadsOverTimeOption, true)
             chartInfoLoading.value = false
           }
         }

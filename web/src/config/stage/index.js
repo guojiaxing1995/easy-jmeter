@@ -5,6 +5,7 @@ import pluginsConfig from './plugin'
 import projectConfig from './project'
 import machineConfig from './machine'
 import caseConfig from './case'
+import taskConfig from './task'
 import hiddenConfig from './hidden'
 
 // eslint-disable-next-line import/no-mutable-exports
@@ -53,6 +54,7 @@ let homeRouter = [
   projectConfig,
   machineConfig,
   caseConfig,
+  taskConfig,
   hiddenConfig
 ]
 

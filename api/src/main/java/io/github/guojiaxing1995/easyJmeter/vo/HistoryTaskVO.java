@@ -21,6 +21,8 @@ public class HistoryTaskVO {
 
     private String jmeterCase;
 
+    private Integer caseId;
+
     private TaskResultEnum result;
 
     private Integer numThreads;
