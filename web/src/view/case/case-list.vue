@@ -201,7 +201,7 @@
             res = await _delete(`/v1/case/${id}`, { showBackend: true })
             getCases()
             res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
-          })
+          }).catch(()=>{})
         }
 
         const handleStop = taskId => {
@@ -213,7 +213,7 @@
           }).then(async () => {
             res = await put(`/v1/task/stop/`, { task_id: taskId }, { showBackend: true })
             res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
-          })
+          }).catch(()=>{})
         }
 
         const _debounce =Utils.debounce(()=>{

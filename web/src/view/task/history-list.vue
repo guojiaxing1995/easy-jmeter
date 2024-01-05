@@ -15,14 +15,22 @@
         </el-select>
       </el-form-item></el-col>
       <el-col class="search-item" :span="8"></el-col>
-      <el-col class="search-item search-btn" :span="8" ><el-button type="primary" @click="handleSearch" class="btn">查询</el-button></el-col>
+      <el-col class="search-item search-btn" :span="8" >
+        <el-button type="danger" @click="handleDelete" class="btn">批量删除</el-button>
+        <el-button type="primary" @click="handleSearch" class="btn">查询</el-button>
+      </el-col>
     </el-row>
-    <el-table :data="historyData" v-loading="loading">
+    <el-table :data="historyData" v-loading="loading" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" />
       <el-table-column prop="task_id" label="测试编号" width="300" show-overflow-tooltip></el-table-column>
       <el-table-column prop="jmeter_case" label="用例名称" min-width="300" show-overflow-tooltip></el-table-column>
       <el-table-column prop="creator" label="创建人员" width="200" show-overflow-tooltip></el-table-column>
       <el-table-column prop="num_threads" label="并发数" width="150"></el-table-column>
-      <el-table-column prop="duration" label="压测时间" width="150"></el-table-column>
+      <el-table-column prop="duration" label="压测时间" width="150">
+        <template #default="scope">
+          {{ timeDeal(scope.row.duration) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="result.desc" label="测试结果" width="150">
         <template #default="scope">
           <el-text type="success" v-if="scope.row.result.value === 1">{{ scope.row.result.desc }}</el-text>
@@ -44,9 +52,10 @@
 </template>
 
 <script>
-  import { reactive,ref,onMounted,onActivated } from 'vue'
-  import { get, post } from '@/lin/plugin/axios'
+  import { reactive,ref,onMounted,onActivated,computed} from 'vue'
+  import { get, post, _delete } from '@/lin/plugin/axios'
   import { useRouter } from "vue-router"
+  import { ElMessageBox, ElMessage } from 'element-plus'
 
   export default {
     setup(props, context) {
@@ -57,6 +66,7 @@
       const loading = ref(false)
       const pageData = ref({ total: 0, page: 0 })
       const router = useRouter()
+      const selectHistoryData = ref([])
       
       onMounted(() => {
         getResults()
@@ -95,6 +105,10 @@
         getHistory()
       }
 
+      const handleSelectionChange = (val) => {
+        selectHistoryData.value = val
+      }
+
       const handleSearch = () => {
         pageData.value.page = 0
         getHistory()
@@ -105,6 +119,25 @@
           path: '/case/detail',
           state: {detail: {caseId: data.case_id, taskId: data.task_id, latest: false}}
         })
+      }
+
+      const handleDelete = () => {
+        let res
+        ElMessageBox.confirm('此操作将永久删除所选记录, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }).then(async () => {
+          loading.value = true
+          let ids = []
+          for(let i=0;i<selectHistoryData.value.length;i++) {
+            ids.push(selectHistoryData.value[i].id)
+          }
+          res = await _delete(`/v1/task/batch`, {ids: ids.toString()})
+          pageData.value.page = 0
+          getHistory()
+          res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
+        }).catch(()=>{})
       }
 
       const selectDate = (date) => {
@@ -124,6 +157,23 @@
         search.end_time = dateValue.value[1]
       }
 
+      const timeDeal = computed(() => (time) => {
+        const hours = Math.floor(time / 3600)
+        const minutes = Math.floor((time % 3600) / 60)
+        const seconds = time % 60
+        let result = ""
+        if (hours > 0) {
+            result += `${hours} hours `
+        }
+        if (minutes > 0) {
+            result += `${minutes} minutes `
+        }
+        if (seconds > 0) {
+            result += `${seconds} seconds`
+        }
+        return result.replace(/hours/g, '小时').replace(/minutes/g, '分钟').replace(/seconds/g, '秒')
+      })
+
       return {
         results,
         getResults,
@@ -137,6 +187,10 @@
         handleCurrentChange,
         handleSearch,
         handleEdit,
+        handleSelectionChange,
+        selectHistoryData,
+        handleDelete,
+        timeDeal,
       }
     }
   }

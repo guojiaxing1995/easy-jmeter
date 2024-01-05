@@ -130,12 +130,12 @@ public class SocketIOClientHandler {
                 cleanLink.setTask(taskDO);
                 cleanLink.start();
             } else if (taskMachineDTO.getStatus().equals(JmeterStatusEnum.RUN.getValue())) {
-                // 运行异常终止运行环节进入收集环节
+                // 运行异常终止运行环节进入清理环节
                 ThreadUtil.interruptThread(runThreadName);
-                CollectLink collectLink = new CollectLink(socket, jFileService);
-                collectLink.setName(collectThreadName);
-                collectLink.setTask(taskDO);
-                collectLink.start();
+                CleanLink cleanLink = new CleanLink(socket);
+                cleanLink.setName(cleanThreadName);
+                cleanLink.setTask(taskDO);
+                cleanLink.start();
             } else if (taskMachineDTO.getStatus().equals(JmeterStatusEnum.COLLECT.getValue())) {
                 // 收集异常终止收集环节进入清理环节
                 ThreadUtil.interruptThread(collectThreadName);

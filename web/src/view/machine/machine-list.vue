@@ -89,7 +89,7 @@
             pageData.value.page = 0
             getMachines()
             res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
-          })
+          }).catch(()=>{})
         }
   
         const handleCurrentChange = val => {

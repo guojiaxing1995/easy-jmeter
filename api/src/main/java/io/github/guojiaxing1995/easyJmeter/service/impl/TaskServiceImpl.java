@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.corundumstudio.socketio.SocketIOClient;
@@ -225,6 +226,9 @@ public class TaskServiceImpl implements TaskService {
         if (taskDO == null) {
             throw new ParameterException(12305);
         }
+        if (taskDO.getResult() != TaskResultEnum.IN_PROGRESS) {
+            throw new ParameterException(12308);
+        }
         CaseDO caseDO = caseMapper.selectById(taskDO.getJmeterCase());
         if (caseDO.getStatus() == JmeterStatusEnum.IDLE) {
             throw new ParameterException(12305);
@@ -236,7 +240,7 @@ public class TaskServiceImpl implements TaskService {
             taskLogService.updateTaskLog(taskLog, false);
         }
         // 标记task状态为失败
-        updateTaskResult(taskDO, TaskResultEnum.EXCEPTION);
+        updateTaskResult(taskDO, TaskResultEnum.MANUAL);
 
         // 如果没有发送过终止消息，向所有agent发送消息进行终止和进入下一环节
         synchronized (this) {
@@ -247,7 +251,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         // 向web端报告进度
-        TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.EXCEPTION);
+        TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.MANUAL);
         socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
 
         return true;
@@ -333,12 +337,27 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public ReportDO getTaskReportByTaskId(String taskId) {
-        return reportRepository.findById(taskId).orElse(null);
+        ReportDO reportDO = reportRepository.findById(taskId).orElse(null);
+        if (reportDO != null) {
+            return reportDO;
+        } else {
+            ReportDO report = new ReportDO();
+            report.setTaskId(taskId);
+            Map<String, List<JSONObject>> stringListMap = new HashMap<>();
+            stringListMap.put("statisticsTable", new ArrayList<>());
+            report.setDashBoardData(stringListMap);
+            return report;
+        }
     }
 
     @Override
     public IPage<HistoryTaskVO> getHistoryTask(Integer current, String jmeterCase, String taskId, String startTime, String endTime, Integer result) {
         Page page = new Page(current, 10);
         return taskMapper.selectHistory(page, taskId, startTime, endTime, result, jmeterCase);
+    }
+
+    @Override
+    public boolean deleteTasks(List<Integer> ids) {
+        return taskMapper.deleteBatchIds(ids) > 0;
     }
 }

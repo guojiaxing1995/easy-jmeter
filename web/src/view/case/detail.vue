@@ -12,7 +12,7 @@
             <el-col :span="16" class="text">场景描述：{{ jcase.description  }}</el-col>
           </el-row>
         </el-col>
-        <el-col :span="8" class="progress-col" v-if="jcase.task_result &&jcase.task_result.value === 0">
+        <el-col :span="8" class="progress-col" v-if="task.result && task.result.value === 0">
           <el-progress type="dashboard" :stroke-width="10" :width="130" class="progress"
           :percentage=getProgressNum(jcase.task_progress)
           :color=getProgressColor(jcase)
@@ -22,8 +22,8 @@
           </template>
           </el-progress>
           <div class="btn">
-            <el-button type="primary" plain circle @click.stop="modifyQPSLimit(jcase.task_id, jcase.qps_limit)"><i class="iconfont icon-config" ></i></el-button>
-            <el-button type="primary" plain circle @click.stop="handleStop(jcase.task_id)"><i class="iconfont icon-stop" ></i></el-button>
+            <el-button type="primary" plain circle @click.stop="modifyQPSLimit(detailIds.taskId, jcase.qps_limit)"><i class="iconfont icon-config" ></i></el-button>
+            <el-button type="primary" plain circle @click.stop="handleStop(detailIds.taskId)"><i class="iconfont icon-stop" ></i></el-button>
           </div>
         </el-col>
       </el-row>
@@ -34,7 +34,7 @@
           </el-row>
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">并发线程数：{{ task.num_threads }}</el-col>
-            <el-col :span="6" class="text-content">压测时长：{{ task.duration }}</el-col>
+            <el-col :span="6" class="text-content">压测时长：{{ timeDeal(task.duration) }}</el-col>
             <el-col :span="6" class="text-content">过渡时间：{{ task.ramp_time }}</el-col>
             <el-col :span="6" class="text-content">测试结果：
               <el-text type="primary" size="large" v-if="task.result.value === 0">{{ task.result.desc }}</el-text>
@@ -69,7 +69,7 @@
             <el-col :span="6" class="text-content">报告时间采样颗粒度：{{ task.granularity }}秒</el-col>
             <el-col :span="12" class="text-content">测试备注：{{ task.remark }}</el-col>
           </el-row>
-          <div class="row-report" v-if="jcase.task_result &&jcase.task_result.value === 1">
+          <div class="row-report" v-if="jcase.task_result &&jcase.task_result.value === 1 && task.result.value === 1">
             <div class="report-title">聚合报告</div>
             <el-table :data="taskReport.dash_board_data.statisticsTable"
                       :header-row-style="{height: '35px'}"
@@ -123,7 +123,7 @@
         </el-tab-pane>
         <el-tab-pane label="实时信息" name="realTimeInformation" v-if="detailIds.latest"></el-tab-pane>
         <el-tab-pane label="图表报告" name="chartInformation">
-          <div v-if="jcase.task_result && jcase.task_result.value === 1">
+          <div v-if="jcase.task_result && jcase.task_result.value === 1 && task.result.value === 1">
             <div class="report-html">
               <el-tooltip content="下载报告" placement="top">
                 <div class="report-icon" @click="downloadFile(taskReport.file.url)"><l-icon name="HTMLreport" height="1.9em" width="1.9em" /></div>
@@ -216,6 +216,11 @@
             const { clientHeight } = document.body
             const ctx = getCurrentInstance()
             ctx.refs.logo.style.height = `${clientHeight - headerHeight}px`
+          } else {
+            getCase()
+            getTaskInfo()
+            getTaskReport()
+            getTaskLog()
           }
         })
 
@@ -225,17 +230,25 @@
 
         onActivated(() => {
           console.log(history.state.detail)
-          if (history.state.detail){
+          if (history.state.detail && detailIds.value && detailIds.value.caseId !== history.state.detail.caseId){
             detailIds.value = history.state.detail
-          }
-          if (history.state.detail && detailIds.value.caseId !== jcase.value.id){
+            activeName.value = 'testDetail'
             getCase()
             getTaskReport()
             getTaskInfo()
             getTaskLog()
           }
-          if (history.state.detail && detailIds.value.taskId !== taskId.value){
+          if (history.state.detail && detailIds.value && detailIds.value.taskId !== history.state.detail.taskId){
+            detailIds.value = history.state.detail
             activeName.value = 'testDetail'
+            getCase()
+            getTaskReport()
+            getTaskInfo()
+            getTaskLog()
+          }
+          if (history.state.detail && !detailIds.value) {
+            detailIds.value = history.state.detail
+            getCase()
             getTaskReport()
             getTaskInfo()
             getTaskLog()
@@ -243,10 +256,12 @@
         })
 
         socketio.on('taskProgress', (data) => {
-          if (jcase.value.task_id === data.taskId) {
+          if (detailIds.value.taskId === data.taskId) {
             jcase.value.status = data.status
             jcase.value.task_result = data.taskResult
-            task.value.result = data.taskResult
+            if (task.value.result.value === 0) {
+              task.value.result = data.taskResult
+            }
             if (data.status.value === 2) {
               jcase.value.task_progress = data.taskProgress
             } else {
@@ -287,7 +302,6 @@
         const getTaskReport = async () => {
           if (jcase.value.task_result.value === 1) {
             reportLoading.value = true
-            
             const res = await get(`/v1/task/report/${detailIds.value.taskId}`, { showBackend: true })
             taskReport.value = JSON.parse(JSON.stringify(res))
             reportLoading.value = false
@@ -373,7 +387,7 @@
           }
         }
 
-        const handleStop = taskId => {
+        const handleStop = (taskId) => {
           let res
           ElMessageBox.confirm('此操作将停止该用例的执行, 是否继续?', '提示', {
             confirmButtonText: '确定',
@@ -382,7 +396,7 @@
           }).then(async () => {
             res = await put(`/v1/task/stop/`, { task_id: taskId }, { showBackend: true })
             res.code < 9999 ? ElMessage.success(`${res.message}`) : 1
-          })
+          }).catch(()=>{})
         }
 
         const modifyQPSLimit = (id) => {
@@ -535,6 +549,22 @@
           return option
         }
 
+        const timeDeal = computed(() => (time) => {
+          const hours = Math.floor(time / 3600)
+          const minutes = Math.floor((time % 3600) / 60)
+          const seconds = time % 60
+          let result = ""
+          if (hours > 0) {
+              result += `${hours} hours `
+          }
+          if (minutes > 0) {
+              result += `${minutes} minutes `
+          }
+          if (seconds > 0) {
+              result += `${seconds} seconds`
+          }
+          return result.replace(/hours/g, '小时').replace(/minutes/g, '分钟').replace(/seconds/g, '秒')
+        })
   
         return {
           getCase,
@@ -571,6 +601,7 @@
           getOption,
           chartInfoLoading,
           reportLoading,
+          timeDeal,
         }
       },
   

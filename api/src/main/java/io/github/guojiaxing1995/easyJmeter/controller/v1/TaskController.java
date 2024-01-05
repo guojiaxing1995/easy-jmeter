@@ -14,12 +14,15 @@ import io.github.talelin.core.annotation.LoginRequired;
 import io.github.talelin.core.annotation.PermissionMeta;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/task")
@@ -90,6 +93,16 @@ public class TaskController {
     public PageResponseVO<HistoryTaskVO> searchHistoryTask(@RequestBody TaskSearchDTO validator){
         IPage<HistoryTaskVO> historyTask = taskService.getHistoryTask(validator.getPage(), validator.getJCase(), validator.getTaskId(), validator.getStartTime(), validator.getEndTime(), validator.getResult());
         return PageUtil.build(historyTask);
+    }
+
+    @DeleteMapping("/batch")
+    @ApiOperation(value = "批量删除测试记录", notes = "根据测试记录id集合删除测试记录")
+    @LoginRequired
+    public DeletedVO batchDeleteTask(@Parameter String ids){
+        System.out.println(ids);
+        List<Integer> idList= Arrays.stream(ids.split(",")).map(s->Integer.parseInt(s.trim())).collect(Collectors.toList());
+        taskService.deleteTasks(idList);
+        return new DeletedVO(3);
     }
 
 }

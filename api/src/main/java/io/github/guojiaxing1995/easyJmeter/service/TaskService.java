@@ -37,4 +37,5 @@ public interface TaskService {
 
     IPage<HistoryTaskVO> getHistoryTask(Integer current,String jmeterCase, String taskId, String startTime, String endTime, Integer result);
 
+    boolean deleteTasks(List<Integer> ids);
 }

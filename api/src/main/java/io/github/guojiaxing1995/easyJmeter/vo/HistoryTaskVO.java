@@ -15,6 +15,8 @@ import java.util.Date;
 @NoArgsConstructor
 public class HistoryTaskVO {
 
+    private Integer id;
+
     private String taskId;
 
     private String creator;
