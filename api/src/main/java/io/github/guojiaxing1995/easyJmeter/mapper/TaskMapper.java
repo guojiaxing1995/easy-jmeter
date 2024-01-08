@@ -14,4 +14,6 @@ public interface TaskMapper extends BaseMapper<TaskDO> {
     IPage<HistoryTaskVO> selectHistory(Page page, @Param("taskId") String taskId,
                                        @Param("startTime") String startTime, @Param("endTime") String endTime,
                                        @Param("result") Integer result, @Param("jmeterCase") String jmeterCase);
+
+    Integer selectSumDuration(@Param("taskId") String taskId);
 }

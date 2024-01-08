@@ -37,4 +37,12 @@
         </if>
         order by t.create_time desc
     </select>
+
+    <select id="selectSumDuration" resultType="java.lang.Integer">
+        select sum(t.duration)
+        from task t
+        <if test="taskId!=null and taskId!=''">
+            and t.task_id like CONCAT('%', #{taskId,jdbcType=VARCHAR}, '%')
+        </if>
+    </select>
 </mapper>

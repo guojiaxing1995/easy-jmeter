@@ -5,4 +5,6 @@ import java.util.Map;
 public interface CommonService {
 
     Map<String, Object> getEnum();
+
+    Map<String, Object> getTotal();
 }

@@ -27,4 +27,11 @@ public class CommonController {
     public Map<String, Object> getAllEnum() {
         return commonService.getEnum();
     }
+
+    @GetMapping("/total")
+    @ApiOperation(value = "获取统计数据", notes = "获取系统的 项目数量、用例数量、压力机数量、测试次数、测试时间数据")
+    @LoginRequired
+    public Map<String, Object> getVersion() {
+        return commonService.getTotal();
+    }
 }
