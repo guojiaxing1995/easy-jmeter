@@ -16,4 +16,6 @@ public interface TaskMapper extends BaseMapper<TaskDO> {
                                        @Param("result") Integer result, @Param("jmeterCase") String jmeterCase);
 
     Integer selectSumDuration(@Param("taskId") String taskId);
+
+    TaskDO selectByIdIncludeDelete(@Param("id") Integer id);
 }

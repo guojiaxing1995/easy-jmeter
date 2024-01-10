@@ -136,6 +136,8 @@ public class ReportDataProcess {
         reportDO.setGraphData(graphData);
         reportDO.setDashBoardData(dashBoardData);
         reportDO.setFile(jFileDO);
+        reportDO.setCreateTime(taskDO.getCreateTime());
+        reportDO.setResult(taskDO.getResult());
 
         return reportDO;
     }

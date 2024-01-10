@@ -69,7 +69,7 @@
             <el-col :span="6" class="text-content">报告时间采样颗粒度：{{ task.granularity }}秒</el-col>
             <el-col :span="12" class="text-content">测试备注：{{ task.remark }}</el-col>
           </el-row>
-          <div class="row-report" v-if="jcase.task_result &&jcase.task_result.value === 1 && task.result.value === 1">
+          <div class="row-report" v-if="task.result && task.result.value === 1">
             <div class="report-title">聚合报告</div>
             <el-table :data="taskReport.dash_board_data.statisticsTable"
                       :header-row-style="{height: '35px'}"
@@ -123,7 +123,7 @@
         </el-tab-pane>
         <el-tab-pane label="实时信息" name="realTimeInformation" v-if="detailIds.latest"></el-tab-pane>
         <el-tab-pane label="图表报告" name="chartInformation">
-          <div v-if="jcase.task_result && jcase.task_result.value === 1 && task.result.value === 1">
+          <div v-if="task.result && task.result.value === 1">
             <div class="report-html">
               <el-tooltip content="下载报告" placement="top">
                 <div class="report-icon" @click="downloadFile(taskReport.file.url)"><l-icon name="HTMLreport" height="1.9em" width="1.9em" /></div>
@@ -234,23 +234,23 @@
             detailIds.value = history.state.detail
             activeName.value = 'testDetail'
             getCase()
-            getTaskReport()
             getTaskInfo()
+            getTaskReport()
             getTaskLog()
           }
           if (history.state.detail && detailIds.value && detailIds.value.taskId !== history.state.detail.taskId){
             detailIds.value = history.state.detail
             activeName.value = 'testDetail'
             getCase()
-            getTaskReport()
             getTaskInfo()
+            getTaskReport()
             getTaskLog()
           }
           if (history.state.detail && !detailIds.value) {
             detailIds.value = history.state.detail
             getCase()
-            getTaskReport()
             getTaskInfo()
+            getTaskReport()
             getTaskLog()
           }
         })
@@ -300,7 +300,7 @@
         }
 
         const getTaskReport = async () => {
-          if (jcase.value.task_result.value === 1) {
+          if (detailIds.value.taskId) {
             reportLoading.value = true
             const res = await get(`/v1/task/report/${detailIds.value.taskId}`, { showBackend: true })
             taskReport.value = JSON.parse(JSON.stringify(res))

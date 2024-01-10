@@ -41,8 +41,16 @@
     <select id="selectSumDuration" resultType="java.lang.Integer">
         select sum(t.duration)
         from task t
+        where t.delete_time is null
+          and t.result = 1
         <if test="taskId!=null and taskId!=''">
             and t.task_id like CONCAT('%', #{taskId,jdbcType=VARCHAR}, '%')
         </if>
+    </select>
+
+    <select id="selectByIdIncludeDelete" resultType="io.github.guojiaxing1995.easyJmeter.model.TaskDO">
+        select *
+        from task t
+        where t.id = #{id}
     </select>
 </mapper>

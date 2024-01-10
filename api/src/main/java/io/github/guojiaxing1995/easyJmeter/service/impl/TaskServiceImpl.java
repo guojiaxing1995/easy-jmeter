@@ -163,6 +163,12 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public boolean updateTaskResult(TaskDO taskDO, TaskResultEnum result) {
         taskDO.setResult(result);
+        // 更新mongo中task结果
+        ReportDO reportDO = reportRepository.findById(taskDO.getTaskId()).orElse(null);
+        if (reportDO != null) {
+            reportDO.setResult(result);
+            reportRepository.save(reportDO);
+        }
         return taskMapper.updateById(taskDO) > 0;
     }
 
@@ -337,7 +343,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public ReportDO getTaskReportByTaskId(String taskId) {
-        ReportDO reportDO = reportRepository.findById(taskId).orElse(null);
+        ReportDO reportDO = reportRepository.findNonDeletedById(taskId).orElse(null);
         if (reportDO != null) {
             return reportDO;
         } else {
@@ -358,6 +364,15 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public boolean deleteTasks(List<Integer> ids) {
-        return taskMapper.deleteBatchIds(ids) > 0;
+        int deleted = taskMapper.deleteBatchIds(ids);
+        for (Integer id : ids) {
+            TaskDO taskDO = taskMapper.selectByIdIncludeDelete(id);
+            ReportDO reportDO = reportRepository.findNonDeletedById(taskDO.getTaskId()).orElse(null);
+            if (reportDO != null) {
+                reportDO.setDeleteTime(taskDO.getDeleteTime());
+                reportRepository.save(reportDO);
+            }
+        }
+        return  deleted > 0;
     }
 }

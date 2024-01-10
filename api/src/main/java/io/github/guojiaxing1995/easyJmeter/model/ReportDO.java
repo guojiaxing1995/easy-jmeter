@@ -1,11 +1,15 @@
 package io.github.guojiaxing1995.easyJmeter.model;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -23,4 +27,12 @@ public class ReportDO implements Serializable {
     private Map<String, JSONObject> graphData;
 
     private JFileDO file;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private Date createTime;
+
+    private TaskResultEnum result;
+
+    @JsonIgnore
+    private Date deleteTime;
 }

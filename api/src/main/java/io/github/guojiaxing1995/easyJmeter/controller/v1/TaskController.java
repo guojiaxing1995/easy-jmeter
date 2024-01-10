@@ -99,7 +99,6 @@ public class TaskController {
     @ApiOperation(value = "批量删除测试记录", notes = "根据测试记录id集合删除测试记录")
     @LoginRequired
     public DeletedVO batchDeleteTask(@Parameter String ids){
-        System.out.println(ids);
         List<Integer> idList= Arrays.stream(ids.split(",")).map(s->Integer.parseInt(s.trim())).collect(Collectors.toList());
         taskService.deleteTasks(idList);
         return new DeletedVO(3);
