@@ -28,6 +28,8 @@ public class ReportDO implements Serializable {
 
     private JFileDO file;
 
+    private Integer caseId;
+
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 

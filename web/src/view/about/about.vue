@@ -29,6 +29,10 @@
             <div class="total-item-title">压测总时长</div>
             <div class="total-item-value">{{timeDeal(totalCount.durationSum)}}</div>
           </div>
+          <div class="total-item">
+            <div class="total-item-title">总请求数</div>
+            <div class="total-item-value">{{totalCount.totalSamples}}</div>
+          </div>
 
         </div>
       </el-col>
@@ -62,6 +66,8 @@ export default {
     const caseName = ref('')
     const cases = ref([])
     const casesOriginal = ref([])
+    const selected = ref(null)
+    const statisticsData = ref([])
 
     onMounted(() => {
       getGreeting()
@@ -107,6 +113,7 @@ export default {
     }
 
     const handleChooseCase = (item) => {
+      selected.value = item.id
       for (let i = 0; i < cases.value.length; i++) {
         if (cases.value[i].id === item.id) {
           cases.value[i].is_choose = true
@@ -132,12 +139,25 @@ export default {
       }
     }
 
+    const getStatisticsById = async () => {
+      let res
+      try {
+        res = await get(`/v1/common/statistics/${selected.value}` , { showBackend: true })
+        statisticsData.value = res
+      } catch (error) {
+      }
+    }
+
     const _debounce =Utils.debounce(()=>{
       searchCases()
     }, 800)
 
     watch(caseName, () => {
       _debounce()
+    })
+
+    watch(selected, () => {
+      getStatisticsById()
     })
 
     const getGreeting = () => {
@@ -198,6 +218,8 @@ export default {
       casesOriginal,
       handleChooseCase,
       searchCases,
+      getStatisticsById,
+      statisticsData,
     }
   },
 }

@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
+import io.github.guojiaxing1995.easyJmeter.model.StatisticsDO;
 import io.github.guojiaxing1995.easyJmeter.service.CommonService;
 import io.github.talelin.core.annotation.LoginRequired;
 import io.swagger.annotations.Api;
@@ -7,6 +8,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,5 +35,12 @@ public class CommonController {
     @LoginRequired
     public Map<String, Object> getVersion() {
         return commonService.getTotal();
+    }
+
+    @GetMapping("/statistics/{id}")
+    @ApiOperation(value = "获取任务统计数据", notes = "根据id获取任务的 统计数据")
+    @LoginRequired
+    public StatisticsDO getStatisticsById(@PathVariable(value = "id") String id) {
+        return commonService.getStatisticsById(id);
     }
 }

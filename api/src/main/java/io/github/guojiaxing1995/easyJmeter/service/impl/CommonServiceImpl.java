@@ -9,13 +9,16 @@ import io.github.guojiaxing1995.easyJmeter.mapper.MachineMapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.ProjectMapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.TaskMapper;
 import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
+import io.github.guojiaxing1995.easyJmeter.model.StatisticsDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
+import io.github.guojiaxing1995.easyJmeter.repository.StatisticsRepository;
 import io.github.guojiaxing1995.easyJmeter.service.CommonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -36,6 +39,9 @@ public class CommonServiceImpl implements CommonService {
     @Autowired
     private ReportRepository reportRepository;
 
+    @Autowired
+    private StatisticsRepository statisticsRepository;
+
     @Override
     public Map<String, Object> getEnum() {
         Map<String, Object> map = new HashMap<>();
@@ -54,6 +60,17 @@ public class CommonServiceImpl implements CommonService {
         map.put("machineNum", machineMapper.selectCount(new QueryWrapper<MachineDO>().eq("is_online", true)));
         map.put("taskNum", taskMapper.selectCount(new QueryWrapper<TaskDO>().eq("result", 1)));
         map.put("durationSum", taskMapper.selectSumDuration(null));
+        List<Long> totalSamples = statisticsRepository.getTotalSamplesSumForNonManual();
+        if (totalSamples.isEmpty()) {
+            map.put("totalSamples", 0);
+        } else {
+            map.put("totalSamples", totalSamples.get(0));
+        }
         return map;
+    }
+
+    @Override
+    public StatisticsDO getStatisticsById(String id) {
+        return statisticsRepository.findById(id).orElse(null);
     }
 }

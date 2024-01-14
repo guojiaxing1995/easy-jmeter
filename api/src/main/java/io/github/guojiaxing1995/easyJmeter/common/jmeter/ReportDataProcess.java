@@ -5,7 +5,11 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
+import io.github.guojiaxing1995.easyJmeter.model.StatisticsDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
+import io.github.guojiaxing1995.easyJmeter.repository.StatisticsRepository;
+import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -21,6 +25,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ReportDataProcess {
+
+    private  ReportRepository reportRepository;
+
+    private StatisticsRepository statisticsRepository;
+
+    public ReportDataProcess() {}
+    
+    public ReportDataProcess(ReportRepository reportRepository, StatisticsRepository statisticsRepository) {
+        this.statisticsRepository = statisticsRepository;
+        this.reportRepository = reportRepository;
+    }
 
     public Map<String, List<JSONObject>> getDashBoardData(String jsPath) {
         StringBuilder contentBuilder = new StringBuilder();
@@ -136,6 +151,7 @@ public class ReportDataProcess {
         reportDO.setGraphData(graphData);
         reportDO.setDashBoardData(dashBoardData);
         reportDO.setFile(jFileDO);
+        reportDO.setCaseId(taskDO.getJmeterCase());
         reportDO.setCreateTime(taskDO.getCreateTime());
         reportDO.setResult(taskDO.getResult());
 
@@ -207,5 +223,121 @@ public class ReportDataProcess {
         infos.put("labels", labels);
 
         return infos;
+    }
+
+    public void statistics(List<TaskDO> taskDOS, CaseInfoVO caseInfoVO, String manualName) {
+        StatisticsDO statisticsDO = new StatisticsDO();
+        if (caseInfoVO==null) {
+            statisticsDO.setCaseId("manual" + System.currentTimeMillis());
+            statisticsDO.setName(manualName);
+        } else {
+            statisticsDO.setCaseId(caseInfoVO.getId().toString());
+            statisticsDO.setName(caseInfoVO.getName());
+        }
+        List<String> taskIdList = taskDOS.stream().map(TaskDO::getTaskId).collect(Collectors.toList());
+        statisticsDO.setTaskIdList(taskIdList);
+        statisticsDO.setTaskNum(taskDOS.size());
+
+        long samplesSum = 0L;
+        long durationSum = 0L;
+        long errorsSum = 0L;
+        double throughputSum = 0.0;
+        double errorRateSum = 0.0;
+        double averageResponseTimeSum = 0.0;
+        double averageMinResponseTimeSum = 0.0;
+        double averageMaxResponseTimeSum = 0.0;
+        double average90thResponseTimeSum = 0.0;
+        double average95thResponseTimeSum = 0.0;
+        double average99thResponseTimeSum = 0.0;
+        double averageMedianResponseTimeSum = 0.0;
+        double receivedSum = 0.0;
+        double sentSum = 0.0;
+        List<List<Object>> throughputData = new ArrayList<>();
+        List<List<Object>> responseTime99thData = new ArrayList<>();
+        List<List<Object>> responseTime90thData = new ArrayList<>();
+        List<List<Object>> responseTime95thData = new ArrayList<>();
+        List<List<Object>> responseTimeMedianData = new ArrayList<>();
+        List<List<Object>> responseTimeAverageData = new ArrayList<>();
+        List<List<Object>> errorRateData = new ArrayList<>();
+        for (TaskDO taskDO : taskDOS) {
+            // 测试总时长
+            durationSum += taskDO.getDuration();
+            // task 创建时间
+            long createTime = taskDO.getCreateTime().getTime();
+            List<JSONObject> taskStatisticsTable = reportRepository.getTaskStatisticsTable(taskDO.getTaskId());
+            if (!taskStatisticsTable.isEmpty()) {
+                JSONObject taskStatistics = taskStatisticsTable.get(0).getJSONObject("totalJson");
+                // 请求数总数
+                samplesSum += Long.parseLong(taskStatistics.get("samples").toString());
+                // 错误总数
+                errorsSum += Long.parseLong(taskStatistics.get("fail").toString());
+                // 吞吐量总数
+                throughputSum += Double.parseDouble(taskStatistics.get("transactions").toString());
+                // 错误率和
+                errorRateSum += Double.parseDouble(taskStatistics.get("error").toString());
+                // 平均响应时间和
+                averageResponseTimeSum += Double.parseDouble(taskStatistics.get("average").toString());
+                // 最小响应时间和
+                averageMinResponseTimeSum += Double.parseDouble(taskStatistics.get("min").toString());
+                // 最大响应时间和
+                averageMaxResponseTimeSum += Double.parseDouble(taskStatistics.get("max").toString());
+                // 90分位响应时间和
+                average90thResponseTimeSum += Double.parseDouble(taskStatistics.get("90th").toString());
+                // 95分位响应时间和
+                average95thResponseTimeSum += Double.parseDouble(taskStatistics.get("95th").toString());
+                // 99分位响应时间和
+                average99thResponseTimeSum += Double.parseDouble(taskStatistics.get("99th").toString());
+                // 中位数响应时间和
+                averageMedianResponseTimeSum += Double.parseDouble(taskStatistics.get("median").toString());
+                // 收到的总数据量和
+                receivedSum += Double.parseDouble(taskStatistics.get("received").toString());
+                // 发送的总数据量和
+                sentSum += Double.parseDouble(taskStatistics.get("Sent").toString());
+                // 吞吐量 时间 list
+                throughputData.add(List.of(createTime, throughputSum/taskDOS.size()));
+                Collections.sort(throughputData, Comparator.comparingLong(list -> (long) list.get(0)));
+                // 99分位响应时间 list
+                responseTime99thData.add(List.of(createTime, average99thResponseTimeSum/taskDOS.size()));
+                Collections.sort(responseTime99thData, Comparator.comparingLong(list -> (long) list.get(0)));
+                // 90分位响应时间 list
+                responseTime90thData.add(List.of(createTime, average90thResponseTimeSum/taskDOS.size()));
+                Collections.sort(responseTime90thData, Comparator.comparingLong(list -> (long) list.get(0)));
+                // 95分位响应时间 list
+                responseTime95thData.add(List.of(createTime, average95thResponseTimeSum/taskDOS.size()));
+                Collections.sort(responseTime95thData, Comparator.comparingLong(list -> (long) list.get(0)));
+                // 中位数响应时间 list
+                responseTimeMedianData.add(List.of(createTime, averageMedianResponseTimeSum/taskDOS.size()));
+                Collections.sort(responseTimeMedianData, Comparator.comparingLong(list -> (long) list.get(0)));
+                // 平均响应时间 list
+                responseTimeAverageData.add(List.of(createTime, averageResponseTimeSum/taskDOS.size()));
+                Collections.sort(responseTimeAverageData, Comparator.comparingLong(list -> (long) list.get(0)));
+                // 错误率 list
+                errorRateData.add(List.of(createTime, errorRateSum/taskDOS.size()));
+                Collections.sort(errorRateData, Comparator.comparingLong(list -> (long) list.get(0)));
+
+            }
+        }
+        statisticsDO.setSamplesSum(samplesSum);
+        statisticsDO.setDurationSum(durationSum);
+        statisticsDO.setErrorsSum(errorsSum);
+        statisticsDO.setAverageThroughput(throughputSum/taskDOS.size());
+        statisticsDO.setAverageErrorRate(errorRateSum/taskDOS.size());
+        statisticsDO.setAverageResponseTime(averageResponseTimeSum/taskDOS.size());
+        statisticsDO.setAverageMinResponseTime(averageMinResponseTimeSum/taskDOS.size());
+        statisticsDO.setAverageMaxResponseTime(averageMaxResponseTimeSum/taskDOS.size());
+        statisticsDO.setAverage90thResponseTime(average90thResponseTimeSum/taskDOS.size());
+        statisticsDO.setAverage95thResponseTime(average95thResponseTimeSum/taskDOS.size());
+        statisticsDO.setAverage99thResponseTime(average99thResponseTimeSum/taskDOS.size());
+        statisticsDO.setAverageMedianResponseTime(averageMedianResponseTimeSum/taskDOS.size());
+        statisticsDO.setReceivedSum(receivedSum);
+        statisticsDO.setSentSum(sentSum);
+        statisticsDO.setThroughputData(throughputData);
+        statisticsDO.setResponseTime99thData(responseTime99thData);
+        statisticsDO.setResponseTime90thData(responseTime90thData);
+        statisticsDO.setResponseTime95thData(responseTime95thData);
+        statisticsDO.setResponseTimeMedianData(responseTimeMedianData);
+        statisticsDO.setResponseTimeAverageData(responseTimeAverageData);
+        statisticsDO.setErrorRateData(errorRateData);
+        statisticsRepository.save(statisticsDO);
     }
 }
