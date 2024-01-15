@@ -297,25 +297,25 @@ public class ReportDataProcess {
                 // 发送的总数据量和
                 sentSum += Double.parseDouble(taskStatistics.get("Sent").toString());
                 // 吞吐量 时间 list
-                throughputData.add(List.of(createTime, throughputSum/taskDOS.size()));
+                throughputData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", throughputSum/taskDOS.size()))));
                 Collections.sort(throughputData, Comparator.comparingLong(list -> (long) list.get(0)));
                 // 99分位响应时间 list
-                responseTime99thData.add(List.of(createTime, average99thResponseTimeSum/taskDOS.size()));
+                responseTime99thData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", average99thResponseTimeSum/taskDOS.size()))));
                 Collections.sort(responseTime99thData, Comparator.comparingLong(list -> (long) list.get(0)));
                 // 90分位响应时间 list
-                responseTime90thData.add(List.of(createTime, average90thResponseTimeSum/taskDOS.size()));
+                responseTime90thData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", average90thResponseTimeSum/taskDOS.size()))));
                 Collections.sort(responseTime90thData, Comparator.comparingLong(list -> (long) list.get(0)));
                 // 95分位响应时间 list
-                responseTime95thData.add(List.of(createTime, average95thResponseTimeSum/taskDOS.size()));
+                responseTime95thData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", average95thResponseTimeSum/taskDOS.size()))));
                 Collections.sort(responseTime95thData, Comparator.comparingLong(list -> (long) list.get(0)));
                 // 中位数响应时间 list
-                responseTimeMedianData.add(List.of(createTime, averageMedianResponseTimeSum/taskDOS.size()));
+                responseTimeMedianData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", averageMedianResponseTimeSum/taskDOS.size()))));
                 Collections.sort(responseTimeMedianData, Comparator.comparingLong(list -> (long) list.get(0)));
                 // 平均响应时间 list
-                responseTimeAverageData.add(List.of(createTime, averageResponseTimeSum/taskDOS.size()));
+                responseTimeAverageData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", averageResponseTimeSum/taskDOS.size()))));
                 Collections.sort(responseTimeAverageData, Comparator.comparingLong(list -> (long) list.get(0)));
                 // 错误率 list
-                errorRateData.add(List.of(createTime, errorRateSum/taskDOS.size()));
+                errorRateData.add(List.of(createTime, Double.parseDouble(String.format("%.2f", errorRateSum/taskDOS.size()))));
                 Collections.sort(errorRateData, Comparator.comparingLong(list -> (long) list.get(0)));
 
             }
