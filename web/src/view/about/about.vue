@@ -398,11 +398,11 @@ export default {
       align-items: center;
       flex-direction: column;
       .total-item-title {
-        font-size: 18px;
+        font-size: 16px;
         color: #6e6d6d;
       }
      .total-item-value {
-        font-size: 16px;
+        font-size: 18px;
         margin-top: 8px;
         color: #4577ff;
       }
@@ -418,11 +418,11 @@ export default {
       align-items: center;
       flex-direction: column;
       .total-item-title-case {
-        font-size: 16px;
+        font-size: 14px;
         color: #6e6d6d;
       }
      .total-item-value-case {
-        font-size: 14px;
+        font-size: 16px;
         margin-top: 8px;
         color: #4577ff;
       }
