@@ -33,7 +33,6 @@
             <div class="total-item-title">总请求数</div>
             <div class="total-item-value">{{totalCount.totalSamples}}</div>
           </div>
-
         </div>
       </el-col>
     </el-row>
@@ -47,14 +46,50 @@
         </div>
       </el-col>
       <el-col :span="18">
-        <div class="box"></div>
+        <div class="box">
+          <div v-if="selected" class="statistics">
+            <div class="first-head-total">
+              <div class="total-item-case">
+                <div class="total-item-title-case">平均响应时间</div>
+                <div class="total-item-value-case">{{parseFloat(statisticsData.average_response_time).toFixed(2)}}</div>
+              </div>
+              <div class="total-item-case">
+                <div class="total-item-title-case">90th响应时间</div>
+                <div class="total-item-value-case">{{parseFloat(statisticsData.average90th_response_time).toFixed(2)}}</div>
+              </div>
+              <div class="total-item-case">
+                <div class="total-item-title-case">平均错误率</div>
+                <div class="total-item-value-case">{{parseFloat(statisticsData.average_error_rate).toFixed(2)}}%</div>
+              </div>
+              <div class="total-item-case">
+                <div class="total-item-title-case">平均吞吐量</div>
+                <div class="total-item-value-case">{{parseFloat(statisticsData.average_throughput).toFixed(2)}}</div>
+              </div>
+              <div class="total-item-case">
+                <div class="total-item-title-case">测试次数</div>
+                <div class="total-item-value-case">{{statisticsData.task_num}}</div>
+              </div>
+              <div class="total-item-case">
+                <div class="total-item-title-case">压测总时长</div>
+                <div class="total-item-value-case">{{timeDeal(statisticsData.duration_sum)}}</div>
+              </div>
+              <div class="total-item-case">
+                <div class="total-item-title-case">总请求数</div>
+                <div class="total-item-value-case">{{statisticsData.samples_sum}}</div>
+              </div>
+            </div>
+            <div id="respoonseTimesChart"  class="report-echarts"></div>
+            <div id="throughputAndErrorChart"  class="report-echarts"></div>
+          </div>
+          <div v-else class="statistics"></div>
+        </div>
       </el-col>
     </el-row>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch, getCurrentInstance } from 'vue'
 import { get } from '@/lin/plugin/axios'
 import Utils from 'lin/util/util'
 
@@ -68,12 +103,17 @@ export default {
     const casesOriginal = ref([])
     const selected = ref(null)
     const statisticsData = ref([])
+    const {proxy} = getCurrentInstance()
 
     onMounted(() => {
       getGreeting()
       getUserInfo()
       getTotalCount()
       getCases()
+    })
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('resize', resizeHandler)
     })
 
     const getUserInfo = async () => {
@@ -144,8 +184,101 @@ export default {
       try {
         res = await get(`/v1/common/statistics/${selected.value}` , { showBackend: true })
         statisticsData.value = res
+        setTimeout( function(){
+          initChart()
+          setChartOption()
+        }, 500 )
       } catch (error) {
       }
+    }
+
+    const initChart = () => {
+      let respoonseTimesEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesChart'))
+      if (respoonseTimesEChart == null) {
+        respoonseTimesEChart= proxy.$echarts.init(document.getElementById('respoonseTimesChart'))
+      }
+      let throughputAndErrorEChart = proxy.$echarts.getInstanceByDom(document.getElementById('throughputAndErrorChart'))
+      if (throughputAndErrorEChart == null) {
+        throughputAndErrorEChart= proxy.$echarts.init(document.getElementById('throughputAndErrorChart'))
+      }
+      window.addEventListener("resize", resizeHandler)
+    }
+
+    const resizeHandler = () => {
+      let respoonseTimesEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesChart'))
+      if (respoonseTimesEChart !== null) {
+        respoonseTimesEChart.resize()
+      }
+      let throughputAndErrorEChart = proxy.$echarts.getInstanceByDom(document.getElementById('throughputAndErrorChart'))
+      if (throughputAndErrorEChart !== null) {
+        throughputAndErrorEChart.resize()
+      }
+    }
+
+    const setChartOption = () => {
+      let responseTimesOption = getOption("responseTimeInfos")
+      let respoonseTimesEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesChart'))
+      respoonseTimesEChart.setOption(responseTimesOption, true)
+
+      let throughputAndErrorOption = getOption("throughputAndErrorInfos")
+      let throughputAndErrorEChart = proxy.$echarts.getInstanceByDom(document.getElementById('throughputAndErrorChart'))
+      throughputAndErrorEChart.setOption(throughputAndErrorOption, true)
+    }
+
+    const getOption = (infos) => {
+      const option = {
+        title: {
+          text: "",
+          left: "center",
+        },
+        grid: {
+          left: '3%',
+          right: '2%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          axisLabel: {
+            interval: 'auto',
+            rotate: 25,
+          },
+          data: []
+
+        },
+        yAxis: {
+          name: '',
+          scale:true
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        toolbox: {
+          show: true,
+          top: 20,
+          feature: {
+            dataZoom: {
+              yAxisIndex: 'none',
+              title: {
+                zoom: '区域缩放',
+                back: '缩放还原'
+              },
+            },
+          }
+        },
+        legend: {
+          data: [],
+          bottom: -5,
+        },
+        series: [],
+      }
+      option.series = statisticsData.value.graph_data[infos].series
+      option.title.text = statisticsData.value.graph_data[infos].titleCN
+      option.legend.data = statisticsData.value.graph_data[infos].labels
+      option.yAxis.name = statisticsData.value.graph_data[infos].yName
+      option.xAxis.data = statisticsData.value.graph_data[infos].times
+      return option
     }
 
     const _debounce =Utils.debounce(()=>{
@@ -220,6 +353,11 @@ export default {
       searchCases,
       getStatisticsById,
       statisticsData,
+      selected,
+      setChartOption,
+      initChart,
+      resizeHandler,
+      getOption,
     }
   },
 }
@@ -270,6 +408,31 @@ export default {
       }
 
     }
+    .total-item-case {
+      height: 100%;
+      width: 135px;
+      margin-left: 8px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      .total-item-title-case {
+        font-size: 16px;
+        color: #6e6d6d;
+      }
+     .total-item-value-case {
+        font-size: 14px;
+        margin-top: 8px;
+        color: #4577ff;
+      }
+
+    }
+  }
+  .report-echarts {
+    width: 100%; 
+    height: 28vh;
+    margin: 1VH 0;
   }
   .case-list {
     width: 100%;
@@ -327,6 +490,9 @@ export default {
     border-radius: 8px;
     box-shadow: 0 2px 14px 0 #f3f3f3;
     height: 70vh;
+    .statistics {
+      height: 100%;
+    }
   }
 }
 

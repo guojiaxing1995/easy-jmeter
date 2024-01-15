@@ -453,15 +453,25 @@
 
         const resizeHandler = () => {
           let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
-          respoonseTimesOverTimeEChart.resize()
+          if (respoonseTimesOverTimeEChart !==null) {
+            respoonseTimesOverTimeEChart.resize()
+          }
           let transactionsPerSecondEChart = proxy.$echarts.getInstanceByDom(document.getElementById('transactionsPerSecondChart'))
-          transactionsPerSecondEChart.resize()
+          if (transactionsPerSecondEChart !==null) {
+            transactionsPerSecondEChart.resize()
+          }
           let totalTPSEChart = proxy.$echarts.getInstanceByDom(document.getElementById('totalTPSChart'))
-          totalTPSEChart.resize()
+          if (totalTPSEChart !==null) {
+            totalTPSEChart.resize()
+          }
           let responseTimePercentilesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('responseTimePercentilesOverTimeChart'))
-          responseTimePercentilesOverTimeEChart.resize()
+          if (responseTimePercentilesOverTimeEChart !==null) {
+            responseTimePercentilesOverTimeEChart.resize()
+          }
           let activeThreadsOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('activeThreadsOverTimeChart'))
-          activeThreadsOverTimeEChart.resize()
+          if (activeThreadsOverTimeEChart !==null) {
+            activeThreadsOverTimeEChart.resize()
+          }
         }
 
         const setChartOption = () => {

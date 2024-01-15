@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Document(collection = "statistics")
@@ -46,9 +47,9 @@ public class StatisticsDO implements Serializable {
 
     private Double averageMedianResponseTime;
 
-    private Double receivedSum;
+    private Double averageReceived;
 
-    private Double sentSum;
+    private Double averageSent;
 
     private List<String> taskIdList;
 
@@ -66,6 +67,8 @@ public class StatisticsDO implements Serializable {
 
     private List<List<Object>> responseTimeAverageData;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private Map<String, Object> graphData;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     private Date updateTime;
 }

@@ -11,7 +11,7 @@ spring:
     username: "root"
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://49.235.228.222:9081/easy-jmeter?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
+    url: jdbc:mysql://49.235.228.222:9081/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
   data:
     mongodb:
       database: easyJmeter

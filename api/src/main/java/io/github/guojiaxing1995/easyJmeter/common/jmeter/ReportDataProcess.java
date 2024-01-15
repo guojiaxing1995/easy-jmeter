@@ -18,6 +18,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -329,8 +332,8 @@ public class ReportDataProcess {
         statisticsDO.setAverage95thResponseTime(average95thResponseTimeSum/taskDOS.size());
         statisticsDO.setAverage99thResponseTime(average99thResponseTimeSum/taskDOS.size());
         statisticsDO.setAverageMedianResponseTime(averageMedianResponseTimeSum/taskDOS.size());
-        statisticsDO.setReceivedSum(receivedSum);
-        statisticsDO.setSentSum(sentSum);
+        statisticsDO.setAverageReceived(receivedSum/taskDOS.size());
+        statisticsDO.setAverageSent(sentSum/taskDOS.size());
         statisticsDO.setThroughputData(throughputData);
         statisticsDO.setResponseTime99thData(responseTime99thData);
         statisticsDO.setResponseTime90thData(responseTime90thData);
@@ -338,6 +341,91 @@ public class ReportDataProcess {
         statisticsDO.setResponseTimeMedianData(responseTimeMedianData);
         statisticsDO.setResponseTimeAverageData(responseTimeAverageData);
         statisticsDO.setErrorRateData(errorRateData);
+        Map<String, Object> stringObjectMap = this.statisticsGraphData(statisticsDO);
+        statisticsDO.setGraphData(stringObjectMap);
+        statisticsDO.setUpdateTime(new Date());
         statisticsRepository.save(statisticsDO);
+    }
+
+    public Map<String, Object> statisticsGraphData(StatisticsDO statisticsDO) {
+        Map<String, Object> graphData = new HashMap<>();
+        JSONObject responseTimeInfos = new JSONObject();
+        responseTimeInfos.put("titleCN", "响应时间");
+        responseTimeInfos.put("yName", "响应时间(ms)");
+        responseTimeInfos.put("labels", List.of("平均", "中位数", "90分位", "95分位", "99分位"));
+        List<JSONObject> series = new ArrayList<>();
+        List<Object> timeList = new ArrayList<>();
+        List<Object> averageList = new ArrayList<>();
+        List<Object> medianList = new ArrayList<>();
+        List<Object> rt90thList = new ArrayList<>();
+        List<Object> rt95thList = new ArrayList<>();
+        List<Object> rt99thList = new ArrayList<>();
+        for (List<Object> item : statisticsDO.getResponseTimeAverageData()) {
+            timeList.add(item.get(0));
+            averageList.add(item.get(1));
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.systemDefault());
+        timeList.replaceAll(element -> {
+            Long timestamp = (Long) element;
+            Instant instant = Instant.ofEpochMilli(timestamp);
+            return formatter.format(instant);
+        });
+        responseTimeInfos.put("times", timeList);
+        statisticsDO.getResponseTime90thData().forEach(item -> rt90thList.add(item.get(1)));
+        statisticsDO.getResponseTime95thData().forEach(item -> rt95thList.add(item.get(1)));
+        statisticsDO.getResponseTime99thData().forEach(item -> rt99thList.add(item.get(1)));
+        statisticsDO.getResponseTimeMedianData().forEach(item -> medianList.add(item.get(1)));
+        JSONObject average = new JSONObject();
+        average.put("name", "平均");
+        average.put("type", "line");
+        average.put("data", averageList);
+        series.add(average);
+        JSONObject median = new JSONObject();
+        median.put("name", "中位数");
+        median.put("type", "line");
+        median.put("data", medianList);
+        series.add(median);
+        JSONObject rt90th = new JSONObject();
+        rt90th.put("name", "90分位");
+        rt90th.put("type", "line");
+        rt90th.put("data", rt90thList);
+        series.add(rt90th);
+        JSONObject rt95th = new JSONObject();
+        rt95th.put("name", "95分位");
+        rt95th.put("type", "line");
+        rt95th.put("data", rt95thList);
+        series.add(rt95th);
+        JSONObject rt99th = new JSONObject();
+        rt99th.put("name", "99分位");
+        rt99th.put("type", "line");
+        rt99th.put("data", rt99thList);
+        series.add(rt99th);
+        responseTimeInfos.put("series", series);
+        graphData.put("responseTimeInfos", responseTimeInfos);
+
+        JSONObject throughputAndErrorInfos = new JSONObject();
+        throughputAndErrorInfos.put("titleCN", "吞吐量和错误率");
+        throughputAndErrorInfos.put("yName", "事务数/秒");
+        throughputAndErrorInfos.put("labels", List.of("吞吐量", "错误率"));
+        throughputAndErrorInfos.put("times", timeList);
+        List<JSONObject> series2 = new ArrayList<>();
+        JSONObject throughput = new JSONObject();
+        List<Object> throughputList = new ArrayList<>();
+        statisticsDO.getThroughputData().forEach(item -> throughputList.add(item.get(1)));
+        throughput.put("name", "吞吐量");
+        throughput.put("type", "line");
+        throughput.put("data", throughputList);
+        series2.add(throughput);
+        JSONObject errorRate = new JSONObject();
+        errorRate.put("name", "错误率");
+        errorRate.put("type", "line");
+        List<Object> errorRateList = new ArrayList<>();
+        statisticsDO.getErrorRateData().forEach(item -> errorRateList.add(item.get(1)));
+        errorRate.put("data", errorRateList);
+        series2.add(errorRate);
+        throughputAndErrorInfos.put("series", series2);
+        graphData.put("throughputAndErrorInfos", throughputAndErrorInfos);
+
+        return graphData;
     }
 }

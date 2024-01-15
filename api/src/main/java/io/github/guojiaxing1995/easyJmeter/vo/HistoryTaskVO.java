@@ -31,6 +31,6 @@ public class HistoryTaskVO {
 
     private Integer duration;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     private Date createTime;
 }

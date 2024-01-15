@@ -24,7 +24,7 @@ public class ProjectInfoVO {
 
     private String description;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     private Date createTime;
 
     public ProjectInfoVO(ProjectDO projectDO, String username){

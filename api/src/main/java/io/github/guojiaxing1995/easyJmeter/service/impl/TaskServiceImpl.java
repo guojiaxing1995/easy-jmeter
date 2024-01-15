@@ -379,7 +379,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDO> getTasksByCaseId(Integer caseId) {
         QueryWrapper<TaskDO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("jmeter_case", caseId);
+        queryWrapper.eq("jmeter_case", caseId).eq("result", 1);
         return taskMapper.selectList(queryWrapper);
     }
 }

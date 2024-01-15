@@ -30,7 +30,7 @@ public class ReportDO implements Serializable {
 
     private Integer caseId;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     private Date createTime;
 
     private TaskResultEnum result;

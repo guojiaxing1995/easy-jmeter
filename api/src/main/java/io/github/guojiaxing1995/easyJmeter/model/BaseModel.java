@@ -18,10 +18,10 @@ public class BaseModel {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     private Date createTime;
 
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     @TableField(update = "now()")
     private Date updateTime;
 
