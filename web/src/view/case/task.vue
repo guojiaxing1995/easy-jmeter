@@ -9,7 +9,7 @@
         <el-input-number v-model="task.duration" :min="1" :max="1209600" size="large"/>
         <div class="unit">秒</div>
       </el-form-item>
-      <el-form-item label="预热时间" label-width="180px" prop="ramp_time">
+      <el-form-item label="过渡时间" label-width="180px" prop="ramp_time">
         <el-input-number v-model="task.ramp_time" :min="0" :max="1209600" size="large"/>
         <div class="unit">秒</div>
       </el-form-item>

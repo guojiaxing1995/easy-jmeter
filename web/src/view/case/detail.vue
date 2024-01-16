@@ -35,7 +35,7 @@
           <el-row :gutter="20" class="row-content">
             <el-col :span="6" class="text-content">并发线程数：{{ task.num_threads }}</el-col>
             <el-col :span="6" class="text-content">压测时长：{{ timeDeal(task.duration) }}</el-col>
-            <el-col :span="6" class="text-content">过渡时间：{{ task.ramp_time }}</el-col>
+            <el-col :span="6" class="text-content">过渡时间：{{ timeDeal(task.ramp_time) }}</el-col>
             <el-col :span="6" class="text-content">测试结果：
               <el-text type="primary" size="large" v-if="task.result.value === 0">{{ task.result.desc }}</el-text>
               <el-text type="success" size="large" v-else-if="task.result.value === 1">{{ task.result.desc }}</el-text>

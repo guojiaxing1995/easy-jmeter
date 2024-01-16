@@ -3,7 +3,7 @@
     <el-row :gutter="35" class="search">
       <el-col class="search-item" :span="8"><el-form-item label="记录编号"><el-input v-model="search.task_id" placeholder="请输入测试编号" clearable /></el-form-item></el-col>
       <el-col class="search-item" :span="8"><el-form-item label="用例名称"><el-input v-model="search.jcase" placeholder="请输入用例名称" clearable /></el-form-item></el-col>
-      <el-col class="search-item" :span="8"><el-form-item label="创建时间">
+      <el-col class="search-item" :span="8"><el-form-item label="测试时间">
         <el-date-picker v-model="dateValue" type="datetimerange" range-separator="To" start-placeholder="开始时间" end-placeholder="结束时间" 
         clearable value-format="YYYY-MM-DD HH:mm:ss" @change="selectDate"/>
       </el-form-item></el-col>
@@ -22,15 +22,16 @@
     </el-row>
     <el-table :data="historyData" v-loading="loading" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="task_id" label="测试编号" width="300" show-overflow-tooltip></el-table-column>
-      <el-table-column prop="jmeter_case" label="用例名称" min-width="300" show-overflow-tooltip></el-table-column>
-      <el-table-column prop="creator" label="创建人员" width="200" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="task_id" label="测试编号" width="200" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="jmeter_case" label="用例名称" min-width="260" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="creator" label="测试人员" width="200" show-overflow-tooltip></el-table-column>
       <el-table-column prop="num_threads" label="并发数" width="150"></el-table-column>
-      <el-table-column prop="duration" label="压测时间" width="150">
+      <el-table-column prop="duration" label="压测时长" width="150">
         <template #default="scope">
           {{ timeDeal(scope.row.duration) }}
         </template>
       </el-table-column>
+      <el-table-column prop="create_time" label="测试时间" width="170"></el-table-column>
       <el-table-column prop="result.desc" label="测试结果" width="150">
         <template #default="scope">
           <el-text type="success" v-if="scope.row.result.value === 1">{{ scope.row.result.desc }}</el-text>

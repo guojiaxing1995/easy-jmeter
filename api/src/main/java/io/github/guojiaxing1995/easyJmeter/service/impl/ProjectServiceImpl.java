@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
@@ -67,5 +68,12 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public List<ProjectDO> getAll() {
         return projectMapper.getAll();
+    }
+
+    @Override
+    public Integer getCaseCount(Integer id) {
+        QueryWrapper<CaseDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("project", id);
+        return caseMapper.selectCount(queryWrapper);
     }
 }

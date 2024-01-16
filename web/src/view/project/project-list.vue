@@ -8,7 +8,7 @@
     </div>
       <el-table :data="projects" v-loading="loading">
         <el-table-column prop="name" label="名称" width="300" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="case_count" label="用例条数" width="130"></el-table-column>
+        <el-table-column prop="case_num" label="用例条数" width="130"></el-table-column>
         <el-table-column prop="creator" label="创建人" width="160" show-overflow-tooltip></el-table-column>
         <el-table-column prop="description" label="描述" show-overflow-tooltip></el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="230"></el-table-column>

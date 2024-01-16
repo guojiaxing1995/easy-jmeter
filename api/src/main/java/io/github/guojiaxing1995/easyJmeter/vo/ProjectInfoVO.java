@@ -24,11 +24,14 @@ public class ProjectInfoVO {
 
     private String description;
 
+    private Integer caseNum;
+
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="Asia/Shanghai")
     private Date createTime;
 
-    public ProjectInfoVO(ProjectDO projectDO, String username){
+    public ProjectInfoVO(ProjectDO projectDO, String username, Integer caseNum){
         BeanUtils.copyProperties(projectDO, this);
         this.creator = username;
+        this.caseNum = caseNum;
     }
 }

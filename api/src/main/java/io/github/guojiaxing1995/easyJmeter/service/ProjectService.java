@@ -20,4 +20,6 @@ public interface ProjectService {
     boolean deleteProject(Integer id);
 
     List<ProjectDO> getAll();
+
+    Integer getCaseCount(Integer id);
 }

@@ -43,7 +43,8 @@ public class ProjectController {
         IPage<ProjectDO> projects = projectService.getProjectByName(page, name);
         List<ProjectInfoVO> projectInfos = projects.getRecords().stream().map(project -> {
             String username = userService.getById(project.getCreator()).getUsername();
-            return new ProjectInfoVO(project, username);
+            Integer caseCount = projectService.getCaseCount(project.getId());
+            return new ProjectInfoVO(project, username, caseCount);
         }).collect(Collectors.toList());
         return PageUtil.build(projects, projectInfos);
     }
