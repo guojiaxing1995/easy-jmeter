@@ -16,10 +16,7 @@ import io.github.guojiaxing1995.easyJmeter.common.serializer.DeserializerObjectM
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
-import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
-import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
-import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
-import io.github.guojiaxing1995.easyJmeter.model.TaskLogDO;
+import io.github.guojiaxing1995.easyJmeter.model.*;
 import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.*;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
@@ -117,7 +114,7 @@ public class SocketIOServerHandler {
 
     // 接收配置完成通知
     @OnEvent("configureFinish")
-    public void configureFinish(SocketIOClient client, String message) {
+    public synchronized void configureFinish(SocketIOClient client, String message) {
         log.info("收到完成配置消息" + message);
         TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
@@ -165,7 +162,7 @@ public class SocketIOServerHandler {
 
     // 接收压测运行完成消息
     @OnEvent("runFinish")
-    public void runFinish(SocketIOClient client, String message) {
+    public synchronized void runFinish(SocketIOClient client, String message) {
         log.info("收到压测运行完成消息" + message);
         TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
@@ -208,7 +205,7 @@ public class SocketIOServerHandler {
 
     // 接收结果收集完成消息
     @OnEvent("collectFinish")
-    public void collectFinish(SocketIOClient client, String message) {
+    public synchronized void collectFinish(SocketIOClient client, String message) {
         log.info("收到结果收集完成消息" + message);
         TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
@@ -253,7 +250,7 @@ public class SocketIOServerHandler {
 
     // 接收环境清理完成消息
     @OnEvent("cleanFinish")
-    public void cleanFinish(SocketIOClient client, String message) {
+    public synchronized void cleanFinish(SocketIOClient client, String message) {
         log.info("收到环境清理完成消息" + message);
         TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         TaskDO taskDO = taskMachineDTO.getTaskDO();
@@ -291,7 +288,7 @@ public class SocketIOServerHandler {
 
     // 接收环节失败消息
     @OnEvent("linkFail")
-    public void linkFail(SocketIOClient client, String message) {
+    public synchronized void linkFail(SocketIOClient client, String message) {
         TaskMachineDTO taskMachineDTO = DeserializerObjectMapper.deserialize(message, TaskMachineDTO.class);
         log.info("收到linkFail:" + taskMachineDTO.toString());
         TaskDO taskDO = taskMachineDTO.getTaskDO();
@@ -304,11 +301,9 @@ public class SocketIOServerHandler {
         TaskDO task = taskService.getTaskById(taskDO.getId());
         taskService.updateTaskResult(task, TaskResultEnum.EXCEPTION);
         // 如果没有发送过终止消息，向所有agent发送消息进行终止和进入下一环节
-        synchronized (this) {
-            if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus())) == null) {
-                caffeineCache.put(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), "taskInterrupt");
-                socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
-            }
+        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus())) == null) {
+            caffeineCache.put(taskDO.getTaskId() + "_" + JmeterStatusEnum.getEnumByCode(taskMachineDTO.getStatus()), "taskInterrupt");
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskInterrupt", taskMachineDTO);
         }
         // 向web端报告进度
         TaskProgressVO taskProgressVO = new TaskProgressVO(taskDO.getTaskId(), JmeterStatusEnum.INTERRUPT, null, TaskResultEnum.EXCEPTION);
@@ -316,17 +311,15 @@ public class SocketIOServerHandler {
     }
 
     @OnEvent("cutCsv")
-    public void cutCsv(SocketIOClient client, String message) {
+    public synchronized void cutCsv(SocketIOClient client, String message) {
         TaskDO taskDO = DeserializerObjectMapper.deserialize(message, TaskDO.class);
         // 如果是第一次收到指定task的切分，则进行文件切分
-        synchronized (this) {
-            if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_CUT") == null) {
-                caffeineCache.put(taskDO.getTaskId() + "_CUT", true);
-                log.info("收到cutCsv:" + taskDO.getTaskId());
-                Map<String, List<CutFileVO>> machineDOCutFileVOListMap = taskService.cutCsv(taskDO);
-                MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO, false);
-                socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
-            }
+        if (caffeineCache.getIfPresent(taskDO.getTaskId() + "_CUT") == null) {
+            caffeineCache.put(taskDO.getTaskId() + "_CUT", true);
+            log.info("收到cutCsv:" + taskDO.getTaskId());
+            Map<String, List<CutFileVO>> machineDOCutFileVOListMap = taskService.cutCsv(taskDO);
+            MachineCutFileVO machineCutFileVO = new MachineCutFileVO(machineDOCutFileVOListMap, taskDO, false);
+            socketServer.getRoomOperations(taskDO.getTaskId()).sendEvent("taskConfigure", machineCutFileVO);
         }
     }
 
