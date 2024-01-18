@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
@@ -13,10 +14,14 @@ import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.serializer.DeserializerObjectMapper;
+import io.github.guojiaxing1995.easyJmeter.dto.jcase.CaseDebugDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.machine.HeartBeatMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
-import io.github.guojiaxing1995.easyJmeter.model.*;
+import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
+import io.github.guojiaxing1995.easyJmeter.model.MachineDO;
+import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.model.TaskLogDO;
 import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.*;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
@@ -228,7 +233,7 @@ public class SocketIOServerHandler {
         // 如果当前环节所有节点全部完成，修改机器、用例状态，发送下一环节指令
         if (logs.size()==taskDO.getMachineNum()) {
             // 服务端对收集结果处理
-            new JmeterExternal(socket).serverCollect(taskDO, jFileService, reportRepository);
+            new JmeterExternal().serverCollect(taskDO, jFileService, reportRepository);
 
             caseService.updateCaseStatus(caseDO, JmeterStatusEnum.CLEAN);
             // 给agent发消息进入清理环节
@@ -333,6 +338,13 @@ public class SocketIOServerHandler {
         // 向web端报告进度
         TaskProgressVO taskProgressVO = new TaskProgressVO(taskProgressMachineDTO.getTaskId(), JmeterStatusEnum.RUN, map, TaskResultEnum.IN_PROGRESS);
         socketServer.getRoomOperations("web").sendEvent("taskProgress", taskProgressVO);
+    }
+
+    @OnEvent("caseDebug")
+    public void caseDebug(SocketIOClient client, String message) {
+        CaseDebugDTO caseDebugDTO = DeserializerObjectMapper.deserialize(message, CaseDebugDTO.class);
+        JSONObject result = caseService.debugCase(caseDebugDTO);
+        socketServer.getRoomOperations("web").sendEvent("caseDebugResult", result);
     }
 
 }

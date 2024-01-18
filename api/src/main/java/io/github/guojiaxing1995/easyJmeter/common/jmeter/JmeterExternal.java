@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.common.util.ZipUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
+import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
@@ -11,6 +12,7 @@ import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
+import io.github.talelin.autoconfigure.exception.ParameterException;
 import io.socket.client.Socket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,8 @@ import org.apache.jmeter.config.CSVDataSet;
 import org.apache.jmeter.report.config.ConfigurationException;
 import org.apache.jmeter.report.dashboard.GenerationException;
 import org.apache.jmeter.report.dashboard.ReportGenerator;
+import org.apache.jmeter.reporters.ResultCollector;
+import org.apache.jmeter.reporters.Summariser;
 import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.StringProperty;
@@ -36,12 +40,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.util.Locale.ENGLISH;
 import static org.apache.jmeter.JMeter.JMETER_REPORT_OUTPUT_DIR_PROPERTY;
@@ -66,6 +68,20 @@ public class JmeterExternal {
         this.version();
         this.ipAddress();
         this.online();
+    }
+
+    public JmeterExternal() {
+        this.socket = null;
+        this.path = System.getProperty("user.dir") + "/apache-jmeter";
+        this.serverVersion();
+        this.ipAddress();
+        this.online();
+    }
+
+    public void serverVersion() {
+        JMeterUtils.setJMeterHome(this.path);
+        JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
+        this.version = JMeterUtils.getJMeterVersion();
     }
 
     public void version() {
@@ -178,11 +194,21 @@ public class JmeterExternal {
         JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
     }
 
-    public void initServerJmeterUtils(TaskDO taskDO) {
-        String jmeterHome = System.getProperty("user.dir") + "/apache-jmeter";
-        log.info(jmeterHome);
-        JMeterUtils.setJMeterHome(jmeterHome);
-        JMeterUtils.loadJMeterProperties(jmeterHome + "/bin/jmeter.properties");
+    public void initServerDebugJmeterUtils() {
+        JMeterUtils.setJMeterHome(this.path);
+        JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
+        JMeterUtils.setProperty("jmeter.save.saveservice.response_data", "true");
+        JMeterUtils.setProperty("jmeter.save.saveservice.response_data.on_error", "true");
+        JMeterUtils.setProperty("jmeter.save.saveservice.samplerData", "true");
+        JMeterUtils.setProperty("jmeter.save.saveservice.responseHeaders", "true");
+        JMeterUtils.setProperty("jmeter.save.saveservice.requestHeaders", "true");
+        JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "xml");
+    }
+
+    public void initServerCollectJmeterUtils(TaskDO taskDO) {
+        log.info(this.path);
+        JMeterUtils.setJMeterHome(this.path);
+        JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
         Integer granularity = taskDO.getGranularity();
         if (granularity == 0) {
             Integer duration = taskDO.getDuration();
@@ -201,7 +227,7 @@ public class JmeterExternal {
     }
 
     public void editJmxConfig(TaskDO taskDO) throws IOException {
-        File directory = new File(this.path + "/tmp/");
+        File directory = new File(Paths.get(this.path, "/tmp/").toString());
         File[] files = directory.listFiles();
         File jmxfile = null;
         List<File> csvFiles = new ArrayList<>();
@@ -258,6 +284,74 @@ public class JmeterExternal {
                 SaveService.saveTree(testPlanTree, outputStream);
             }
         }
+    }
+
+    public String editJmxDebugConfig(CaseDO caseDO, Long debugId, JFileService jFileService) throws IOException {
+        // jmx文件路径
+        String jmxPath = null;
+        // 文件下载目录
+        String dir = Paths.get(jFileService.getStoreDir(), caseDO.getId().toString(), debugId.toString()).toString();
+        // 下载jmx文件
+        String jmxStr = caseDO.getJmx();
+        List<JFileDO> jmxFileDOList= Arrays.stream(jmxStr.isEmpty() ? new String[]{} : jmxStr.split(","))
+                .map(Integer::parseInt).map(jFileService::searchById).collect(Collectors.toList());
+        if (jmxFileDOList.isEmpty()) {
+            throw new ParameterException();
+        } else {
+            jmxPath = jFileService.downloadFile(jmxFileDOList.get(0).getId(), dir);
+        }
+        // jar文件下载
+        String jarStr = caseDO.getJar();
+        List<JFileDO> jarFileDOList= Arrays.stream(jarStr.isEmpty() ? new String[]{} : jarStr.split(","))
+                .map(Integer::parseInt).map(jFileService::searchById).collect(Collectors.toList());
+        for (JFileDO jFileDO: jarFileDOList) {
+            jFileService.downloadFile(jFileDO.getId(), dir);
+        }
+        // csv 文件下载
+        String csvStr = caseDO.getCsv();
+        List<JFileDO> csvFileDOList= Arrays.stream(csvStr.isEmpty() ? new String[]{} : csvStr.split(","))
+                .map(Integer::parseInt).map(jFileService::searchById).collect(Collectors.toList());
+        List<File> csvFiles = new ArrayList<>();
+        for (JFileDO jFileDO: csvFileDOList) {
+            File csvFile = new File(jFileService.downloadFile(jFileDO.getId(), dir));
+            csvFiles.add(csvFile);
+        }
+        // 修改压测配置
+        HashTree testPlanTree = SaveService.loadTree(new File(jmxPath));
+        SearchByClass<SetupThreadGroup> setupThreadGroupSearch = new SearchByClass<>(SetupThreadGroup.class);
+        testPlanTree.traverse(setupThreadGroupSearch);
+        for (SetupThreadGroup setupThreadGroup : setupThreadGroupSearch.getSearchResults()) {
+            setupThreadGroup.setNumThreads(1);
+            setupThreadGroup.setScheduler(false);
+            setupThreadGroup.setRampUp(1);
+            setupThreadGroup.getSamplerController().setProperty("LoopController.loops", 1);
+        }
+        // 修改jmx中csv配置
+        SearchByClass<CSVDataSet> csvDataSetSearch = new SearchByClass<>(CSVDataSet.class);
+        testPlanTree.traverse(csvDataSetSearch);
+        for (File csvFile : csvFiles) {
+            for (CSVDataSet csvDataSet : csvDataSetSearch.getSearchResults()) {
+                String csvOldPathName = new File(csvDataSet.getProperty("filename").toString()).getName();
+                if (csvOldPathName.equals(csvFile.getName())) {
+                    csvDataSet.setProperty("filename", csvFile.getAbsolutePath());
+                }
+            }
+        }
+        // 加入查看结果数
+        Summariser summer = new Summariser("debug");
+        ResultCollector resultCollector = new ResultCollector(summer);
+        resultCollector.setEnabled(true);
+        resultCollector.setProperty(new StringProperty(TestElement.GUI_CLASS, "ViewResultsFullVisualizer"));
+        resultCollector.setProperty(new StringProperty(TestElement.TEST_CLASS, "ResultCollector"));
+        resultCollector.setProperty(new StringProperty(TestElement.NAME, "debug"));
+        resultCollector.setFilename(Paths.get(dir, "debug.jtl").toString());
+        testPlanTree.add(testPlanTree.getArray()[0], resultCollector);
+        // 写回jmx文件
+        try (FileOutputStream outputStream = new FileOutputStream(new File(jmxPath))) {
+            SaveService.saveTree(testPlanTree, outputStream);
+        }
+
+        return jmxPath;
     }
 
     public void runJmeter(TaskDO taskDO) {
@@ -526,7 +620,7 @@ public class JmeterExternal {
     }
 
     public void serverCollect(TaskDO taskDO, JFileService jFileService, ReportRepository reportRepository) {
-        this.initServerJmeterUtils(taskDO);
+        this.initServerCollectJmeterUtils(taskDO);
         String jtlPath = this.mergeJtlFile(taskDO, jFileService);
         String outputReportPath = this.generateReport(taskDO, jtlPath, jFileService);
         JFileDO jFileDO = this.compressReportAndUpload(taskDO, outputReportPath, jFileService);

@@ -1,14 +1,19 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import com.alibaba.fastjson2.JSONObject;
+import com.corundumstudio.socketio.SocketIOServer;
 import com.github.benmanes.caffeine.cache.Cache;
 import io.github.guojiaxing1995.easyJmeter.common.LocalUser;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
+import io.github.guojiaxing1995.easyJmeter.dto.jcase.CaseDebugDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CreateOrUpdateCaseDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.CaseMapper;
 import io.github.guojiaxing1995.easyJmeter.mapper.JFileMapper;
 import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.model.JFileDO;
 import io.github.guojiaxing1995.easyJmeter.service.CaseService;
+import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoPlusVO;
 import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO;
 import io.github.guojiaxing1995.easyJmeter.vo.JFileVO;
@@ -18,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,6 +42,12 @@ public class CaseServiceImpl implements CaseService {
 
     @Autowired
     Cache<String, Object> caffeineCache;
+
+    @Autowired
+    private JFileService jFileService;
+
+    @Autowired
+    private SocketIOServer socketServer;
 
     @Override
     public boolean createCase(CreateOrUpdateCaseDTO caseDTO) {
@@ -154,5 +166,38 @@ public class CaseServiceImpl implements CaseService {
     public boolean updateCaseStatus(CaseDO caseDO, JmeterStatusEnum status) {
         caseDO.setStatus(status);
         return caseMapper.updateById(caseDO) > 0;
+    }
+
+    @Override
+    public JSONObject debugCase(CaseDebugDTO caseDebugDTO) {
+        Integer caseId = caseDebugDTO.getCaseId();
+        Long debugId = caseDebugDTO.getDebugId();
+        CaseDO caseDO = caseMapper.selectById(caseId);
+        if (caseDO == null){
+            throw new NotFoundException(12201);
+        }
+        // 初始化服务端配置
+        JmeterExternal jmeterExternal = new JmeterExternal();
+        jmeterExternal.initServerDebugJmeterUtils();
+        // 如果debug没有配置过，则进行配置
+        if (caffeineCache.getIfPresent(caseId + "_config_" + debugId) == null) {
+            // 配置jmx文件，缓存jmx文件路径
+            try {
+                String jmxPath = jmeterExternal.editJmxDebugConfig(caseDO, debugId, jFileService);
+                log.info(jmxPath);
+                caffeineCache.put(caseId + "_config_" + debugId, jmxPath);
+            }catch (IOException e) {
+                log.error("配置失败", e);
+                throw new RuntimeException("配置失败");
+            }
+            // 发送配置完成消息
+            JSONObject result = new JSONObject();
+            result.put("config", true);
+            result.put("caseDebugDTO", caseDebugDTO);
+            socketServer.getRoomOperations("web").sendEvent("caseDebugResult", result);
+        }
+        // 获取jmx路径
+        // 进行调试 发起请求
+        return null;
     }
 }
