@@ -20,14 +20,16 @@ import io.github.guojiaxing1995.easyJmeter.vo.JFileVO;
 import io.github.talelin.autoconfigure.exception.NotFoundException;
 import io.github.talelin.autoconfigure.exception.ParameterException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.jmeter.JMeter;
+import org.apache.jmeter.engine.StandardJMeterEngine;
+import org.apache.jmeter.save.SaveService;
+import org.apache.jorphan.collections.HashTree;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -169,7 +171,7 @@ public class CaseServiceImpl implements CaseService {
     }
 
     @Override
-    public JSONObject debugCase(CaseDebugDTO caseDebugDTO) {
+    public JSONObject debugCase(CaseDebugDTO caseDebugDTO) throws IOException {
         Integer caseId = caseDebugDTO.getCaseId();
         Long debugId = caseDebugDTO.getDebugId();
         CaseDO caseDO = caseMapper.selectById(caseId);
@@ -179,17 +181,15 @@ public class CaseServiceImpl implements CaseService {
         // 初始化服务端配置
         JmeterExternal jmeterExternal = new JmeterExternal();
         jmeterExternal.initServerDebugJmeterUtils();
+        // jtl文件路径
+        String jtlPath = null;
         // 如果debug没有配置过，则进行配置
         if (caffeineCache.getIfPresent(caseId + "_config_" + debugId) == null) {
             // 配置jmx文件，缓存jmx文件路径
-            try {
-                String jmxPath = jmeterExternal.editJmxDebugConfig(caseDO, debugId, jFileService);
-                log.info(jmxPath);
-                caffeineCache.put(caseId + "_config_" + debugId, jmxPath);
-            }catch (IOException e) {
-                log.error("配置失败", e);
-                throw new RuntimeException("配置失败");
-            }
+            Map<String, Object> map = jmeterExternal.editJmxDebugConfig(caseDO, debugId, jFileService);
+            jtlPath = map.get("jtlPath").toString();
+            log.info(map.toString());
+            caffeineCache.put(caseId + "_config_" + debugId, map.get("jmxPath"));
             // 发送配置完成消息
             JSONObject result = new JSONObject();
             result.put("config", true);
@@ -197,7 +197,18 @@ public class CaseServiceImpl implements CaseService {
             socketServer.getRoomOperations("web").sendEvent("caseDebugResult", result);
         }
         // 获取jmx路径
+        String jmxPath = (String) caffeineCache.getIfPresent(caseId + "_config_" + debugId);
         // 进行调试 发起请求
+        HashTree testPlanTree = SaveService.loadTree(new File(jmxPath));
+        StandardJMeterEngine engine = new StandardJMeterEngine();
+        JMeter.convertSubTree(testPlanTree,false);
+        engine.configure(testPlanTree);
+        engine.run();
+        engine.exit();
+
+        // jtl文件处理
+
+
         return null;
     }
 }

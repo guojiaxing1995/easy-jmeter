@@ -8,6 +8,7 @@ import io.github.guojiaxing1995.easyJmeter.model.CaseDO;
 import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoPlusVO;
 import io.github.guojiaxing1995.easyJmeter.vo.CaseInfoVO;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface CaseService {
@@ -26,5 +27,5 @@ public interface CaseService {
 
     boolean updateCaseStatus(CaseDO caseDO, JmeterStatusEnum status);
 
-    JSONObject debugCase(CaseDebugDTO caseDebugDTO);
+    JSONObject debugCase(CaseDebugDTO caseDebugDTO) throws IOException;
 }

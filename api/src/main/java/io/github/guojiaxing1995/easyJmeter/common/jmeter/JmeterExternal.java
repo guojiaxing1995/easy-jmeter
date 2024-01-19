@@ -286,11 +286,13 @@ public class JmeterExternal {
         }
     }
 
-    public String editJmxDebugConfig(CaseDO caseDO, Long debugId, JFileService jFileService) throws IOException {
+    public Map<String, Object> editJmxDebugConfig(CaseDO caseDO, Long debugId, JFileService jFileService) throws IOException {
         // jmx文件路径
         String jmxPath = null;
         // 文件下载目录
         String dir = Paths.get(jFileService.getStoreDir(), caseDO.getId().toString(), debugId.toString()).toString();
+        // jtl 文件路径
+        String jtlPath = Paths.get(dir, "debug.jtl").toString();
         // 下载jmx文件
         String jmxStr = caseDO.getJmx();
         List<JFileDO> jmxFileDOList= Arrays.stream(jmxStr.isEmpty() ? new String[]{} : jmxStr.split(","))
@@ -344,14 +346,18 @@ public class JmeterExternal {
         resultCollector.setProperty(new StringProperty(TestElement.GUI_CLASS, "ViewResultsFullVisualizer"));
         resultCollector.setProperty(new StringProperty(TestElement.TEST_CLASS, "ResultCollector"));
         resultCollector.setProperty(new StringProperty(TestElement.NAME, "debug"));
-        resultCollector.setFilename(Paths.get(dir, "debug.jtl").toString());
+        resultCollector.setFilename(jtlPath);
         testPlanTree.add(testPlanTree.getArray()[0], resultCollector);
         // 写回jmx文件
         try (FileOutputStream outputStream = new FileOutputStream(new File(jmxPath))) {
             SaveService.saveTree(testPlanTree, outputStream);
         }
+        
+        Map<String, Object> map = new HashMap<>();
+        map.put("jmxPath", jmxPath);
+        map.put("jtlPath", jtlPath);
 
-        return jmxPath;
+        return map;
     }
 
     public void runJmeter(TaskDO taskDO) {

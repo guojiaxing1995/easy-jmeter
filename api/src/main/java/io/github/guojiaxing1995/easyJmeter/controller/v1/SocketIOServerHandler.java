@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -341,7 +342,7 @@ public class SocketIOServerHandler {
     }
 
     @OnEvent("caseDebug")
-    public void caseDebug(SocketIOClient client, String message) {
+    public void caseDebug(SocketIOClient client, String message) throws IOException {
         CaseDebugDTO caseDebugDTO = DeserializerObjectMapper.deserialize(message, CaseDebugDTO.class);
         JSONObject result = caseService.debugCase(caseDebugDTO);
         socketServer.getRoomOperations("web").sendEvent("caseDebugResult", result);
