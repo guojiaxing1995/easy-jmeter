@@ -1,6 +1,5 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
-import com.alibaba.fastjson2.JSONObject;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
@@ -10,6 +9,7 @@ import com.corundumstudio.socketio.annotation.OnEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
+import io.github.guojiaxing1995.easyJmeter.common.enumeration.DebugTypeEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
@@ -24,6 +24,7 @@ import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskLogDO;
 import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.*;
+import io.github.guojiaxing1995.easyJmeter.vo.CaseDebugVO;
 import io.github.guojiaxing1995.easyJmeter.vo.CutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.MachineCutFileVO;
 import io.github.guojiaxing1995.easyJmeter.vo.TaskProgressVO;
@@ -33,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -342,10 +342,18 @@ public class SocketIOServerHandler {
     }
 
     @OnEvent("caseDebug")
-    public void caseDebug(SocketIOClient client, String message) throws IOException {
+    public void caseDebug(SocketIOClient client, String message){
         CaseDebugDTO caseDebugDTO = DeserializerObjectMapper.deserialize(message, CaseDebugDTO.class);
-        JSONObject result = caseService.debugCase(caseDebugDTO);
-        socketServer.getRoomOperations("web").sendEvent("caseDebugResult", result);
+        try {
+            caseService.debugCase(caseDebugDTO);
+        } catch (Exception e) {
+            log.error("debugCase error", e);
+            CaseDebugVO caseDebugVO = CaseDebugVO.builder().type(DebugTypeEnum.ERROR).caseId(caseDebugDTO.getCaseId()).
+                    debugId(caseDebugDTO.getDebugId()).log(e.getMessage()).build();
+            // 通知web端发生异常
+            socketServer.getRoomOperations("web").sendEvent("caseDebugResult", caseDebugVO);
+        }
+
     }
 
 }

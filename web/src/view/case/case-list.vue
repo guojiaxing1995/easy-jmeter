@@ -11,7 +11,7 @@
       </div>
       <el-main v-if="loading" v-loading = "loading" element-loading-text="Loading..." element-loading-background="#F9FAFB" style="height: 600px;"/>
       <div class="list" v-else>
-        <div class="case" v-for="(item,index) in casesRes" @click.stop="handleDetail(item)">
+        <div class="case" v-for="(item,index) in casesRes" @click.stop="handleDetail(item)" @mouseover="caseMouseover(item)" @mouseleave="caseMouseout" >
           <div class="line line-name">
             <div class="name">{{item.name}}</div>
             <div class="last-run">{{item.creator}}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{item.create_time}}</div>
@@ -34,7 +34,7 @@
           <div class="line">
             <div class="line-icon">
               <i class="iconfont icon-stop" @click.stop="handleStop(item.task_id)"></i>
-              <i class="iconfont icon-debug"></i>
+              <i class="iconfont icon-debug" @click.stop="handleDebug(item.id)"></i>
               <i class="iconfont icon-modify" @click.stop="handleEdit(item.id)"></i>
               <i class="iconfont icon-remove" @click.stop="handleDelete(item.id)"></i>
               <i class="iconfont icon-history" @click.stop="handleHistory(item.name)"></i>
@@ -44,6 +44,7 @@
       </div>
       <task :taskVisible="taskVisible" :caseId="taskCaseId" @taskClose="closeTask"></task>
       <qps-limit :qpsLimitVisible="qpsLimitVisible" :taskId="taskId" @qpsLimitDialogClose="closeQPSLimit"></qps-limit>
+      <case-debug :caseId="debugCaseId" :debugVisible="debugVisible" @debugDialogClose="closeDebug"></case-debug>
     </div>
     <case v-else @editClose="editClose" :editCaseId="editCaseId" :projects="projects"></case>
   </template>
@@ -57,12 +58,14 @@
     import Case from './case'
     import Task from './task'
     import QpsLimit from './qps-limit'
+    import CaseDebug from './case-debug'
   
     export default {
       components: {
         Case,
         Task,
-        QpsLimit
+        QpsLimit,
+        CaseDebug,
       },
       setup() {
         const showEdit = ref(false)
@@ -75,11 +78,14 @@
         const casesRes = ref([])
         const taskVisible = ref(false)
         const qpsLimitVisible = ref(false)
+        const debugVisible = ref(false)
         const taskCaseId = ref(null)
         const taskId = ref('')
         const socketio = inject('socketio')
         const route = useRoute()
         const router = useRouter()
+        const debugCaseId = ref(0)
+        const hoverCaseId = ref(0)
   
         onMounted(() => {
           history.replaceState({}, '', '/#'+route.path);
@@ -151,6 +157,11 @@
           editCaseId.value = id
         }
 
+        const handleDebug = id => {
+          debugVisible.value = true
+          debugCaseId.value = id
+        }
+
         const handleDetail = item => {
           if (!item.task_id) {
             ElMessage.warning('请先执行用例')
@@ -188,6 +199,10 @@
         const closeQPSLimit = () => {
           qpsLimitVisible.value = false
           taskId.value = null
+        }
+
+        const closeDebug = () => {
+          debugVisible.value = false
         }
 
         const handleDelete = id => {
@@ -229,9 +244,12 @@
         })
 
         const getProgressColor = c => {
+          if (hoverCaseId.value === c.id) {
+            return '#f5faff'
+          }
           switch (c.status.value) {
             case 0:
-              return '#5698c3'
+              return '#b3d8ff'
             case 1:
               return '#f1ca17'
             case 2:
@@ -245,6 +263,14 @@
           }
         }
 
+        const caseMouseover = c => {
+          hoverCaseId.value = c.id
+        }
+
+        const caseMouseout = () => {
+          hoverCaseId.value = null
+        }
+
         const getProgressNum = progress => {
           if (progress == null) {
             return 100
@@ -254,6 +280,9 @@
         }
 
         const setProgressStriped = c => {
+          if (hoverCaseId.value === c.id) {
+            return false
+          }
           switch (c.status.value) {
             case 0:
               return false
@@ -298,6 +327,13 @@
           closeQPSLimit,
           handleDetail,
           handleHistory,
+          handleDebug,
+          debugVisible,
+          debugCaseId,
+          closeDebug,
+          hoverCaseId,
+          caseMouseover,
+          caseMouseout,
       }
   
       },
@@ -334,8 +370,9 @@
       flex-wrap: wrap;
     }
     .case:hover {
-      background-color: #ecf5ff;
+      background-color: #b3d8ff;
       cursor: pointer;
+      color: #f5faff;
     }
     .case {
       width: calc(50% - 32px);
@@ -343,7 +380,9 @@
       border-radius: 5px;
       box-shadow: 0px 0px 12px rgba(0, 0, 0, .12);
       background-color: #f5faff;
-      border: 1px solid #f5faff;
+      color: #1979d9;
+      // background: #ecf5ff;
+      border:1px solid #b3d8ff;
 
       .line {
         height: 45px;

@@ -1,6 +1,5 @@
 package io.github.guojiaxing1995.easyJmeter.service;
 
-import com.alibaba.fastjson2.JSONObject;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CaseDebugDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CreateOrUpdateCaseDTO;
@@ -27,5 +26,5 @@ public interface CaseService {
 
     boolean updateCaseStatus(CaseDO caseDO, JmeterStatusEnum status);
 
-    JSONObject debugCase(CaseDebugDTO caseDebugDTO) throws IOException;
+    void debugCase(CaseDebugDTO caseDebugDTO) throws IOException;
 }

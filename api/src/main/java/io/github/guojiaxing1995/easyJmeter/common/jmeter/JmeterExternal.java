@@ -286,7 +286,7 @@ public class JmeterExternal {
         }
     }
 
-    public Map<String, Object> editJmxDebugConfig(CaseDO caseDO, Long debugId, JFileService jFileService) throws IOException {
+    public Map<String, String> editJmxDebugConfig(CaseDO caseDO, Long debugId, JFileService jFileService) throws IOException {
         // jmx文件路径
         String jmxPath = null;
         // 文件下载目录
@@ -353,7 +353,7 @@ public class JmeterExternal {
             SaveService.saveTree(testPlanTree, outputStream);
         }
         
-        Map<String, Object> map = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
         map.put("jmxPath", jmxPath);
         map.put("jtlPath", jtlPath);
 

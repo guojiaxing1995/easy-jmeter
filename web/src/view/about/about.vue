@@ -439,7 +439,6 @@ export default {
     overflow: auto;
     height: calc(70vh - 35px);
     .case-item {
-      background: green;
       height: 35px;
       line-height: 35px;
       font-weight: 500;
