@@ -23,7 +23,7 @@ public class HttpSample {
     private String ct;
 
     @XStreamAsAttribute
-    private String ts;
+    private Long ts;
 
     @XStreamAsAttribute
     private Boolean s;

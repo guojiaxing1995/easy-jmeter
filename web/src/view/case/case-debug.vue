@@ -16,7 +16,28 @@
                   </div>
                 </div>
               </el-col>
-              <el-col :span="18"></el-col>
+              <el-col :span="18">
+                <el-tabs v-model="activeNameSample" type="border-card" class="sampleTab">
+                  <el-tab-pane label="响应体" name="responseBody">
+                    <codemirror v-model="responseBodyCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
+                  </el-tab-pane>
+                  <el-tab-pane label="响应头" name="responseHeader">
+                    <codemirror v-model="responseHeaderCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
+                  </el-tab-pane>
+                  <el-tab-pane label="请求体" name="requestBody">
+                    <codemirror v-model="requestBodyCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
+                  </el-tab-pane>
+                  <el-tab-pane label="请求头" name="requestHeader">
+                    <codemirror v-model="requestHeaderCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
+                  </el-tab-pane>
+                  <el-tab-pane label="断言" name="assert">
+                    
+                  </el-tab-pane>
+                  <el-tab-pane label="取样器结果" name="sampleData">
+                    <codemirror v-model="sampleResultCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
+                  </el-tab-pane>
+                </el-tabs>
+              </el-col>
             </el-row>
           </div>
         </el-tab-pane>
@@ -28,7 +49,10 @@
           <el-text v-if="status=='SAMPLE'" size="large" type="success">调试成功</el-text>
           <el-text v-if="status=='ERROR'" size="large" type="danger">调试异常 {{ errorStr }}</el-text>
           <el-text v-else size="large" type="info"></el-text>
-          <el-button :loading="loading" type="primary" @click="startDebug">启动</el-button>
+          <div>
+            <el-button @click="clear">清空</el-button>
+            <el-button :loading="loading" type="primary" @click="startDebug">启动</el-button>
+          </div>
         </div>
       </template>
     </el-dialog>
@@ -37,6 +61,9 @@
 
 <script>
 import { ref,onBeforeUpdate,inject } from 'vue'
+import { Codemirror } from 'vue-codemirror'
+import { json } from '@codemirror/lang-json'
+import {rosePineDawn} from 'thememirror';
 
 export default {
   props: {
@@ -49,14 +76,24 @@ export default {
       required: true,
     },
   },
+  components: {
+    Codemirror
+  },
   setup(props, context) {
     const activeName = ref('sample')
+    const activeNameSample = ref('responseBody')
     const debugId = ref(null)
     const socketio = inject('socketio')
     const status = ref('')
     const loading = ref(false)
     const httpSamples = ref([])
     const errorStr = ref('')
+    const responseBodyCode = ref('')
+    const responseHeaderCode = ref('')
+    const requestBodyCode = ref('')
+    const requestHeaderCode = ref('')
+    const sampleResultCode = ref('')
+    const extensions = [json(), rosePineDawn]
 
     onBeforeUpdate(() => {
       if (props.debugVisible){
@@ -65,6 +102,11 @@ export default {
       status.value = ''
       errorStr.value = ''
       httpSamples.value = []
+      responseBodyCode.value = ''
+      responseHeaderCode.value = ''
+      requestBodyCode.value = ''
+      requestHeaderCode.value = ''
+      sampleResultCode.value = ''
     })
 
     socketio.on('caseDebugResult', (data) => {
@@ -109,6 +151,33 @@ export default {
           httpSamples.value[i].is_choose = false
         }
       }
+      try {
+        responseBodyCode.value = JSON.stringify(JSON.parse(item.responseData), null, '\t')
+      } catch (error) {
+        responseBodyCode.value = item.responseData
+      }
+      responseHeaderCode.value = item.responseHeader
+      try {
+        let requestUrl = item.method + '  ' + item.javaNetURL + '\n'
+        requestBodyCode.value = requestUrl + JSON.stringify(JSON.parse(item.queryString), null, '\t') + '\n' +item.cookies
+      } catch (error) {
+        let requestUrl = item.method + '  ' + item.javaNetURL + '\n'
+        requestBodyCode.value = requestUrl + item.queryString + '\n' +item.cookies
+      }
+      requestHeaderCode.value = item.requestHeader
+      sampleResultCode.value = 'Thread Name:'+item.tn+'\n'+'Sample Start:'+new Date(item.ts)+'\n'+'Load time:'+item.lt+'\n'+
+      'Connect Time:'+item.ct+'\n'+'Latency:'+item.t+'\n'+'Response code:'+item.rc+'\n'+'Response message:'+item.rm+'\n'+
+      'Data type ("text"|"bin"|""):'+item.dt+'\n'
+    }
+
+    const clear = () => {
+      httpSamples.value = []
+      responseBodyCode.value = ''
+      responseHeaderCode.value = ''
+      requestBodyCode.value = ''
+      requestHeaderCode.value = ''
+      sampleResultCode.value = ''
+  
     }
     
     return {
@@ -120,7 +189,15 @@ export default {
       loading,
       httpSamples,
       errorStr,
-      chooseSample
+      chooseSample,
+      activeNameSample,
+      responseBodyCode,
+      responseHeaderCode,
+      requestBodyCode,
+      requestHeaderCode,
+      sampleResultCode,
+      extensions,
+      clear,
     }
   },
 }
@@ -131,13 +208,21 @@ export default {
   padding-top: 0;
   padding-bottom: 0;
 }
+::v-deep .el-tabs__content{
+  padding: 0;
+}
 
 .body{
   height: 60vh;
+  margin-bottom: 3px;
+  ::v-deep .el-tabs__item.is-top.is-active {
+    background: #faf4ed;
+  }
   .list{
     height: 60vh;
     overflow: auto;
-    background-color: #f8f9fa;
+    background-color: #f5f7fa;
+    border: 1px solid #e4e7ed;
     .item {
       height: 35px;
       line-height: 35px;
@@ -179,6 +264,9 @@ export default {
   }
   .list::-webkit-scrollbar-thumb:hover{
     background: rgb(175, 173, 173);
+  }
+  .sampleTab{
+    height: 100%;
   }
 }
 .footer {
