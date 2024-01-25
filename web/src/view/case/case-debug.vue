@@ -31,7 +31,22 @@
                     <codemirror v-model="requestHeaderCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
                   </el-tab-pane>
                   <el-tab-pane label="断言" name="assert">
-                    
+                    <el-row :gutter="0">
+                      <el-col :span="6">
+                        <div class="assert-list">
+                          <div class="assert-item" v-for="item in assertionResults" v-bind:class="{'assert-item-color': !item.is_choose, 'assert-item-color-choose': item.is_choose}" :key="item.id" @click="chooseAssert(item)">
+                            <i class="el-icon-check" v-if="!item.failure && item.is_choose"></i>
+                            <i class="el-icon-success" v-if="!item.failure && !item.is_choose" style="color: #00C292"></i>
+                            <i class="el-icon-error" v-if="item.failure && !item.is_choose" style="color: #E46A76"></i>
+                            <i class="el-icon-close" v-if="item.failure && item.is_choose"></i>
+                            {{ item.name }}
+                          </div>
+                        </div>
+                      </el-col>
+                      <el-col :span="18">
+                        <codemirror v-model="assertResultCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
+                      </el-col>
+                    </el-row>
                   </el-tab-pane>
                   <el-tab-pane label="取样器结果" name="sampleData">
                     <codemirror v-model="sampleResultCode" :style="{height:'calc(60vh - 39px)'}" :disabled="true" :extensions="extensions"/>
@@ -94,6 +109,8 @@ export default {
     const requestHeaderCode = ref('')
     const sampleResultCode = ref('')
     const extensions = [json(), rosePineDawn]
+    const assertionResults = ref([])
+    const assertResultCode = ref('')
 
     onBeforeUpdate(() => {
       if (props.debugVisible){
@@ -107,6 +124,9 @@ export default {
       requestBodyCode.value = ''
       requestHeaderCode.value = ''
       sampleResultCode.value = ''
+      loading.value = false
+      assertionResults.value = []
+      assertResultCode.value = ''
     })
 
     socketio.on('caseDebugResult', (data) => {
@@ -168,6 +188,28 @@ export default {
       sampleResultCode.value = 'Thread Name:'+item.tn+'\n'+'Sample Start:'+new Date(item.ts)+'\n'+'Load time:'+item.lt+'\n'+
       'Connect Time:'+item.ct+'\n'+'Latency:'+item.t+'\n'+'Response code:'+item.rc+'\n'+'Response message:'+item.rm+'\n'+
       'Data type ("text"|"bin"|""):'+item.dt+'\n'
+
+      assertionResults.value = []
+      assertResultCode.value = ''
+      if(item.assertionResults) {
+        let assertionData = item.assertionResults
+        for (let i = 0; i < assertionData.length; i++) {
+          assertionData[i].is_choose = false
+          assertionData[i].id = Math.random().toString(36).substring(2, 36)
+        }
+        assertionResults.value = assertionData
+      }
+    }
+
+    const chooseAssert = (item) => {
+      for (let i = 0; i < assertionResults.value.length; i++) {
+        if (assertionResults.value[i].id == item.id){
+          assertionResults.value[i].is_choose = true
+        } else {
+          assertionResults.value[i].is_choose = false
+        }
+      }
+      assertResultCode.value = 'error:'+item.error+'\n'+'failure:'+item.failure+'\n'+'failureMessage:'+item.failureMessage+'\n'
     }
 
     const clear = () => {
@@ -177,7 +219,8 @@ export default {
       requestBodyCode.value = ''
       requestHeaderCode.value = ''
       sampleResultCode.value = ''
-  
+      assertionResults.value = []
+      assertResultCode.value = ''
     }
     
     return {
@@ -198,6 +241,9 @@ export default {
       sampleResultCode,
       extensions,
       clear,
+      assertionResults,
+      chooseAssert,
+      assertResultCode,
     }
   },
 }
@@ -267,6 +313,52 @@ export default {
   }
   .sampleTab{
     height: 100%;
+    .assert-list {
+      height: calc(60vh - 39px);
+      overflow: auto;
+      background-color: #faf4ed;
+      .assert-item {
+        height: 30px;
+        line-height: 30px;
+        font-weight: 500;
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 0 5px;
+        margin: 2px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+      .assert-item-color {
+        color: #409eff;
+        background: #ecf5ff;
+        border: 1px solid #b3d8ff;
+      }
+      .assert-item-color-choose {
+        color: #ecf5ff;
+        background: #409eff;
+        border: 1px solid #b3d8ff;
+      }
+    }
+    .assert-list::-webkit-scrollbar{
+      display: none;
+    }
+    .assert-list:hover::-webkit-scrollbar{
+      width:6px;
+      height:6px;
+      display: block;
+    }
+    .assert-list::-webkit-scrollbar-track{
+      background: rgb(239, 239, 239);
+      border-radius:2px;
+    }
+    .assert-list::-webkit-scrollbar-thumb{
+      background: #dad4d4;
+      border-radius:10px;
+    }
+    .assert-list::-webkit-scrollbar-thumb:hover{
+      background: rgb(175, 173, 173);
+    }
   }
 }
 .footer {
