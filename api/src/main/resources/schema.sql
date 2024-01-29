@@ -288,7 +288,7 @@ CREATE TABLE `task` (
     `num_threads` int(11) NOT NULL COMMENT '并发线程数',
     `duration` int(11) NOT NULL COMMENT '压测时长',
     `ramp_time` int(11) DEFAULT 0 COMMENT '过渡时间',
-    `qpsLimit` int(11) DEFAULT 0 COMMENT 'QPS限制',
+    `qps_limit` int(11) DEFAULT 0 COMMENT 'QPS限制',
     `machine` varchar(50) DEFAULT NULL COMMENT '压力机文件id,逗号分割',
     `machine_num` int(11) NOT NULL DEFAULT 1 COMMENT '压力机数量',
     `granularity` int(11) NOT NULL DEFAULT '0' COMMENT '生成报告的时间采样颗粒度',
