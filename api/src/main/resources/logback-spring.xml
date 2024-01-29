@@ -136,6 +136,15 @@
             <onMismatch>DENY</onMismatch>
         </filter>
     </appender>
+
+    <appender name="jmeter-log" class="ch.qos.logback.core.FileAppender">
+        <file>logs/jmeter.log</file>
+        <append>false</append>
+        <layout>
+            <pattern>%d %p %c{1.}: %m%n</pattern>
+        </layout>
+        <filter class="io.github.guojiaxing1995.easyJmeter.module.log.JmeterLogFilter"/>
+    </appender>
     
     <logger name="io.github.guojiaxing1995.easyJmeter.module.log.MDCAccessServletFilter" level="INFO" additivity="false">
         <appender-ref ref="FILE_ACCESS"/>
@@ -149,6 +158,7 @@
             <appender-ref ref="FILE_INFO"/>
             <appender-ref ref="FILE_DEBUG"/>
             <appender-ref ref="FILE_TRACE"/>
+            <appender-ref ref="jmeter-log"/>
         </root>
     </springProfile>
     
@@ -159,12 +169,14 @@
             <appender-ref ref="FILE_INFO"/>
             <appender-ref ref="FILE_DEBUG"/>
             <appender-ref ref="FILE_TRACE"/>
+            <appender-ref ref="jmeter-log"/>
         </root>
     </springProfile>
     
     <springProfile name="test">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE_ERROR"/>
         </root>
     </springProfile>
 

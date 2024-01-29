@@ -68,5 +68,12 @@ public class HttpSample {
     @XStreamImplicit
     @XStreamAlias("assertionResult")
     private List<AssertionResult> assertionResults;
+
+    private String redirectLocation;
+
+    @XStreamImplicit
+    @XStreamAlias("httpSample")
+    private List<HttpSample> httpSamples;
+
 }
 

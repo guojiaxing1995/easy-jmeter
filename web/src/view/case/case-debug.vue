@@ -56,7 +56,11 @@
             </el-row>
           </div>
         </el-tab-pane>
-        <!-- <el-tab-pane label="引擎日志" name="log"></el-tab-pane> -->
+        <el-tab-pane label="引擎日志" name="log">
+          <div class="body">
+            <codemirror v-model="logCode" :style="{height:'calc(60vh)'}" :disabled="true" :extensions="extensions"/>
+          </div>
+        </el-tab-pane>
       </el-tabs>
       <template #footer>
         <div class="footer">
@@ -111,6 +115,7 @@ export default {
     const extensions = [json(), rosePineDawn]
     const assertionResults = ref([])
     const assertResultCode = ref('')
+    const logCode = ref('')
 
     onBeforeUpdate(() => {
       if (props.debugVisible){
@@ -127,6 +132,7 @@ export default {
       loading.value = false
       assertionResults.value = []
       assertResultCode.value = ''
+      logCode.value = ''
     })
 
     socketio.on('caseDebugResult', (data) => {
@@ -146,6 +152,9 @@ export default {
         }
         if (data.type == 'ERROR'){
           errorStr.value = data.log
+        }
+        if (data.type == 'LOG'){
+          logCode.value = logCode.value + data.log + '\n'
         }
       }
     })
@@ -221,6 +230,7 @@ export default {
       sampleResultCode.value = ''
       assertionResults.value = []
       assertResultCode.value = ''
+      logCode.value = ''
     }
     
     return {
@@ -244,6 +254,7 @@ export default {
       assertionResults,
       chooseAssert,
       assertResultCode,
+      logCode,
     }
   },
 }

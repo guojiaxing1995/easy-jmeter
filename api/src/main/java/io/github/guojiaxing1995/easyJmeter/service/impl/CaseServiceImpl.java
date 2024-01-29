@@ -10,6 +10,7 @@ import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.xstream.AssertionResult;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.xstream.HttpSample;
+import io.github.guojiaxing1995.easyJmeter.common.jmeter.xstream.JmeterLogDeal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.xstream.TestResults;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CaseDebugDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.jcase.CreateOrUpdateCaseDTO;
@@ -183,34 +184,39 @@ public class CaseServiceImpl implements CaseService {
         Integer caseId = caseDebugDTO.getCaseId();
         Long debugId = caseDebugDTO.getDebugId();
         CaseDO caseDO = caseMapper.selectById(caseId);
+        String configKey = caseId + "_config_" + debugId;
         if (caseDO == null){
             throw new NotFoundException(12201);
         }
         // 初始化服务端配置
         JmeterExternal jmeterExternal = new JmeterExternal();
         jmeterExternal.initServerDebugJmeterUtils();
-
         // 如果debug没有配置过，则进行配置
-        if (caffeineCache.getIfPresent(caseId + "_config_" + debugId) == null) {
+        if (caffeineCache.getIfPresent(configKey) == null) {
             // 配置jmx文件，缓存jmx文件路径
             Map<String, String> map = jmeterExternal.editJmxDebugConfig(caseDO, debugId, jFileService);
-            caffeineCache.put(caseId + "_config_" + debugId, map);
+            caffeineCache.put(configKey, map);
             CaseDebugVO caseDebugVO = CaseDebugVO.builder().type(DebugTypeEnum.CONFIG).caseId(caseId).debugId(debugId).build();
             // 通知web端配置完成
             socketServer.getRoomOperations("web").sendEvent("caseDebugResult", caseDebugVO);
         }
-        Map<String, String> map = (Map<String, String>) caffeineCache.getIfPresent(caseId + "_config_" + debugId);
+        Map<String, String> map = (Map<String, String>) caffeineCache.getIfPresent(configKey);
         log.info(map.toString());
         // 获取jmx jtl路径
         String jmxPath = map.get("jmxPath");
         String jtlPath = map.get("jtlPath");
         // 进行调试 发起请求
-        HashTree testPlanTree = SaveService.loadTree(new File(jmxPath));
-        StandardJMeterEngine engine = new StandardJMeterEngine();
-        JMeter.convertSubTree(testPlanTree,false);
-        engine.configure(testPlanTree);
-        engine.run();
-        engine.exit();
+        long l = System.currentTimeMillis();
+        synchronized(this) {
+            log.info(configKey+l+":debug_start");
+            HashTree testPlanTree = SaveService.loadTree(new File(jmxPath));
+            StandardJMeterEngine engine = new StandardJMeterEngine();
+            JMeter.convertSubTree(testPlanTree,false);
+            engine.configure(testPlanTree);
+            engine.run();
+            engine.exit();
+            log.info(configKey+l+":debug_end");
+        }
 
         // jtl文件处理
         try (BufferedReader reader = new BufferedReader(new FileReader(jtlPath))) {
@@ -230,6 +236,14 @@ public class CaseServiceImpl implements CaseService {
 
             CaseDebugVO caseDebugVO = CaseDebugVO.builder().type(DebugTypeEnum.SAMPLE).caseId(caseId).debugId(debugId).result(testResults).build();
             // 通知web端数据请求完成
+            socketServer.getRoomOperations("web").sendEvent("caseDebugResult", caseDebugVO);
+        }
+        // 获取jmeter日志
+        String logsPath = Paths.get(System.getProperty("user.dir"), "logs", "jmeter.log").toString();
+        String[] logs = JmeterLogDeal.cutContentFromFile(logsPath, configKey + l + ":debug_start", configKey + l + ":debug_end");
+        CaseDebugVO caseDebugVO = CaseDebugVO.builder().type(DebugTypeEnum.LOG).caseId(caseId).debugId(debugId).build();
+        for (String log:logs) {
+            caseDebugVO.setLog(log);
             socketServer.getRoomOperations("web").sendEvent("caseDebugResult", caseDebugVO);
         }
         // 清理jtl文件
