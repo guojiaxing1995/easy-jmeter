@@ -65,4 +65,4 @@ cron:
   heartBeat: "0 0/1 * * * ?"
   deleteTaskRecordStorage: "0 0 1 ? * MON"
   recordStatistics: "0 0/30 * * * ? "
-  jmeterLogClear: "0 0/1 * * * ?"
+  jmeterLogClear: "0 0 2 ? * *"
