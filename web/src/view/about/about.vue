@@ -51,19 +51,23 @@
             <div class="first-head-total">
               <div class="total-item-case">
                 <div class="total-item-title-case">平均响应时间</div>
-                <div class="total-item-value-case">{{parseFloat(statisticsData.average_response_time).toFixed(2)}}</div>
+                <div class="total-item-value-case" v-if="parseFloat(statisticsData.average_response_time)">{{parseFloat(statisticsData.average_response_time).toFixed(2)}}</div>
+                <div class="total-item-value-case" v-else>--</div>
               </div>
               <div class="total-item-case">
                 <div class="total-item-title-case">90th响应时间</div>
-                <div class="total-item-value-case">{{parseFloat(statisticsData.average90th_response_time).toFixed(2)}}</div>
+                <div class="total-item-value-case" v-if="parseFloat(statisticsData.average90th_response_time)">{{parseFloat(statisticsData.average90th_response_time).toFixed(2)}}</div>
+                <div class="total-item-value-case" v-else>--</div>
               </div>
               <div class="total-item-case">
                 <div class="total-item-title-case">平均错误率</div>
-                <div class="total-item-value-case">{{parseFloat(statisticsData.average_error_rate).toFixed(2)}}%</div>
+                <div class="total-item-value-case" v-if="parseFloat(statisticsData.average_error_rate)">{{parseFloat(statisticsData.average_error_rate).toFixed(2)}}%</div>
+                <div class="total-item-value-case" v-else>--</div>
               </div>
               <div class="total-item-case">
                 <div class="total-item-title-case">平均吞吐量</div>
-                <div class="total-item-value-case">{{parseFloat(statisticsData.average_throughput).toFixed(2)}}</div>
+                <div class="total-item-value-case" v-if="parseFloat(statisticsData.average_throughput)">{{parseFloat(statisticsData.average_throughput).toFixed(2)}}</div>
+                <div class="total-item-value-case" v-else>--</div>
               </div>
               <div class="total-item-case">
                 <div class="total-item-title-case">测试次数</div>
