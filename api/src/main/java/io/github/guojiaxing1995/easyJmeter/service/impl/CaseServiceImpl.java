@@ -190,7 +190,7 @@ public class CaseServiceImpl implements CaseService {
         }
         // 初始化服务端配置
         JmeterExternal jmeterExternal = new JmeterExternal();
-        jmeterExternal.initServerDebugJmeterUtils();
+        jmeterExternal.initServerJmeterUtils(null);
         // 如果debug没有配置过，则进行配置
         if (caffeineCache.getIfPresent(configKey) == null) {
             // 配置jmx文件，缓存jmx文件路径

@@ -13,8 +13,8 @@
       <el-table-column prop="groupNames" label="所属分组"></el-table-column>
       <el-table-column label="操作" fixed="right" width="275">
         <template #default="scope">
-          <el-button plain size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button plain size="mini" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
+          <el-button plain size="small" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button plain size="small" type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

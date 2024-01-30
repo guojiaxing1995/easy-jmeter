@@ -194,35 +194,31 @@ public class JmeterExternal {
         JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
     }
 
-    public void initServerDebugJmeterUtils() {
+    public void initServerJmeterUtils(TaskDO taskDO) {
         JMeterUtils.setJMeterHome(this.path);
         JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
+        if (taskDO!=null){
+            Integer granularity = taskDO.getGranularity();
+            if (granularity == 0) {
+                Integer duration = taskDO.getDuration();
+                if (duration/60 <= 15) {
+                    granularity = 3;
+                } else if (duration/60 > 15 && duration/60 <= 30) {
+                    granularity = 6;
+                } else if (duration/60 > 30 && duration/60 <= 60) {
+                    granularity = 10;
+                } else {
+                    granularity = 30;
+                }
+            }
+            JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", String.valueOf(granularity*1000));
+        }
         JMeterUtils.setProperty("jmeter.save.saveservice.response_data", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.response_data.on_error", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.samplerData", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.responseHeaders", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.requestHeaders", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "xml");
-    }
-
-    public void initServerCollectJmeterUtils(TaskDO taskDO) {
-        log.info(this.path);
-        JMeterUtils.setJMeterHome(this.path);
-        JMeterUtils.loadJMeterProperties(Paths.get(this.path, "/bin/jmeter.properties").toString());
-        Integer granularity = taskDO.getGranularity();
-        if (granularity == 0) {
-            Integer duration = taskDO.getDuration();
-            if (duration/60 <= 15) {
-                granularity = 3;
-            } else if (duration/60 > 15 && duration/60 <= 30) {
-                granularity = 6;
-            } else if (duration/60 > 30 && duration/60 <= 60) {
-                granularity = 10;
-            } else {
-                granularity = 30;
-            }
-        }
-        JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", String.valueOf(granularity*1000));
         JMeterUtils.setLocale(ENGLISH);
     }
 
@@ -626,7 +622,7 @@ public class JmeterExternal {
     }
 
     public void serverCollect(TaskDO taskDO, JFileService jFileService, ReportRepository reportRepository) {
-        this.initServerCollectJmeterUtils(taskDO);
+        this.initServerJmeterUtils(taskDO);
         String jtlPath = this.mergeJtlFile(taskDO, jFileService);
         String outputReportPath = this.generateReport(taskDO, jtlPath, jFileService);
         JFileDO jFileDO = this.compressReportAndUpload(taskDO, outputReportPath, jFileService);

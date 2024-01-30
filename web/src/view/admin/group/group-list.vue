@@ -23,7 +23,7 @@
           :model="group"
           label-width="120px"
           v-if="dialogFormVisible"
-          label-position="labelPosition"
+          label-position="right"
           style="margin-left: -35px; margin-bottom: -35px; margin-top: 15px"
         >
           <el-form-item label="分组名称" prop="name">

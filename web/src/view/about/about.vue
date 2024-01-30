@@ -246,7 +246,7 @@ export default {
           boundaryGap: false,
           axisLabel: {
             interval: 'auto',
-            rotate: 25,
+            rotate: 15,
           },
           data: []
 

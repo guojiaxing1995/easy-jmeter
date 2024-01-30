@@ -11,7 +11,15 @@ spring:
     username: "root"
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://49.235.228.222:9081/easy-jmeter?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
+    url: jdbc:mysql://10.10.77.87:9081/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
+  data:
+    mongodb:
+      database: easyJmeter
+      host: 10.10.77.87
+      port: 9090
+      username: root
+      password: mongo2020
+      authentication-database: admin
 
 
 # 开启权限拦截
@@ -36,7 +44,7 @@ logging:
     io.github.guojiaxing1995.easyJmeter.mapper: debug
 
 minio:
-  endpoint: http://49.235.228.222:9085
+  endpoint: http://10.10.77.87:9085
   bucketName: dev
   accessKey: root
   secretKey: minio2023
@@ -53,3 +61,7 @@ socket:
     serverUrl: http://127.0.0.1:9000
     enable: false
 
+cron:
+  heartBeat: "0 0/1 * * * ?"
+  deleteTaskRecordStorage: "0 0 1 ? * MON"
+  recordStatistics: "0 0/30 * * * ? "
