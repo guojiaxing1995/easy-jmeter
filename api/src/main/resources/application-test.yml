@@ -20,6 +20,11 @@ spring:
       username: root
       password: mongo2020
       authentication-database: admin
+  influx:
+    url: http://10.10.77.87:8086
+    user: root
+    password: root
+    database: easyJmeter
 
 
 # 开启权限拦截

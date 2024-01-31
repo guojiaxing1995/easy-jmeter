@@ -1,5 +1,6 @@
 package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
+import io.github.guojiaxing1995.easyJmeter.common.configuration.InfluxDBProperties;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.links.CleanLink;
@@ -25,6 +26,9 @@ public class SocketIOClientHandler {
 
     @Autowired
     private JFileService jFileService;
+
+    @Autowired
+    private InfluxDBProperties influxDBProperties;
 
     @Autowired
     public SocketIOClientHandler(Socket socket){
@@ -68,7 +72,7 @@ public class SocketIOClientHandler {
             log.info(taskDO.toString());
             log.info("收到启动命令，任务进入配置状态，任务编号：" + taskDO.getTaskId());
             // 配置逻辑
-            ConfigureLink configureLink = new ConfigureLink(socket, jFileService);
+            ConfigureLink configureLink = new ConfigureLink(socket, jFileService, influxDBProperties);
             configureLink.setMachineCutFileVO(machineCutFileVO);
             configureLink.setTask(taskDO);
             configureLink.setName(taskDO.getTaskId() + "_" + JmeterStatusEnum.CONFIGURE.getDesc());

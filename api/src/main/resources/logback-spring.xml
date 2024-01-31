@@ -177,6 +177,7 @@
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="FILE_ERROR"/>
+            <appender-ref ref="jmeter-log"/>
         </root>
     </springProfile>
 

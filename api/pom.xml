@@ -186,6 +186,12 @@
             <artifactId>xstream</artifactId>
             <version>1.4.20</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.influxdb</groupId>
+            <artifactId>influxdb-java</artifactId>
+            <version>2.24</version>
+        </dependency>
 
     </dependencies>
 

@@ -1,6 +1,7 @@
 package io.github.guojiaxing1995.easyJmeter.common.jmeter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.guojiaxing1995.easyJmeter.common.configuration.InfluxDBProperties;
 import io.github.guojiaxing1995.easyJmeter.common.util.ThreadUtil;
 import io.github.guojiaxing1995.easyJmeter.common.util.ZipUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskProgressMachineDTO;
@@ -16,6 +17,7 @@ import io.github.talelin.autoconfigure.exception.ParameterException;
 import io.socket.client.Socket;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.CSVDataSet;
 import org.apache.jmeter.report.config.ConfigurationException;
 import org.apache.jmeter.report.dashboard.GenerationException;
@@ -28,6 +30,7 @@ import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.threads.SetupThreadGroup;
 import org.apache.jmeter.timers.ConstantThroughputTimer;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jmeter.visualizers.backend.BackendListener;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.SearchByClass;
 
@@ -213,16 +216,16 @@ public class JmeterExternal {
             }
             JMeterUtils.setProperty("jmeter.reportgenerator.overall_granularity", String.valueOf(granularity*1000));
         }
+        JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "xml");
         JMeterUtils.setProperty("jmeter.save.saveservice.response_data", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.response_data.on_error", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.samplerData", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.responseHeaders", "true");
         JMeterUtils.setProperty("jmeter.save.saveservice.requestHeaders", "true");
-        JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "xml");
         JMeterUtils.setLocale(ENGLISH);
     }
 
-    public void editJmxConfig(TaskDO taskDO) throws IOException {
+    public void editJmxConfig(TaskDO taskDO, InfluxDBProperties influxDBProperties) throws IOException {
         File directory = new File(Paths.get(this.path, "/tmp/").toString());
         File[] files = directory.listFiles();
         File jmxfile = null;
@@ -275,6 +278,36 @@ public class JmeterExternal {
 
             testPlanTree.add(testPlanTree.getArray()[0], constantThroughputTimer);
 
+            //添加influxdb后置监听器
+            if (taskDO.getRealtime()) {
+                String database = influxDBProperties.getDatabase();
+                String url = influxDBProperties.getUrl();
+                String taskId = taskDO.getTaskId();
+                Arguments arguments = new Arguments();
+                arguments.setProperty(new StringProperty(TestElement.GUI_CLASS, "ArgumentsPanel"));
+                arguments.setProperty(new StringProperty(TestElement.TEST_CLASS, "Arguments"));
+                arguments.setProperty(new StringProperty(TestElement.NAME, "arguments"));
+                arguments.setEnabled(true);
+                arguments.addArgument("influxdbMetricsSender", "org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender", "=");
+                arguments.addArgument("influxdbUrl", url+"/write?db="+database, "=");
+                arguments.addArgument("application", taskId, "=");
+                arguments.addArgument("measurement", "jmeter", "=");
+                arguments.addArgument("summaryOnly", "false", "=");
+                arguments.addArgument("samplersRegex", ".*", "=");
+                arguments.addArgument("percentiles", "90;95;99", "=");
+                arguments.addArgument("testTitle", taskId, "=");
+                arguments.addArgument("eventTags", this.address, "=");
+
+                BackendListener backendListener = new BackendListener();
+                backendListener.setProperty(new StringProperty(TestElement.GUI_CLASS, "BackendListenerGui"));
+                backendListener.setProperty(new StringProperty(TestElement.TEST_CLASS, "BackendListener"));
+                backendListener.setProperty(new StringProperty(TestElement.NAME, "influxdbBackendListener"));
+                backendListener.setEnabled(true);
+                backendListener.setClassname("org.apache.jmeter.visualizers.backend.influxdb.InfluxdbBackendListenerClient");
+                backendListener.setArguments(arguments);
+
+                testPlanTree.add(testPlanTree.getArray()[0], backendListener);
+            }
 
             try (FileOutputStream outputStream = new FileOutputStream(new File(this.path + "/tmp/" +taskDO.getTaskId() +".jmx"))) {
                 SaveService.saveTree(testPlanTree, outputStream);
@@ -595,6 +628,7 @@ public class JmeterExternal {
         JMeterUtils.setProperty(JMETER_REPORT_OUTPUT_DIR_PROPERTY, outputReportPath);
 
         try {
+            JMeterUtils.setProperty("jmeter.save.saveservice.output_format", "csv");
             ReportGenerator generator = new ReportGenerator(jtlPath, null);
             generator.generate();
         } catch (ConfigurationException | GenerationException e) {

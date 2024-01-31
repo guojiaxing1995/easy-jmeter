@@ -2,6 +2,7 @@ package io.github.guojiaxing1995.easyJmeter.common.jmeter.links;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.guojiaxing1995.easyJmeter.common.configuration.InfluxDBProperties;
 import io.github.guojiaxing1995.easyJmeter.common.enumeration.JmeterStatusEnum;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.JmeterExternal;
 import io.github.guojiaxing1995.easyJmeter.common.jmeter.LinkStrategy;
@@ -25,13 +26,16 @@ public class ConfigureLink extends Thread implements LinkStrategy {
 
     private MachineCutFileVO machineCutFileVO;
 
+    private final InfluxDBProperties influxDBProperties;
+
     public void setMachineCutFileVO(MachineCutFileVO machineCutFileVO) {
         this.machineCutFileVO = machineCutFileVO;
     }
 
-    public ConfigureLink(Socket socket, JFileService jFileService) {
+    public ConfigureLink(Socket socket, JFileService jFileService, InfluxDBProperties influxDBProperties) {
         this.socket = socket;
         this.jFileService = jFileService;
+        this.influxDBProperties = influxDBProperties;
     }
 
     @Override
@@ -50,7 +54,7 @@ public class ConfigureLink extends Thread implements LinkStrategy {
                 jmeterExternal.downloadConfigFile(this.taskDO,jFileService,this.machineCutFileVO);
                 //jmeter jmx文件修改 添加properties
                 jmeterExternal.initJMeterUtils();
-                jmeterExternal.editJmxConfig(taskDO);
+                jmeterExternal.editJmxConfig(taskDO, influxDBProperties);
                 jmeterExternal.addProperties();
 
                 this.reportSuccess();
