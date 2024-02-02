@@ -11,16 +11,16 @@
       </div>
       <el-table :data="machines" v-loading="loading" >
         <el-table-column prop="name" label="名称" width="300" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="address" label="地址" width="230"></el-table-column>
-        <el-table-column prop="path" label="路径" width="390" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="address" label="地址" width="180"></el-table-column>
+        <el-table-column prop="path" label="路径" width="350" show-overflow-tooltip></el-table-column>
         <el-table-column prop="version" label="版本" width="160" show-overflow-tooltip></el-table-column>
-        <el-table-column label="压力机状态" width="150">
+        <el-table-column label="压力机状态" width="130">
           <template #default="scope">
               <el-tag v-if="scope.row.is_online===false" type="danger">离线</el-tag>
               <el-tag v-else type="info">在线</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="jmeter_status.desc" label="jmeter状态" width="150"></el-table-column>
+        <el-table-column prop="jmeter_status.desc" label="jmeter状态" width="115"></el-table-column>
         <el-table-column label="操作" fixed="right" width="200">
           <template #default="scope">
             <el-button plain size="small" type="primary" @click="handleEdit(scope.row.id)">编辑</el-button>

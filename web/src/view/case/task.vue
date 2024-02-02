@@ -84,7 +84,7 @@
       const logLevels = ref([])
       const availableMachine = ref(0)
       const form = ref(null)
-      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,granularity:0,machine_num:1,machine:[],log_level:null,realtime:false,remark:''})
+      const task = reactive({ num_threads:10,duration:60,ramp_time:0,jcase:'',qps_limit:0,granularity:0,machine_num:1,machine:[],log_level:null,realtime:true,remark:''})
       const closeDialog = () => {
         context.emit('taskClose')
       }

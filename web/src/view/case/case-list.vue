@@ -167,6 +167,7 @@
             ElMessage.warning('请先执行用例')
             return
           }
+          caseMouseout()
           router.push({
             path: '/case/detail',
             state: {detail: {caseId: item.id, taskId: item.task_id, latest: true}}
