@@ -6,7 +6,7 @@
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="address" jdbcType="VARCHAR" property="address"/>
         <result column="path" jdbcType="VARCHAR" property="path"/>
-        <result column="version" jdbcType="VARCHAR" property="path"/>
+        <result column="version" jdbcType="VARCHAR" property="version"/>
         <result column="is_online" jdbcType="BOOLEAN" property="isOnline"/>
         <result column="jmeter_status" property="jmeterStatus" typeHandler="com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler"/>
         <result column="client_id" jdbcType="VARCHAR" property="clientId"/>
