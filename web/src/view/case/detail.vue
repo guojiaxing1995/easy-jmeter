@@ -84,7 +84,12 @@
               <el-table-column label="执行">
                 <el-table-column prop="samples" label="样本" width="130" show-overflow-tooltip />
                 <el-table-column prop="fail" label="失败" width="100" show-overflow-tooltip />
-                <el-table-column prop="error" label="错误率" width="100" :formatter="toFixedPercent" show-overflow-tooltip />
+                <el-table-column prop="error" label="错误率" width="100" show-overflow-tooltip>
+                  <template #default="scope">
+                    <el-text v-if="scope.row.error!='0.0'" type="danger">{{parseFloat(scope.row.error).toFixed(2)}}%</el-text>
+                    <el-text v-else type="info">{{parseFloat(scope.row.error).toFixed(2)}}%</el-text>
+                  </template>
+                </el-table-column>
               </el-table-column>
               <el-table-column label="响应时间（毫秒）">
                 <el-table-column prop="average" label="平均" width="100" :formatter="toFixed" show-overflow-tooltip />
