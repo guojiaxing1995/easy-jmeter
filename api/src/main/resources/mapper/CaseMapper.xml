@@ -49,8 +49,9 @@
                  LEFT JOIN task t2 ON t1.jmeter_case = t2.jmeter_case AND t1.max_create_time = t2.create_time
         WHERE c.delete_time IS NULL
         <if test="id !=null and id !=''">
-            AND c.id = #{id};
+            AND c.id = #{id}
         </if>
+        order by c.status DESC
     </select>
 
     <select id="selectByProject" resultMap="BaseResultMap">

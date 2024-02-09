@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.util.PageUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.TaskRealTimeDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskSearchDTO;
 import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.service.TaskInfluxdbService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.*;
+import io.github.talelin.autoconfigure.exception.ParameterException;
 import io.github.talelin.core.annotation.GroupRequired;
 import io.github.talelin.core.annotation.LoginRequired;
 import io.github.talelin.core.annotation.PermissionMeta;
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +36,9 @@ public class TaskController {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private TaskInfluxdbService taskInfluxdbService;
 
     @PostMapping("")
     @ApiOperation(value = "启动用例", notes = "创建任务")
@@ -104,4 +111,27 @@ public class TaskController {
         return new DeletedVO(3);
     }
 
+    @PostMapping("/realTimeData")
+    @ApiOperation(value = "获取实时数据", notes = "传入测试记录id、数据类型")
+//    @LoginRequired
+    public Map<String, Object> getRealTimeData(@RequestBody TaskRealTimeDTO validator){
+        Map<String, Object> times = taskInfluxdbService.getTimes(validator.getTaskId());
+        String startTime = times.get("startTime").toString();
+        String endTime = times.get("endTime").toString();
+        List<OffsetDateTime> points = (List<OffsetDateTime>) times.get("points");
+        String type = validator.getType();
+        String taskId = validator.getTaskId();
+        switch (type) {
+            case "TIMES":
+                return times;
+            case "COUNT":
+                return taskInfluxdbService.sampleCounts(taskId, startTime, endTime);
+            case "THROUGHPUT":
+                return taskInfluxdbService.throughputGraph(taskId, startTime, endTime, points);
+            case "ERROR":
+                return taskInfluxdbService.errorGraph(taskId, startTime, endTime, points);
+            default:
+                throw new ParameterException(12501);
+        }
+    }
 }

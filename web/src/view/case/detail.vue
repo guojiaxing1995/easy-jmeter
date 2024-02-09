@@ -126,7 +126,28 @@
             </el-timeline-item>
           </el-timeline>
         </el-tab-pane>
-        <el-tab-pane label="实时信息" name="realTimeInformation" v-if="detailIds.latest"></el-tab-pane>
+        <el-tab-pane label="实时信息" name="realTimeInformation" v-if="detailIds.latest">
+          <div class="realtime">
+            <div v-if="realtimeData.times.startTime" class="times"><el-text size="small" type="primary">{{ realtimeData.times.start}}~{{ realtimeData.times.end}}</el-text></div>
+            <div class="count" v-if="realtimeData.times.startTime">
+              <div class="count-item"><div class="count-label">总请求数</div><div class="count-value">{{ realtimeData.count.count.all }}</div></div> 
+              <div class="count-item"><div class="count-label">总错误数</div><div class="count-value">{{ realtimeData.count.countError.all }}</div></div>
+              <div class="count-item"><div class="count-label">成功率</div><div class="count-value">{{ getErrorRate(realtimeData.count.count.all,realtimeData.count.countError.all) }}%</div></div>
+            </div>
+            <div id="tpsRealChart" class="report-echarts"></div>
+            <div id="errorRealChart" class="report-echarts"></div>
+            <div v-if="realtimeData.times.startTime" class="times">
+              <el-select @change="transactionChange" v-model="transaction" placeholder="select transaction"><el-option v-for="item in realtimeData.transaction" :key="item.value" :label="item.label" :value="item.value"/></el-select>
+            </div>
+            <div class="count" v-if="transaction">
+              <div class="count-item"><div class="count-label">请求数</div><div class="count-value">{{ transactionData.count }}</div></div> 
+              <div class="count-item"><div class="count-label">错误数</div><div class="count-value">{{ transactionData.countError }}</div></div>
+              <div class="count-item"><div class="count-label">成功率</div><div class="count-value">{{ getErrorRate(transactionData.count,transactionData.countError) }}%</div></div>
+            </div>
+            <div id="tpsTransactionRealChart" class="report-echarts"></div>
+            <div id="errorTransactionRealChart" class="report-echarts"></div>
+          </div>
+        </el-tab-pane>
         <el-tab-pane label="图表报告" name="chartInformation">
           <div v-if="task.result && task.result.value === 1">
             <div class="report-html">
@@ -188,9 +209,9 @@
   </template>
   
   <script>
-    import { inject,ref,onMounted,getCurrentInstance,onActivated,onBeforeUnmount,computed,watch } from 'vue'
+    import { inject,ref,onMounted,getCurrentInstance,onActivated,onBeforeUnmount,onDeactivated,computed,watch } from 'vue'
     import { ElMessageBox, ElMessage } from 'element-plus'
-    import { get,put } from '@/lin/plugin/axios'
+    import { get,put,post } from '@/lin/plugin/axios'
     import QpsLimit from './qps-limit'
   
     export default {
@@ -213,6 +234,10 @@
         const {proxy} = getCurrentInstance()
         const chartInfoLoading = ref(false)
         const reportLoading = ref(false)
+        const realtimeData = ref({transaction:{},times: {startTime:'',endTime:'',start:'',end:''},throughput:[],count:{count:{all:0},countError:{all:0}}})
+        const timer = ref(null)
+        const transaction = ref('')
+        const transactionData = ref({count:0, countError:0, throughput:[]})
         
         onMounted(() => {
           detailIds.value = history.state.detail
@@ -226,11 +251,24 @@
             getTaskInfo()
             getTaskReport()
             getTaskLog()
+            timer.value = window.setInterval(()=>{getRealtimeData()},5000)
           }
         })
 
         onBeforeUnmount(() => {
           window.removeEventListener('resize', resizeHandler)
+          if (timer.value) {
+            window.clearInterval(timer.value)
+            timer.value = null
+          }
+        })
+
+        onDeactivated(() => {
+          window.removeEventListener('resize', resizeHandler)
+          if (timer.value) {
+            window.clearInterval(timer.value)
+            timer.value = null
+          }
         })
 
         onActivated(() => {
@@ -242,6 +280,8 @@
             getTaskInfo()
             getTaskReport()
             getTaskLog()
+            transaction.value = ''
+            uninitTransactionRealChart()
           }
           if (history.state.detail && detailIds.value && detailIds.value.taskId !== history.state.detail.taskId){
             detailIds.value = history.state.detail
@@ -257,6 +297,9 @@
             getTaskInfo()
             getTaskReport()
             getTaskLog()
+          }
+          if (!timer.value) {
+            timer.value = window.setInterval(()=>{getRealtimeData()},5000)
           }
         })
 
@@ -390,7 +433,12 @@
               setChartOption()
             }, 500 )
           }
-        }
+          if (tab.paneName === 'realTimeInformation') {
+            setTimeout( function(){
+              initRealChart()
+            }, 500 )
+          }
+         }
 
         const handleStop = (taskId) => {
           let res
@@ -426,6 +474,50 @@
         watch( () => jcase.value.task_result.value,() => {
           getTaskReport()
         })
+
+        const initRealChart = () => {
+          let tpsRealEChart = proxy.$echarts.getInstanceByDom(document.getElementById('tpsRealChart'))
+          if (tpsRealEChart == null) {
+            tpsRealEChart= proxy.$echarts.init(document.getElementById('tpsRealChart'))
+          }
+          let errorRealEChart = proxy.$echarts.getInstanceByDom(document.getElementById('errorRealChart'))
+          if (errorRealEChart == null) {
+            errorRealEChart= proxy.$echarts.init(document.getElementById('errorRealChart'))
+          }
+        }
+
+        const initTransactionRealChart = () => {
+          let tpsRealTranEChart = proxy.$echarts.getInstanceByDom(document.getElementById('tpsTransactionRealChart'))
+          if (tpsRealTranEChart == null) {
+            tpsRealTranEChart= proxy.$echarts.init(document.getElementById('tpsTransactionRealChart'))
+          }
+          let errorRealTranEChart = proxy.$echarts.getInstanceByDom(document.getElementById('errorTransactionRealChart'))
+          if (errorRealTranEChart == null) {
+            errorRealTranEChart= proxy.$echarts.init(document.getElementById('errorTransactionRealChart'))
+          }
+        }
+
+        const uninitTransactionRealChart = () => {
+          let tpsRealTranEChart = proxy.$echarts.getInstanceByDom(document.getElementById('tpsTransactionRealChart'))
+          if (tpsRealTranEChart != null) {
+            tpsRealTranEChart.dispose()
+          }
+          let errorRealTranEChart = proxy.$echarts.getInstanceByDom(document.getElementById('errorTransactionRealChart'))
+          if (errorRealTranEChart != null) {
+            errorRealTranEChart.dispose()
+          }
+        }
+
+        const uninitRealChart = () => {
+          let tpsRealEChart = proxy.$echarts.getInstanceByDom(document.getElementById('tpsRealChart'))
+          if (tpsRealEChart != null) {
+            tpsRealEChart.dispose()
+          }
+          let errorRealEChart = proxy.$echarts.getInstanceByDom(document.getElementById('errorRealChart'))
+          if (errorRealEChart != null) {
+            errorRealEChart.dispose()
+          }
+        }
         
         const initChart = () => {
           let respoonseTimesOverTimeEChart = proxy.$echarts.getInstanceByDom(document.getElementById('respoonseTimesOverTimeChart'))
@@ -453,7 +545,7 @@
             activeThreadsOverTimeEChart= proxy.$echarts.init(document.getElementById('activeThreadsOverTimeChart'))
           }
 
-          window.addEventListener("resize", resizeHandler)
+          // window.addEventListener("resize", resizeHandler)
         }
 
         const resizeHandler = () => {
@@ -564,6 +656,112 @@
           return option
         }
 
+        const setRealChartOption = (type) => {
+          const option = {
+            title: {
+              text: "",
+              left: "center",
+            },
+            grid: {
+              left: '2%',
+              right: '3.5%',
+              bottom: '3%',
+              containLabel: true
+            },
+            xAxis: {
+              type: 'time',
+              axisLabel: {
+                interval: 'auto',
+                rotate: 35,
+                formatter: function (value, index) {
+                  var date = new Date(value)
+                  return date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
+                }
+              },
+              name: '时间',
+            },
+            yAxis: {
+              name: '',
+              scale:true
+            },
+            tooltip: {
+              trigger: 'axis'
+            },
+            toolbox: {
+              show: true,
+              top: 20,
+            },
+            legend: {
+              data: [],
+              bottom: -5,
+            },
+            series: [],
+          }
+          if (type==='tps_all') {
+            let series = {}
+            series.data = realtimeData.value.throughput.all
+            series.type = 'line'
+            series.name = 'TPS'
+            option.series.push(series)
+            option.title.text = 'TPS'
+            option.legend.data.push('TPS')
+            option.yAxis.name = '事务数/秒'
+            let tpsRealEChart = proxy.$echarts.getInstanceByDom(document.getElementById('tpsRealChart'))
+            if (tpsRealEChart != null) {
+              tpsRealEChart.setOption(option, true)
+              // 第一次渲染成功后判断是不是可以停止定时任务
+              if (jcase.value.status.value != 2) {
+                if (timer.value) {
+                  window.clearInterval(timer.value)
+                  timer.value = null
+                }
+              }
+            }
+          }
+          if (type==='tps_transaction') {
+            let series = {}
+            series.data = transactionData.value.throughput
+            series.type = 'line'
+            series.name = 'TPS'
+            option.series.push(series)
+            option.title.text = 'TPS'
+            option.legend.data.push('TPS')
+            option.yAxis.name = '事务数/秒'
+            let tpsTransactionRealChart = proxy.$echarts.getInstanceByDom(document.getElementById('tpsTransactionRealChart'))
+            if (tpsTransactionRealChart != null) {
+              tpsTransactionRealChart.setOption(option, true)
+            }
+          }
+          if (type==='error') {
+            let series = {}
+            series.data = realtimeData.value.error.all
+            series.type = 'line'
+            series.name = '错误数'
+            option.series.push(series)
+            option.title.text = '总错误趋势'
+            option.legend.data.push('错误数')
+            option.yAxis.name = '个'
+            let errorRealChart = proxy.$echarts.getInstanceByDom(document.getElementById('errorRealChart'))
+            if (errorRealChart != null) {
+              errorRealChart.setOption(option, true)
+            }
+          }
+          if (type==='error_transaction') {
+            let series = {}
+            series.data = transactionData.value.error
+            series.type = 'line'
+            series.name = '错误数'
+            option.series.push(series)
+            option.title.text = '错误趋势'
+            option.legend.data.push('错误数')
+            option.yAxis.name = '个'
+            let errorRealTranEChart = proxy.$echarts.getInstanceByDom(document.getElementById('errorTransactionRealChart'))
+            if (errorRealTranEChart != null) {
+              errorRealTranEChart.setOption(option, true)
+            }
+          }
+        }
+
         const timeDeal = computed(() => (time) => {
           const hours = Math.floor(time / 3600)
           const minutes = Math.floor((time % 3600) / 60)
@@ -580,6 +778,117 @@
           }
           return result.replace(/hours/g, '小时').replace(/minutes/g, '分钟').replace(/seconds/g, '秒')
         })
+
+        const getErrorRate = (all,error) => {
+          if (all === 0) {
+            return 0
+          }
+          if (all === undefined) {
+            return 0
+          }
+          return ((all-error)/all*100).toFixed(2)
+        }
+
+        const transactionChange = (value) => {
+          initTransactionRealChart()
+          // 获取请求数
+          for (let key in realtimeData.value.count.count) {
+            if (key === value) {
+              transactionData.value.count = realtimeData.value.count.count[key]
+              break
+            }
+          }
+          for (let key in realtimeData.value.count.countError) {
+            if (key === value) {
+              transactionData.value.countError = realtimeData.value.count.countError[key]
+              break
+            } else {
+              transactionData.value.countError = 0
+            }
+          }
+          // 获取tps
+          for (let key in realtimeData.value.throughput) {
+            if (key === value) {
+              transactionData.value.throughput = realtimeData.value.throughput[key]
+              // 渲染tps图表
+              setRealChartOption('tps_transaction')
+              break
+            }
+          }
+          // 获取错误趋势
+          for (let key in realtimeData.value.error) {
+            if (key === value) {
+              transactionData.value.error = realtimeData.value.error[key]
+              // 渲染错误趋势图表
+              setRealChartOption('error_transaction')
+              break
+            } else {
+              transactionData.value.error = []
+              if (transaction.value != '') {
+                setRealChartOption('error_transaction')
+              }
+            }
+          }
+        }
+
+        const getRealtimeData = async() => {
+          let res
+          res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'TIMES' }, { showBackend: true })
+          realtimeData.value.times = res
+          if (realtimeData.value.times.startTime) {
+            initRealChart()
+            // 获取实时数据
+            const promise1 = getCount()
+            const promise2 = getThroughput()
+            const promise3 = getError()
+
+            await Promise.all([promise1, promise2, promise3])
+            transactionChange(transaction.value)
+          } else {
+            uninitRealChart()
+            transaction.value = ''
+            uninitTransactionRealChart()
+          }
+        }
+
+        const getCount = async() => {
+          let res
+          res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'COUNT' }, { showBackend: true })
+          realtimeData.value.count = res
+        }
+
+        const getThroughput = async() => {
+          let res
+          res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'THROUGHPUT' }, { showBackend: true })
+          realtimeData.value.throughput = res
+          setRealChartOption('tps_all')
+          getTransaction(res)
+        }
+
+        const getError = async() => {
+          let res
+          res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'ERROR' }, { showBackend: true })
+          realtimeData.value.error = res
+          setRealChartOption('error')
+        }
+
+        const getTransaction = (data) => {
+          let set = new Set()
+          for (let key in data) {
+            if (key!='all') {
+              set.add(key)
+            }
+          }
+          let arr = []
+          for (const value of set) {
+            let obj = {
+              value: value,
+              label: value
+            }
+            arr.push(obj)
+          }
+          realtimeData.value.transaction = arr
+        }
   
         return {
           getCase,
@@ -617,6 +926,21 @@
           chartInfoLoading,
           reportLoading,
           timeDeal,
+          realtimeData,
+          getRealtimeData,
+          timer,
+          getCount,
+          getThroughput,
+          getTransaction,
+          getErrorRate,
+          initRealChart,
+          setRealChartOption,
+          uninitRealChart,
+          transaction,
+          transactionData,
+          transactionChange,
+          initTransactionRealChart,
+          uninitTransactionRealChart,
         }
       },
   
@@ -711,6 +1035,36 @@
       }
       .log {
         margin: 10px 0;
+      }
+      .realtime {
+        .times {
+          text-align: right;
+        }
+        .count {
+          height: 10vh;
+          width: 100%;
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          .count-item {
+            height: 100%;
+            width: 33%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            .count-label {
+              font-size: 12px;
+              color: #6e6d6d;
+            }
+            .count-value {
+              font-size: 28px;
+              margin-top: 8px;
+              color: #4577ff;
+            }
+          }
+        }
       }
     }
     .logo {
