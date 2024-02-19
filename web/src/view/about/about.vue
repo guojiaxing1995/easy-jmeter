@@ -151,6 +151,9 @@ export default {
         }
         casesOriginal.value = res
         cases.value = res
+        if (cases.value) {
+          handleChooseCase(cases.value[0])
+        }
       } catch (error) {
         casesOriginal.value = []
       }
