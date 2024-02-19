@@ -136,16 +136,35 @@
             </div>
             <div id="tpsRealChart" class="report-echarts"></div>
             <div id="errorRealChart" class="report-echarts"></div>
+            <el-table :data="realtimeData.errorInfo.count" v-show="realtimeData.times.startTime" size="small" 
+              :header-row-style="{height: '25px'}"
+              :header-cell-style="{background: '#ecf5ff', 'border-color':'#d3c7c7'}"
+              width="100%"
+              :row-style="{background: '#ffffff', 'border-color':'#d3c7c7', height: '25px'}"
+              class="errorTable">
+              <el-table-column prop="transaction" label="transaction" min-width="500" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="sum" label="错误数" width="380"></el-table-column>
+            </el-table>
             <div v-if="realtimeData.times.startTime" class="times">
               <el-select @change="transactionChange" v-model="transaction" placeholder="select transaction"><el-option v-for="item in realtimeData.transaction" :key="item.value" :label="item.label" :value="item.value"/></el-select>
             </div>
-            <div class="count" v-if="transaction">
+            <div class="count" v-show="transaction">
               <div class="count-item"><div class="count-label">请求数</div><div class="count-value">{{ transactionData.count }}</div></div> 
               <div class="count-item"><div class="count-label">错误数</div><div class="count-value">{{ transactionData.countError }}</div></div>
               <div class="count-item"><div class="count-label">成功率</div><div class="count-value">{{ getErrorRate(transactionData.count,transactionData.countError) }}%</div></div>
             </div>
             <div id="tpsTransactionRealChart" class="report-echarts"></div>
             <div id="errorTransactionRealChart" class="report-echarts"></div>
+            <el-table :data="transactionData.errorInfo" v-show="transaction" size="small" 
+              :header-row-style="{height: '25px'}"
+              :header-cell-style="{background: '#ecf5ff', 'border-color':'#d3c7c7'}"
+              width="100%"
+              :row-style="{background: '#ffffff', 'border-color':'#d3c7c7', height: '25px'}"
+              class="errorTable">
+              <el-table-column prop="responseCode" label="responseCode" width="300" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="responseMessage" label="responseMessage" min-width="500" show-overflow-tooltip></el-table-column>
+              <el-table-column prop="count" label="错误数" width="380"></el-table-column>
+            </el-table>
           </div>
         </el-tab-pane>
         <el-tab-pane label="图表报告" name="chartInformation">
@@ -234,10 +253,10 @@
         const {proxy} = getCurrentInstance()
         const chartInfoLoading = ref(false)
         const reportLoading = ref(false)
-        const realtimeData = ref({transaction:{},times: {startTime:'',endTime:'',start:'',end:''},throughput:[],count:{count:{all:0},countError:{all:0}}})
+        const realtimeData = ref({errorInfo:{count:[]},transaction:{},times: {startTime:'',endTime:'',start:'',end:''},throughput:[],count:{count:{all:0},countError:{all:0}}})
         const timer = ref(null)
         const transaction = ref('')
-        const transactionData = ref({count:0, countError:0, throughput:[]})
+        const transactionData = ref({count:0, countError:0, throughput:[], errorInfo:[]})
         
         onMounted(() => {
           detailIds.value = history.state.detail
@@ -280,8 +299,10 @@
             getTaskInfo()
             getTaskReport()
             getTaskLog()
+            realtimeData.value.times.startTime = ''
             transaction.value = ''
             uninitTransactionRealChart()
+            uninitRealChart()
           }
           if (history.state.detail && detailIds.value && detailIds.value.taskId !== history.state.detail.taskId){
             detailIds.value = history.state.detail
@@ -829,6 +850,18 @@
               }
             }
           }
+          // 获取错误信息
+          if (realtimeData.value.errorInfo.transaction) {
+            realtimeData.value.errorInfo.transaction.forEach(element => {
+              if (element.transaction === value) {
+                transactionData.value.errorInfo = element.count
+              } else {
+                transactionData.value.errorInfo = []
+              }
+            })
+          } else {
+            transactionData.value.errorInfo = []
+          }
         }
 
         const getRealtimeData = async() => {
@@ -836,14 +869,13 @@
           res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'TIMES' }, { showBackend: true })
           realtimeData.value.times = res
           if (realtimeData.value.times.startTime) {
-            initRealChart()
             // 获取实时数据
             const promise1 = getCount()
             const promise2 = getThroughput()
             const promise3 = getError()
+            const promise4 = getErrorInfo()
 
-            await Promise.all([promise1, promise2, promise3])
-            transactionChange(transaction.value)
+            await Promise.all([promise1, promise2, promise3, promise4])
           } else {
             uninitRealChart()
             transaction.value = ''
@@ -870,6 +902,12 @@
           res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'ERROR' }, { showBackend: true })
           realtimeData.value.error = res
           setRealChartOption('error')
+        }
+
+        const getErrorInfo = async() => {
+          let res
+          res = await post(`/v1/task/realTimeData`, { task_id: detailIds.value.taskId, type: 'ERROR_INFO' }, { showBackend: true })
+          realtimeData.value.errorInfo = res
         }
 
         const getTransaction = (data) => {
@@ -941,6 +979,7 @@
           transactionChange,
           initTransactionRealChart,
           uninitTransactionRealChart,
+          getErrorInfo,
         }
       },
   
@@ -1039,6 +1078,9 @@
       .realtime {
         .times {
           text-align: right;
+        }
+        .errorTable {
+          margin-bottom: 10px;
         }
         .count {
           height: 10vh;

@@ -113,7 +113,7 @@ public class TaskController {
 
     @PostMapping("/realTimeData")
     @ApiOperation(value = "获取实时数据", notes = "传入测试记录id、数据类型")
-//    @LoginRequired
+    @LoginRequired
     public Map<String, Object> getRealTimeData(@RequestBody TaskRealTimeDTO validator){
         Map<String, Object> times = taskInfluxdbService.getTimes(validator.getTaskId());
         String startTime = times.get("startTime").toString();
@@ -130,6 +130,8 @@ public class TaskController {
                 return taskInfluxdbService.throughputGraph(taskId, startTime, endTime, points);
             case "ERROR":
                 return taskInfluxdbService.errorGraph(taskId, startTime, endTime, points);
+            case "ERROR_INFO":
+                return taskInfluxdbService.errorInfo(taskId, startTime, endTime);
             default:
                 throw new ParameterException(12501);
         }

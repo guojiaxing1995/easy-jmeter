@@ -222,4 +222,49 @@ public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
         }
         return map;
     }
+
+    @Override
+    public Map<String, Object> errorInfo(String taskId, String startTime, String endTime) {
+        if (startTime.isEmpty() || endTime.isEmpty()){
+            return Map.of();
+        }
+        Map<String, Object> map = new HashMap<>();
+        String queryCount = String.format("SELECT sum(count) FROM jmeter WHERE statut='' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction tz('Asia/Shanghai')",
+                startTime, endTime, taskId);
+        QueryResult.Result resultCount = influxDB.query(new Query(queryCount)).getResults().get(0);
+        if (resultCount.getSeries()!=null){
+            List<QueryResult.Series> series = resultCount.getSeries();
+            List<Object> count = new ArrayList<>();
+            for (QueryResult.Series seriesItem : series) {
+                String transaction = seriesItem.getTags().get("transaction");
+                List<List<Object>> values = seriesItem.getValues();
+                count.add(Map.of("transaction",transaction,"sum",(long)(double)(values.get(0).get(1))));
+            }
+            map.put("count", count);
+        }
+        String query = String.format("SELECT count,responseCode,responseMessage FROM jmeter WHERE statut='' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction tz('Asia/Shanghai')",
+                startTime, endTime, taskId);
+        QueryResult.Result result = influxDB.query(new Query(query)).getResults().get(0);
+        if (result.getSeries()!=null){
+            List<QueryResult.Series> series = result.getSeries();
+            List<Object> transactionList = new ArrayList<>();
+            for (QueryResult.Series seriesItem : series) {
+                String t = seriesItem.getTags().get("transaction");
+                List<List<Object>> values = seriesItem.getValues();
+                Map<String, Long> groupedCounts = values.stream()
+                        .collect(Collectors.groupingBy(
+                                transaction -> transaction.get(2) + " - " + transaction.get(3), // 分组键由第3（responseCode）和第4（responseMessage）个元素组成
+                                Collectors.reducing(0L, transaction -> ((Number) transaction.get(1)).longValue(), Long::sum) // 求count字段的和，它位于第2个位置
+                        ));
+                List<Object> infoResult = new ArrayList<>();
+                for (Map.Entry<String, Long> entry : groupedCounts.entrySet()) {
+                    infoResult.add(Map.of("responseCode",entry.getKey().split(" - ")[0],"responseMessage",entry.getKey().split(" - ")[1],"count",entry.getValue()));
+                }
+                transactionList.add(Map.of("transaction",t,"count",infoResult));
+            }
+            map.put("transaction",transactionList);
+        }
+
+        return map;
+    }
 }

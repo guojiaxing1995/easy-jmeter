@@ -14,4 +14,6 @@ public interface TaskInfluxdbService {
 
     Map<String, Object> errorGraph(String taskId, String startTime, String endTime, List<OffsetDateTime> points);
 
+    Map<String, Object> errorInfo(String taskId, String startTime, String endTime);
+
 }
