@@ -1,0 +1,153 @@
+
+version: "3"
+
+services:
+
+  server:
+    build: 
+      context: ./api
+      dockerfile: src/main/resources/Dockerfile
+    image: guojiaxing1995/easy-jmeter-api:v1
+    container_name: server
+    restart: always
+    expose:
+      - 5000
+    command: ["server", "prod"]
+    environment:
+      - MINIO_HOST=127.0.0.1
+      - MINIO_PORT=9085
+    networks:
+      - ej
+    ports:
+      - 8037:5000
+    volumes:
+      - ./logs/server/:/opt/logs/
+      - ./assets/:/opt/assets/
+
+  agent1:
+    build: 
+      context: ./api
+      dockerfile: src/main/resources/Dockerfile
+    image: guojiaxing1995/easy-jmeter-api:v1
+    container_name: agent1
+    restart: always
+    expose:
+      - 5000
+    command: ["agent", "prod"]
+    environment:
+      - INFLUXDB_HOST=127.0.0.1
+      - INFLUXDB_PORT=8086
+    networks:
+      - ej
+    volumes:
+      - ./logs/agent1/:/opt/logs/
+      - /opt/apache-jmeter-5.6.2:/opt/apache/jmeter
+      
+  agent2:
+    build: 
+      context: ./api
+      dockerfile: src/main/resources/Dockerfile
+    image: guojiaxing1995/easy-jmeter-api:v1
+    container_name: agent2
+    restart: always
+    expose:
+      - 5000
+    command: ["agent", "prod"]
+    environment:
+      - INFLUXDB_HOST=127.0.0.1
+      - INFLUXDB_PORT=8086
+    networks:
+      - ej
+    volumes:
+      - ./logs/agent2/:/opt/logs/
+      - /opt/apache-jmeter-5.6:/opt/apache/jmeter
+      
+  web:
+    build: ./web
+    image: guojiaxing1995/easy-jmeter-web:v1
+    container_name: web
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - ej
+      
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    restart: always
+    ports:
+      - 9081:3306
+    expose:
+      - 3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=easy-jmeter
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - ej
+
+  mongodb:
+    image: mongo:4.2
+    container_name: mongodb
+    restart: always
+    expose:
+      - 27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mongo2020
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./mongodb:/data/db
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 9090:27017
+    networks:
+      - ej
+
+  minio:
+    image: docker.io/bitnami/minio:2023
+    container_name: minio
+    restart: always
+    expose:
+      - 9000
+      - 9001
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=minio2023
+      - MINIO_DEFAULT_BUCKETS=dev
+    volumes:
+      - ./miniodb:/data
+    ports:
+      - 9085:9000
+      - 9086:9001
+    networks:
+      - ej
+
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb_data:/var/lib/influxdb
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - INFLUXDB_DB=mydb
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+      - INFLUXDB_USER=root
+      - INFLUXDB_USER_PASSWORD=root
+      - TZ=Asia/Shanghai
+    networks:
+      - ej
+
+
+networks:
+  ej:
+    driver: bridge
+

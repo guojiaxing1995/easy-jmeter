@@ -7,10 +7,23 @@ server:
 spring:
   # 数据源配置，请修改为你项目的实际配置
   datasource:
-    username: "root"
-    password: "123456"
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/lin-cms?useSSL=false&serverTimezone=UTC&characterEncoding=UTF8
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
+  data:
+    mongodb:
+      database: easyJmeter
+      host: ${MONGODB_HOST:mongodb}
+      port: 27017
+      username: ${MONGODB_USERNAME:root}
+      password: ${MONGODB_PASSWORD:mongo2020}
+      authentication-database: admin
+  influx:
+    url: http://${INFLUXDB_HOST:influxdb}:${INFLUXDB_PORT:8086}
+    user: ${INFLUXDB_USERNAME:root}
+    password: ${INFLUXDB_PASSWORD:root}
+    database: easyJmeter
 
 # 开启权限拦截
 auth:
@@ -21,9 +34,40 @@ login-captcha:
   enabled: false
   secret: "m49CPM5ak@MDXTzbbT_ZEyMM3KBsBn!h"
 
-# 开启请求日志记录
+# 开启http请求日志记录
 request-log:
   enabled: true
 
 
+logging:
+  level:
+    # web信息日志记录
+    web: debug
+    # SQL日志记录
+    io.github.guojiaxing1995.easyJmeter.mapper: debug
 
+minio:
+  endpoint: http://${MINIO_HOST:minio}:${MINIO_PORT:9000}
+  bucketName: dev
+  accessKey: ${MINIO_ACCESS_KEY:root}
+  secretKey: ${MINIO_SECRET_KEY:minio2023}
+
+swagger:
+  enable: false
+
+socket:
+  server:
+    host: 0.0.0.0
+    port: 9000
+    # 启动server时 此项为true
+    enable: true
+  client:
+    serverUrl: http://${SERVER_HOST:server}:9000
+    # 启动agent时 此项为true
+    enable: false
+
+cron:
+  heartBeat: "0 0/1 * * * ?"
+  deleteTaskRecordStorage: "0 0 1 ? * MON"
+  recordStatistics: "0 0/30 * * * ? "
+  jmeterLogClear: "0 0 2 ? * *"
