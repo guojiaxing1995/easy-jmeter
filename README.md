@@ -23,12 +23,6 @@
 
 <font face="楷体" color=gray>使用文档：[https://blog.csdn.net/qq_36450484/article/details/136213502](https://blog.csdn.net/qq_36450484/article/details/136213502)</font>
 
-### 视频演示
-
-<iframe height=500 width=510 src="https://player.youku.com/embed/XNjM3MTk5MDQzNg"></iframe >
-
-
-
 ### 部分模块展示
 
 ![用例列表](https://img-blog.csdnimg.cn/direct/d4cde4d0325d4060bc6075c880db6295.jpeg#pic_center)
