@@ -11,17 +11,17 @@ spring:
     username: "root"
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://49.235.228.222:9081/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
+    url: jdbc:mysql://192.168.56.66:9081/easy-jmeter?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=UTF8
   data:
     mongodb:
       database: easyJmeter
-      host: 49.235.228.222
+      host: 192.168.56.66
       port: 9090
       username: root
       password: mongo2020
       authentication-database: admin
   influx:
-    url: http://49.235.228.222:8086
+    url: http://192.168.56.66:8086
     user: root
     password: root
     database: easyJmeter
@@ -48,7 +48,7 @@ logging:
     io.github.guojiaxing1995.easyJmeter.mapper: debug
 
 minio:
-  endpoint: http://49.235.228.222:9085
+  endpoint: http://192.168.56.66:9085
   bucketName: dev
   accessKey: root
   secretKey: minio2023

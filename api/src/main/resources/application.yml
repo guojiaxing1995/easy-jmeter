@@ -5,7 +5,7 @@ spring:
     name: easy-jmeter
   # 激活环境配置
   profiles:
-    active: test
+    active: dev
   # 文件编码 UTF8
   mandatory-file-encoding: UTF-8
   mvc:
