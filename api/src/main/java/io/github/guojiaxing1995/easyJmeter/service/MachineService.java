@@ -29,4 +29,6 @@ public interface MachineService {
     boolean updateMachineStatus(MachineDO machineDO, JmeterStatusEnum status);
 
     MachineDO getByAddress(String address);
+
+    void setMachineOffline();
 }

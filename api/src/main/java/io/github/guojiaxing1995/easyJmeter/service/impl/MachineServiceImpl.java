@@ -106,4 +106,15 @@ public class MachineServiceImpl implements MachineService {
     public MachineDO getByAddress(String address) {
         return machineMapper.selectByAddress(address);
     }
+
+    @Override
+    public void setMachineOffline() {
+        ArrayList<MachineDO> machineDOS = this.getAll();
+        for (MachineDO machineDO : machineDOS) {
+            machineDO.setIsOnline(false);
+            machineDO.setJmeterStatus(JmeterStatusEnum.IDLE);
+            machineDO.setClientId("");
+            machineMapper.updateById(machineDO);
+        }
+    }
 }
