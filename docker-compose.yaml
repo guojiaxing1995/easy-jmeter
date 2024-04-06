@@ -122,7 +122,7 @@ services:
       - MINIO_ROOT_PASSWORD=minio2023
       - MINIO_DEFAULT_BUCKETS=dev
     volumes:
-      - ./miniodb:/data
+      - ./miniodb:/bitnami/minio/data
     ports:
       - 9085:9000
       - 9086:9001
