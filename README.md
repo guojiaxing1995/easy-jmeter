@@ -62,19 +62,26 @@ socket.client.enable=true
 
 ### 普通部署
 
-  1. 安装mysql5.7数据库
+  1. 安装mysql5.7数据库，导入初始化sql：api\src\main\resources\schema.sql
+
   2. 安装mongodb4.2数据库
+
   3. 安装influxdb1.8数据库
+
   4. 安装minio文件服务器，设置指定bucket的Access Policy为public
+
   5. 部署server、agent。代码结构中api目录下为后端目录，后端使用springboot，修改配置文件并打包。其中作为server启动时设置socket.server.enable为true，作为agent启动时设置socket.client.enable为true，agent需要设置服务端socketio地址serverUrl。agent所在压力机需要配置jmete安装路径作为环境变量JMETER_HOME.
+
   6. 前端服务打包。代码结构中web目录下为前端服务，前端使用vue，node版本v12.13.0，打包命令 npm run build。
+
   7. 安装nginx。将web目录下default.conf按照实际情况修改，将前端包和配置文件放入nginx指定目录下启动。
-  8. 
+
+     
 
 ### 容器化部署
 
- 1. 构建后端jar包，代码结构中api目录下为后端目录，后端框架springboot,maven构建命令，`mvn clean package`。
- 2. 构建前端dist包，前端使用vue，node版本v12.13.0，打包命令 `npm run build`。
- 3. 编辑项目根目录下docker-compose.yaml 文件，修改environment中的minio地址和influxdb地址为实际地址，修改volumes中宿主机jmeter地址为实际地址。项目根目录下执行`docker-compose up -d`构建镜像并启动。
-
+  1. 构建后端jar包，代码结构中api目录下为后端目录，后端框架springboot,maven构建命令，`mvn clean package`。
+  2. 构建前端dist包，前端使用vue，node版本v12.13.0，打包命令 `npm run build`。
+  3. 编辑项目根目录下docker-compose.yaml 文件，修改environment中的minio地址和influxdb地址为实际地址，修改volumes中宿主机jmeter地址为实际地址。项目根目录下执行`docker-compose up -d`构建镜像并启动。给生成的minio以及apachejmeter/bin赋予777权限。
+  4. 导入初始化sql：api\src\main\resources\schema.sql。
 

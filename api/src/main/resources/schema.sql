@@ -236,6 +236,9 @@ CREATE TABLE `machine` (
    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
+INSERT INTO `easy-jmeter`.machine (id, name, address, path, version, is_online, jmeter_status, client_id, create_time, update_time, delete_time) VALUES (1, '172.25.0.91', '172.25.0.91', '/opt/apache-jmeter', '5.6.2', 1, 0, 'd0947a00-f375-4129-82b3-8e907f4cbbdc', '2024-04-04 21:41:49.477', '2024-11-11 21:14:10.000', null);
+INSERT INTO `easy-jmeter`.machine (id, name, address, path, version, is_online, jmeter_status, client_id, create_time, update_time, delete_time) VALUES (2, '172.25.0.92', '172.25.0.92', '/opt/apache-jmeter', '5.6.2', 1, 0, '5c598572-56bd-4183-b951-44d5bfb40e4f', '2024-04-04 21:41:56.725', '2024-11-11 21:14:10.000', null);
+
 -- ----------------------------
 -- 文件表
 -- ----------------------------

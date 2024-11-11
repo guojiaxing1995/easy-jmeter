@@ -20,6 +20,7 @@ services:
       - ej
     ports:
       - 8037:5000
+      - 8036:9000
     volumes:
       - ./logs/server/:/opt/logs/
       - ./assets/:/opt/assets/
@@ -133,13 +134,14 @@ services:
   influxdb:
     image: influxdb:1.8
     container_name: influxdb
+    restart: always
     ports:
       - "8086:8086"
     volumes:
       - ./influxdb_data:/var/lib/influxdb
       - /etc/localtime:/etc/localtime:ro
     environment:
-      - INFLUXDB_DB=mydb
+      - INFLUXDB_DB=easyJmeter
       - INFLUXDB_ADMIN_USER=admin
       - INFLUXDB_ADMIN_PASSWORD=admin
       - INFLUXDB_USER=root
