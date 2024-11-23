@@ -28,6 +28,7 @@ import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.threads.SetupThreadGroup;
+import org.apache.jmeter.threads.ThreadGroup;
 import org.apache.jmeter.timers.ConstantThroughputTimer;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.backend.BackendListener;
@@ -255,14 +256,14 @@ public class JmeterExternal {
                 }
             }
             // 修改jmx中压测参数
-            SearchByClass<SetupThreadGroup> setupThreadGroupSearch = new SearchByClass<>(SetupThreadGroup.class);
-            testPlanTree.traverse(setupThreadGroupSearch);
-            for (SetupThreadGroup setupThreadGroup : setupThreadGroupSearch.getSearchResults()) {
-                setupThreadGroup.setNumThreads(taskDO.getNumThreads()/taskDO.getMachineNum());
-                setupThreadGroup.setDuration(taskDO.getDuration());
-                setupThreadGroup.setScheduler(true);
-                setupThreadGroup.setRampUp(taskDO.getRampTime());
-                setupThreadGroup.getSamplerController().setProperty("LoopController.loops", -1);
+            SearchByClass<ThreadGroup> threadGroupSearch = new SearchByClass<>(org.apache.jmeter.threads.ThreadGroup.class);
+            testPlanTree.traverse(threadGroupSearch);
+            for (ThreadGroup threadGroup : threadGroupSearch.getSearchResults()) {
+                threadGroup.setNumThreads(taskDO.getNumThreads()/taskDO.getMachineNum());
+                threadGroup.setDuration(taskDO.getDuration());
+                threadGroup.setScheduler(true);
+                threadGroup.setRampUp(taskDO.getRampTime());
+                threadGroup.getSamplerController().setProperty("LoopController.loops", -1);
             }
 
             // 添加常数吞吐量定时器
