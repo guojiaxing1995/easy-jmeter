@@ -1,6 +1,8 @@
 package io.github.guojiaxing1995.easyJmeter.service.impl;
 
+import io.github.guojiaxing1995.easyJmeter.dto.task.JmeterParamDTO;
 import io.github.guojiaxing1995.easyJmeter.service.TaskInfluxdbService;
+import lombok.extern.slf4j.Slf4j;
 import org.influxdb.InfluxDB;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
@@ -12,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
 
@@ -266,5 +269,213 @@ public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
         }
 
         return map;
+    }
+    @Override
+    public List<JmeterParamDTO> getEvents(JmeterParamDTO jmeterParamDTO) {
+        String startTime = jmeterParamDTO.getStartTime();
+        String endTime = jmeterParamDTO.getEndTime();
+        String application = jmeterParamDTO.getApplication();
+        String tags = jmeterParamDTO.getTags();
+        String text = jmeterParamDTO.getText();
+        if (startTime.isEmpty() || endTime.isEmpty()){
+            return List.of();
+        }
+        String queryEvents = "SELECT time,application,tags,text FROM events WHERE time >= '%s' AND time <= '%s'";
+        List<String> params = new ArrayList<>();
+        params.add(startTime);
+        params.add(endTime);
+
+        if (application != null && !application.isEmpty()) {
+            queryEvents += " AND application =~ /%s/";
+            params.add(application);
+        }
+
+        if (tags != null && !tags.isEmpty()) {
+            queryEvents += " AND tags =~ /%s/";
+            params.add(tags);
+        }
+
+        if (text != null && !text.isEmpty()) {
+            queryEvents += " AND text =~ /%s/";
+            params.add(text);
+        }
+
+        queryEvents += " tz('Asia/Shanghai')";
+        queryEvents = String.format(queryEvents, params.toArray());
+        log.info(queryEvents);
+        List<QueryResult.Result> results = influxDB.query(new Query(queryEvents)).getResults();
+        List<Map<String, Object>> eventsList = new ArrayList<>();
+        for (QueryResult.Result result : results) {
+            if (result.getSeries() != null) {
+                for (QueryResult.Series series : result.getSeries()) {
+                    List<List<Object>> values = series.getValues();
+                    List<String> columns = series.getColumns();
+
+                    for (List<Object> value : values) {
+                        Map<String, Object> row = new HashMap<>();
+                        for (int i = 0; i < columns.size(); i++) {
+                            row.put(columns.get(i), value.get(i));
+                        }
+                        eventsList.add(row);
+                    }
+                }
+            }
+        }
+
+        // 进行数据处理
+        List<JmeterParamDTO> resultsList = new ArrayList<>();
+        List<Map<String, Object>> toRemove = new ArrayList<>();
+
+        for (int i = 0; i < eventsList.size(); i++) {
+            Map<String, Object> map1 = eventsList.get(i);
+            if (map1.get("text").toString().endsWith("started") &&!toRemove.contains(map1)) {
+                String applicationEvent = map1.get("application").toString();
+                String tagsEvent = map1.get("tags").toString();
+                long minTimeDiff = Long.MAX_VALUE;
+                Map<String, Object> closestEndedMap = null;
+                for (int j = 0; j < eventsList.size(); j++) {
+                    Map<String, Object> map2 = eventsList.get(j);
+                    if (j == i) continue;
+                    if (map2.get("text").toString().endsWith("ended") &&
+                            map2.get("application").toString().equals(applicationEvent) &&
+                            map2.get("tags").toString().equals(tagsEvent) &&
+                            !toRemove.contains(map2)) {
+                        Instant time1 = OffsetDateTime.parse(map1.get("time").toString()).toInstant();
+                        Instant time2 = OffsetDateTime.parse(map2.get("time").toString()).toInstant();
+                        long timeDiff = Duration.between(time1, time2).toMillis();
+                        if (timeDiff < minTimeDiff) {
+                            minTimeDiff = timeDiff;
+                            closestEndedMap = map2;
+                        }
+                    }
+                }
+                if (closestEndedMap!= null) {
+                    JmeterParamDTO jmeterParam = new JmeterParamDTO();
+                    jmeterParam.setApplication(applicationEvent);
+                    jmeterParam.setStartTime(map1.get("time").toString());
+                    jmeterParam.setEndTime(closestEndedMap.get("time").toString());
+                    jmeterParam.setTags(tagsEvent);
+                    jmeterParam.setText(map1.get("text").toString().split(" ")[0]);
+                    resultsList.add(0, jmeterParam);
+                    toRemove.add(map1);
+                    toRemove.add(closestEndedMap);
+                }
+            }
+        }
+
+
+        return resultsList;
+    }
+
+    @Override
+    public List<Map<String, Object>> getAggregateReport(List<JmeterParamDTO> jmeterParamDTOList) {
+        List<Map<String,Object>> aggregateReportList = new ArrayList<>();
+        for (JmeterParamDTO jmeterParamDTO : jmeterParamDTOList) {
+            List<Map<String,Object>> query1List = new ArrayList<>();
+            String application = jmeterParamDTO.getApplication();
+            String tags = jmeterParamDTO.getTags();
+            String text = jmeterParamDTO.getText();
+            String startTime = jmeterParamDTO.getStartTime();
+            String endTime = jmeterParamDTO.getEndTime();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+            Duration duration = Duration.between(ZonedDateTime.parse(startTime, formatter), ZonedDateTime.parse(endTime, formatter));
+            long time = duration.getSeconds();
+
+            String query1 = String.format("SELECT sum(count) as sample,sum(avg) as avg,MEDIAN(avg),sum(countError) as error ,mean(max) as max,mean(min) as min,sum(rb)/"
+                            +time+ " as rb,sum(sb)/"+time+" as sb ,sum(hit)/"+time+" as tps FROM jmeter WHERE statut='all' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction tz('Asia/Shanghai')",
+                    startTime, endTime, application);
+            List<QueryResult.Result> results1 = influxDB.query(new Query(query1)).getResults();
+            for (QueryResult.Result result : results1) {
+                if (result.getSeries() != null) {
+                    for (QueryResult.Series series : result.getSeries()) {
+                        List<List<Object>> values = series.getValues();
+                        List<String> columns = series.getColumns();
+                        String transaction = series.getTags().get("transaction");
+
+                        for (List<Object> value : values) {
+                            Map<String, Object> row = new HashMap<>();
+                            row.put("transaction", transaction);
+                            row.put("application", application);
+                            row.put("tags", tags);
+                            row.put("startTime", startTime);
+                            row.put("endTime", endTime);
+                            row.put("text", text);
+                            row.put("pct90.0", 0.0f);
+                            row.put("pct95.0", 0.0f);
+                            row.put("pct99.0", 0.0f);
+                            for (int i = 0; i < columns.size(); i++) {
+                                row.put(columns.get(i), value.get(i));
+                            }
+                            row.remove("time");
+                            query1List.add(row);
+                        }
+                    }
+                }
+            }
+            String query2 = String.format("SELECT sum(count) as error FROM jmeter WHERE statut='ko' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction tz('Asia/Shanghai')",
+                    startTime, endTime, application);
+            List<QueryResult.Result> results2 = influxDB.query(new Query(query2)).getResults();
+            for (QueryResult.Result result : results2) {
+                if (result.getSeries() != null) {
+                    for (QueryResult.Series series : result.getSeries()) {
+                        List<List<Object>> values = series.getValues();
+                        String transaction = series.getTags().get("transaction");
+                        for (List<Object> value : values) {
+                            for (Map<String, Object> row: query1List) {
+                                if (row.get("transaction").equals(transaction)) {
+                                    row.put("error", value.get(1));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            String query3 = String.format("SELECT * FROM jmeter WHERE statut='all' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' tz('Asia/Shanghai')",
+                    startTime, endTime, application);
+            List<Map<String,Object>> pctList = new ArrayList<>();
+            List<QueryResult.Result> results3 = influxDB.query(new Query(query3)).getResults();
+            for (QueryResult.Result result : results3) {
+                if (result.getSeries() != null) {
+                    for (QueryResult.Series series : result.getSeries()) {
+                        List<List<Object>> values = series.getValues();
+                        List<String> columns = series.getColumns();
+
+                        for (List<Object> value : values) {
+                            Map<String, Object> row = new HashMap<>();
+                            for (int i = 0; i < columns.size(); i++) {
+                                row.put(columns.get(i), value.get(i));
+                            }
+                            pctList.add(row);
+                        }
+                    }
+                }
+            }
+            for (Map<String, Object> value : pctList) {
+                String transaction = value.get("transaction").toString();
+                for (Map<String, Object> row: query1List) {
+                    float pct90 = (float) row.get("pct90.0");
+                    float pct95 = (float) row.get("pct95.0");
+                    float pct99 = (float) row.get("pct99.0");
+                    if (row.get("transaction").equals(transaction)) {
+                        row.put("pct90.0", Float.parseFloat(value.get("pct90.0").toString())+pct90);
+                        row.put("pct95.0", Float.parseFloat(value.get("pct95.0").toString())+pct95);
+                        row.put("pct99.0", Float.parseFloat(value.get("pct99.0").toString())+pct99);
+                    }
+                }
+            }
+            for (Map<String, Object> row : query1List) {
+                if (row.get("pct90.0") != null) {
+                    row.put("pct90.0", Float.parseFloat(row.get("pct90.0").toString())/pctList.size());
+                }
+                if (row.get("pct95.0") != null) {
+                    row.put("pct95.0", Float.parseFloat(row.get("pct95.0").toString())/pctList.size());
+                }
+                if (row.get("pct99.0") != null) {
+                    row.put("pct99.0", Float.parseFloat(row.get("pct99.0").toString())/pctList.size());
+                }
+            }
+            aggregateReportList.addAll(query1List);
+        }
+        return aggregateReportList;
     }
 }

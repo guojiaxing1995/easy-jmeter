@@ -2,10 +2,7 @@ package io.github.guojiaxing1995.easyJmeter.controller.v1;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.util.PageUtil;
-import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.task.TaskRealTimeDTO;
-import io.github.guojiaxing1995.easyJmeter.dto.task.TaskSearchDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.*;
 import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
 import io.github.guojiaxing1995.easyJmeter.service.TaskInfluxdbService;
@@ -135,5 +132,14 @@ public class TaskController {
             default:
                 throw new ParameterException(12501);
         }
+    }
+
+    @PostMapping("/aggregateReport/search")
+    @ApiOperation(value = "聚合报告查询", notes = "根据时间范围、应用、标签查询聚合报告，按照应用、标签进行分类")
+    @PermissionMeta(value = "聚会报告记录", module = "jmeter数据")
+    @LoginRequired
+    public List<Map<String, Object>> getAggregateReportSearch(@RequestBody @Validated JmeterParamDTO validator) {
+        List<JmeterParamDTO> events = taskInfluxdbService.getEvents(validator);
+        return taskInfluxdbService.getAggregateReport(events);
     }
 }
