@@ -381,7 +381,7 @@ public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
             Duration duration = Duration.between(ZonedDateTime.parse(startTime, formatter), ZonedDateTime.parse(endTime, formatter));
             long time = duration.getSeconds();
 
-            String query1 = String.format("SELECT sum(count) as sample,sum(avg) as avg,MEDIAN(avg),sum(countError) as error ,mean(max) as max,mean(min) as min,sum(rb)/"
+            String query1 = String.format("SELECT sum(count) as sample,count(count),mean(avg) as avg,MEDIAN(avg),sum(countError) as error ,max(max),min(min),sum(rb)/"
                             +time+ " as rb,sum(sb)/"+time+" as sb ,sum(hit)/"+time+" as tps FROM jmeter WHERE statut='all' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction tz('Asia/Shanghai')",
                     startTime, endTime, application);
             List<QueryResult.Result> results1 = influxDB.query(new Query(query1)).getResults();
@@ -465,13 +465,13 @@ public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
             }
             for (Map<String, Object> row : query1List) {
                 if (row.get("pct90.0") != null) {
-                    row.put("pct90.0", Float.parseFloat(row.get("pct90.0").toString())/pctList.size());
+                    row.put("pct90.0", Float.parseFloat(row.get("pct90.0").toString())/Double.parseDouble(row.get("count").toString()));
                 }
                 if (row.get("pct95.0") != null) {
-                    row.put("pct95.0", Float.parseFloat(row.get("pct95.0").toString())/pctList.size());
+                    row.put("pct95.0", Float.parseFloat(row.get("pct95.0").toString())/Double.parseDouble(row.get("count").toString()));
                 }
                 if (row.get("pct99.0") != null) {
-                    row.put("pct99.0", Float.parseFloat(row.get("pct99.0").toString())/pctList.size());
+                    row.put("pct99.0", Float.parseFloat(row.get("pct99.0").toString())/Double.parseDouble(row.get("count").toString()));
                 }
             }
             aggregateReportList.addAll(query1List);

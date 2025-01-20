@@ -53,6 +53,7 @@ export default {
 }
 
 .menu-tab {
+  position: absolute;
   width: 100%;
   height: 38px;
   line-height: 38px;

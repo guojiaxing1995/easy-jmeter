@@ -1,13 +1,13 @@
 const jmeterRouter = {
     route: null,
     name: null,
-    title: '聚会报告记录',
+    title: '聚合报告记录',
     type: 'tab', // 类型: folder, tab, view
     icon: 'iconfont icon-aggregateReport',
     filePath: 'view/jmeter/', // 文件路径
     order: null,
     inNav: true,
-    permission: ['聚会报告记录'],
+    permission: ['聚合报告记录'],
     children: [
       {
         title: '查询',
