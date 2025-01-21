@@ -13,10 +13,12 @@ import io.github.guojiaxing1995.easyJmeter.common.enumeration.TaskResultEnum;
 import io.github.guojiaxing1995.easyJmeter.common.mybatis.Page;
 import io.github.guojiaxing1995.easyJmeter.common.util.CSVUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.CreateOrUpdateTaskDTO;
+import io.github.guojiaxing1995.easyJmeter.dto.task.JmeterAggregateReportDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.ModifyTaskDTO;
 import io.github.guojiaxing1995.easyJmeter.dto.task.TaskMachineDTO;
 import io.github.guojiaxing1995.easyJmeter.mapper.*;
 import io.github.guojiaxing1995.easyJmeter.model.*;
+import io.github.guojiaxing1995.easyJmeter.repository.AggregateReportRepository;
 import io.github.guojiaxing1995.easyJmeter.repository.ReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.JFileService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskLogService;
@@ -68,6 +70,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private ReportRepository reportRepository;
+
+    @Autowired
+    private AggregateReportRepository aggregateReportRepository;
 
     @Override
     @Transactional
@@ -381,5 +386,19 @@ public class TaskServiceImpl implements TaskService {
         QueryWrapper<TaskDO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("jmeter_case", caseId).eq("result", 1);
         return taskMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public void aggregateReportAdd(JmeterAggregateReportDTO jmeterAggregateReportDTO) {
+        Integer projectId = jmeterAggregateReportDTO.getProjectId();
+        List<AggregateReportDO> aggregateReportDOList = jmeterAggregateReportDTO.getAggregateReports();
+        String text = jmeterAggregateReportDTO.getText();
+        for (AggregateReportDO aggregateReport : aggregateReportDOList) {
+            aggregateReport.setCreateTime(new Date());
+            aggregateReport.setProjectId(projectId);
+            aggregateReport.setText(text);
+            aggregateReportRepository.save(aggregateReport);
+        }
+
     }
 }

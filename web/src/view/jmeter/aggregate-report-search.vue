@@ -1,8 +1,8 @@
 <template>
-    <div  class="container">
+    <div class="container">
       <el-row :gutter="35" class="search">
-        <el-col class="search-item" :span="8"><el-form-item label="应用名称"><el-input v-model="search.application" placeholder="请输入application" clearable /></el-form-item></el-col>
-        <el-col class="search-item" :span="8"><el-form-item label="标记名称"><el-input v-model="search.tags" placeholder="请输入tags" clearable /></el-form-item></el-col>
+        <el-col class="search-item" :span="8"><el-form-item label="应用名称"><el-input v-model="search.application" placeholder="请输入 application" clearable /></el-form-item></el-col>
+        <el-col class="search-item" :span="8"><el-form-item label="标记名称"><el-input v-model="search.tags" placeholder="请输入 tags" clearable /></el-form-item></el-col>
         <el-col class="search-item" :span="8"><el-form-item label="测试时间">
             <el-date-picker v-model="dateValue" type="datetimerange" range-separator="To" start-placeholder="开始时间" end-placeholder="结束时间" 
             clearable value-format="YYYY-MM-DD HH:mm:ss" @change="selectDate"/></el-form-item>
@@ -10,7 +10,7 @@
       </el-row>
       <el-row :gutter="35" class="search">
         <el-col class="search-item" :span="8"><el-form-item label="测试备注">
-          <el-input v-model="search.text" placeholder="请输入textTitle" clearable />
+          <el-input v-model="search.text" placeholder="请输入 textTitle" clearable />
         </el-form-item></el-col>
         <el-col class="search-item" :span="8"></el-col>
         <el-col class="search-item search-btn" :span="8" >
@@ -18,11 +18,11 @@
           <el-button type="primary" @click="getDatas" class="btn">查询</el-button>
         </el-col>
       </el-row>
-      <el-table :data="datas" v-loading="loading" :row-class-name="getRowClassName" max-height="550">
+      <el-table :data="datas" v-loading="loading" :row-class-name="getRowClassName" :max-height="maxTableHeight">
         <el-table-column type="selection"/>
-        <el-table-column prop="application" label="application" width="110" show-overflow-tooltip fixed="left"></el-table-column>
-        <el-table-column prop="tags" label="tags" width="100" show-overflow-tooltip fixed="left"></el-table-column>
-        <el-table-column prop="transaction" label="label" width="90" show-overflow-tooltip fixed="left"></el-table-column>
+        <el-table-column prop="application" label="application" width="130" show-overflow-tooltip fixed="left"></el-table-column>
+        <el-table-column prop="tags" label="tags" width="150" show-overflow-tooltip fixed="left"></el-table-column>
+        <el-table-column prop="transaction" label="label" width="150" show-overflow-tooltip fixed="left"></el-table-column>
         <el-table-column prop="sample" label="sample" width="90" show-overflow-tooltip></el-table-column>
         <el-table-column prop="avg" label="avg" width="90" show-overflow-tooltip></el-table-column>
         <el-table-column prop="median" label="median" width="90" show-overflow-tooltip></el-table-column>
@@ -40,10 +40,10 @@
       </el-table>
     </div>
   </template>
-
+  
   <script>
     import Utils from 'lin/util/util'
-    import { onMounted, ref ,reactive, onActivated } from 'vue'
+    import { onMounted, ref, reactive, onActivated, onBeforeUnmount } from 'vue'
     import { post } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
   
@@ -56,10 +56,23 @@
         const dateValue = ref([])
         const search = reactive({ application:'',tags:'',text:'',start_time:'',end_time:''})
         const colorPool = ref(['#1abc9c', '#3498db', '#9b59b6', '#e74c3c', '#f1c40f'])
+        const maxTableHeight = ref(0)
+  
+        const calculateMaxHeight = () => {
+          const browserHeight = window.innerHeight || document.documentElement.clientHeight;
+          const extraHeight = 285; 
+          maxTableHeight.value = browserHeight - extraHeight;
+        }
   
         onMounted(() => {
           setDefaultDateRange()
           getDatas()
+          calculateMaxHeight()
+          window.addEventListener('resize', calculateMaxHeight)
+        })
+  
+        onBeforeUnmount(() => {
+          window.removeEventListener('resize', calculateMaxHeight)
         })
   
         const getDatas = async () => {
@@ -74,7 +87,7 @@
             datas.value = []
           }
         }
-
+  
         const selectDate = (date) => {
             if(date == null) {
                 search.start_time = ''
@@ -87,16 +100,16 @@
             originalDate.setUTCHours(23, 59, 59)
             let modifiedDateTimeString = originalDate.toISOString().slice(0, 19).replace('T', ' ')
             dateValue.value[1] = modifiedDateTimeString
-
+  
             search.start_time = dateValue.value[0]
             search.end_time = dateValue.value[1]
         }
-
+  
         const setDefaultDateRange = async () => {
             const today = new Date()
             const startOfDay = new Date(today)
             startOfDay.setUTCHours(0, 0, 0, 0) // 设置为今天的零点
-
+  
             const endOfDay = new Date(today);
             endOfDay.setUTCHours(23, 59, 59, 999) // 设置为今天的23:59:59
             
@@ -105,7 +118,7 @@
             search.start_time = dateValue.value[0]
             search.end_time = dateValue.value[1]
         }
-
+  
         const getRowClassName = ({row, rowIndex}) => {
           const uniqueNames = Array.from(new Set(datas.value.map(r => r.application)))
           if (uniqueNames.length === 1) {
@@ -121,7 +134,7 @@
           const colorIndex = uniqueNames.indexOf(row.application) % colorPool.value.length
           return `row-color-${colorIndex}`
         }
-
+  
         return {
           datas,
           loading,
@@ -132,66 +145,66 @@
           setDefaultDateRange,
           colorPool,
           getRowClassName,
+          maxTableHeight
         }
-  
       },
     }
   </script>
-  
-  <style lang="scss" scoped>
-  .container {
-
-    padding: 58px 30px 20px 30px;
-      .search{
-        margin: 0 10px;
-      .search-item {
-        height: 50px;
-        line-height: 50px;
-        vertical-align: middle;
-      }
-      .search-btn {
-        text-align: right;
-      }
-      .btn {
-        vertical-align: top;
-      }
-    }
-
-    ::v-deep .is-vertical {
-      width: 0;
-      top: 2px;
-    }
-
-    ::v-deep .row-color-0 {
-      background-color: hsla(160, 72%, 36%, 0.1);
-    }
-    ::v-deep tr.row-color-0 td {
-      background-color: hsla(160, 72%, 36%, 0.1);
-    }
-    ::v-deep .row-color-1 {
-      background-color: rgba(52, 152, 219, 0.1);
-    }
-    ::v-deep tr.row-color-1 td {
-      background-color: rgba(52, 152, 219, 0.1);
-    }
-    ::v-deep .row-color-2 {
-      background-color: rgba(155, 89, 182, 0.1);
-    }
-    ::v-deep tr.row-color-2 td {
-      background-color: rgba(155, 89, 182, 0.1);
-    }
-    ::v-deep .row-color-3 {
-      background-color: rgba(231, 76, 60, 0.1);
-    }
-    ::v-deep tr.row-color-3 td {
-      background-color: rgba(231, 76, 60, 0.1);
-    }
-    ::v-deep .row-color-4 {
-      background-color: rgba(241, 196, 15, 0.1);
-    }
-    ::v-deep tr.row-color-4 td {
-      background-color: rgba(241, 196, 15, 0.1);
-    }
     
-  }
-  </style>
+    <style lang="scss" scoped>
+    .container {
+  
+      padding: 58px 30px 20px 30px;
+        .search{
+          margin: 0 10px;
+        .search-item {
+          height: 50px;
+          line-height: 50px;
+          vertical-align: middle;
+        }
+        .search-btn {
+          text-align: right;
+        }
+        .btn {
+          vertical-align: top;
+        }
+      }
+  
+      ::v-deep .is-vertical {
+        width: 0;
+        top: 2px;
+      }
+  
+      ::v-deep .row-color-0 {
+        background-color: hsla(160, 72%, 36%, 0.1);
+      }
+      ::v-deep tr.row-color-0 td {
+        background-color: hsla(160, 72%, 36%, 0.1);
+      }
+      ::v-deep .row-color-1 {
+        background-color: rgba(52, 152, 219, 0.1);
+      }
+      ::v-deep tr.row-color-1 td {
+        background-color: rgba(52, 152, 219, 0.1);
+      }
+      ::v-deep .row-color-2 {
+        background-color: rgba(155, 89, 182, 0.1);
+      }
+      ::v-deep tr.row-color-2 td {
+        background-color: rgba(155, 89, 182, 0.1);
+      }
+      ::v-deep .row-color-3 {
+        background-color: rgba(231, 76, 60, 0.1);
+      }
+      ::v-deep tr.row-color-3 td {
+        background-color: rgba(231, 76, 60, 0.1);
+      }
+      ::v-deep .row-color-4 {
+        background-color: rgba(241, 196, 15, 0.1);
+      }
+      ::v-deep tr.row-color-4 td {
+        background-color: rgba(241, 196, 15, 0.1);
+      }
+      
+    }
+    </style>

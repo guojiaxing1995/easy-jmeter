@@ -53,6 +53,7 @@ export default {
 }
 
 .menu-tab {
+  z-index: 999;
   position: absolute;
   width: 100%;
   height: 38px;

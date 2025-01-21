@@ -136,10 +136,19 @@ public class TaskController {
 
     @PostMapping("/aggregateReport/search")
     @ApiOperation(value = "聚合报告查询", notes = "根据时间范围、应用、标签查询聚合报告，按照应用、标签进行分类")
-    @PermissionMeta(value = "聚会报告记录", module = "jmeter数据")
+    @PermissionMeta(value = "聚合报告记录", module = "jmeter数据")
     @LoginRequired
-    public List<Map<String, Object>> getAggregateReportSearch(@RequestBody @Validated JmeterParamDTO validator) {
+    public List<Map<String, Object>> aggregateReportSearch(@RequestBody @Validated JmeterParamDTO validator) {
         List<JmeterParamDTO> events = taskInfluxdbService.getEvents(validator);
         return taskInfluxdbService.getAggregateReport(events);
+    }
+
+    @PostMapping("/aggregateReport/archive")
+    @ApiOperation(value = "聚合报告归档", notes = "选择聚合报告归档到目标工程下")
+    @PermissionMeta(value = "聚合报告记录", module = "jmeter数据")
+    @LoginRequired
+    public CreatedVO aggregateReportArchive(@RequestBody @Validated JmeterAggregateReportDTO validator) {
+        taskService.aggregateReportAdd(validator);
+        return new CreatedVO();
     }
 }

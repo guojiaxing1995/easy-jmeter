@@ -370,19 +370,19 @@ public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
     @Override
     public List<Map<String, Object>> getAggregateReport(List<JmeterParamDTO> jmeterParamDTOList) {
         List<Map<String,Object>> aggregateReportList = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
         for (JmeterParamDTO jmeterParamDTO : jmeterParamDTOList) {
             List<Map<String,Object>> query1List = new ArrayList<>();
             String application = jmeterParamDTO.getApplication();
             String tags = jmeterParamDTO.getTags();
             String text = jmeterParamDTO.getText();
             String startTime = jmeterParamDTO.getStartTime();
-            String endTime = jmeterParamDTO.getEndTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+            String endTime = ZonedDateTime.parse(jmeterParamDTO.getEndTime(), formatter).plus(Duration.ofMillis(200)).format(formatter);
             Duration duration = Duration.between(ZonedDateTime.parse(startTime, formatter), ZonedDateTime.parse(endTime, formatter));
             long time = duration.getSeconds();
 
             String query1 = String.format("SELECT sum(count) as sample,count(count),mean(avg) as avg,MEDIAN(avg),sum(countError) as error ,max(max),min(min),sum(rb)/"
-                            +time+ " as rb,sum(sb)/"+time+" as sb ,sum(hit)/"+time+" as tps FROM jmeter WHERE statut='all' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction tz('Asia/Shanghai')",
+                            +time+ " as rb,sum(sb)/"+time+" as sb ,sum(hit)/"+time+" as tps FROM jmeter WHERE statut='all' and time >= '%s' AND time <= '%s' and application = '%s' and transaction!='internal' group by transaction ORDER BY time DESC tz('Asia/Shanghai')",
                     startTime, endTime, application);
             List<QueryResult.Result> results1 = influxDB.query(new Query(query1)).getResults();
             for (QueryResult.Result result : results1) {

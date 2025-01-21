@@ -617,7 +617,7 @@ public class JmeterExternal {
             List<String> command = processBuilder.command();
             int exitCode = process.waitFor();
         } catch (IOException | InterruptedException e) {
-            log.error("jtl文件聚会失败", e);
+            log.error("jtl文件聚合失败", e);
         }
         log.info("合并jtl成功");
         return newJtlPath;
