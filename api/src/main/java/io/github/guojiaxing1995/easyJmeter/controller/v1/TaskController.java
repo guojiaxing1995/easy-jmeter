@@ -3,8 +3,10 @@ package io.github.guojiaxing1995.easyJmeter.controller.v1;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.github.guojiaxing1995.easyJmeter.common.util.PageUtil;
 import io.github.guojiaxing1995.easyJmeter.dto.task.*;
+import io.github.guojiaxing1995.easyJmeter.model.AggregateReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.ReportDO;
 import io.github.guojiaxing1995.easyJmeter.model.TaskDO;
+import io.github.guojiaxing1995.easyJmeter.repository.AggregateReportRepository;
 import io.github.guojiaxing1995.easyJmeter.service.TaskInfluxdbService;
 import io.github.guojiaxing1995.easyJmeter.service.TaskService;
 import io.github.guojiaxing1995.easyJmeter.vo.*;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +39,9 @@ public class TaskController {
 
     @Autowired
     private TaskInfluxdbService taskInfluxdbService;
+
+    @Autowired
+    private AggregateReportRepository aggregateReportRepository;
 
     @PostMapping("")
     @ApiOperation(value = "启动用例", notes = "创建任务")
@@ -150,5 +156,31 @@ public class TaskController {
     public CreatedVO aggregateReportArchive(@RequestBody @Validated JmeterAggregateReportDTO validator) {
         taskService.aggregateReportAdd(validator);
         return new CreatedVO();
+    }
+
+    @PostMapping("/aggregateReport/record/search")
+    @ApiOperation(value = "聚合报告归档数据查询", notes = "根据工程、备注、事务进行查询")
+    @PermissionMeta(value = "聚合报告归档数据", module = "jmeter数据")
+    @LoginRequired
+    public List<AggregateReportDO> aggregateReportRecordSearch(@RequestBody @Validated JmeterParamDTO validator) {
+        String label = validator.getLabel() != null ? validator.getLabel() : "";
+        Integer projectId = validator.getProjectId() != null ? validator.getProjectId() : 0;
+        String text = validator.getText() != null ? validator.getText() : "";
+
+        return aggregateReportRepository.getAggregateReportRecord(projectId, text, label).orElse(List.of());
+
+    }
+
+    @DeleteMapping("/aggregateReport/record/delete")
+    @ApiOperation(value = "聚合报告归档数据删除", notes = "传入记录id列表")
+    @PermissionMeta(value = "聚合报告归档数据", module = "jmeter数据")
+    @LoginRequired
+    public DeletedVO aggregateReportRecordRemove(@RequestBody List<String> ids) {
+        for (String id: ids) {
+            AggregateReportDO aggregateReportDO = aggregateReportRepository.findById(id).get();
+            aggregateReportDO.setDeleteTime(new Date());
+            aggregateReportRepository.save(aggregateReportDO);
+        }
+        return new DeletedVO();
     }
 }

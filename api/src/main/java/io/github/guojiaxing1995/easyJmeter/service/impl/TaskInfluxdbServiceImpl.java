@@ -277,7 +277,7 @@ public class TaskInfluxdbServiceImpl implements TaskInfluxdbService {
         String application = jmeterParamDTO.getApplication();
         String tags = jmeterParamDTO.getTags();
         String text = jmeterParamDTO.getText();
-        if (startTime.isEmpty() || endTime.isEmpty()){
+        if (startTime==null || endTime==null || startTime.isEmpty() || endTime.isEmpty()){
             return List.of();
         }
         String queryEvents = "SELECT time,application,tags,text FROM events WHERE time >= '%s' AND time <= '%s'";

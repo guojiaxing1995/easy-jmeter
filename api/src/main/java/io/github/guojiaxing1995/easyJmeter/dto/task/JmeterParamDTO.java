@@ -4,17 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class JmeterParamDTO {
 
-    @NotNull(message = "{task.time.not-empty}")
     private String startTime;
 
-    @NotNull(message = "{task.time.not-empty}")
     private String endTime;
 
     private String application;
@@ -22,4 +18,9 @@ public class JmeterParamDTO {
     private String tags;
 
     private String text;
+
+    private Integer projectId;
+
+    private String label;
+
 }

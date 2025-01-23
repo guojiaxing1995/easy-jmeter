@@ -3,6 +3,8 @@ package io.github.guojiaxing1995.easyJmeter.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
@@ -13,8 +15,13 @@ import java.util.Date;
 public class AggregateReportDO implements Serializable {
     private static final long serialVersionUID = 113323427779853001L;
 
+    @Id
+    private String id;
+
+    @Indexed
     private Integer projectId;
 
+    @Indexed
     private String label;
 
     private Long sample;
@@ -41,6 +48,7 @@ public class AggregateReportDO implements Serializable {
 
     private Double sb;
 
+    @Indexed
     private String text;
 
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSSXXX", timezone="Asia/Shanghai")

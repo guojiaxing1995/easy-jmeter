@@ -46,6 +46,7 @@ logging:
     web: debug
     # SQL日志记录
     io.github.guojiaxing1995.easyJmeter.mapper: debug
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 minio:
   endpoint: http://192.168.56.66:9085

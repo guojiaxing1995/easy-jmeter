@@ -397,7 +397,8 @@ public class TaskServiceImpl implements TaskService {
             aggregateReport.setCreateTime(new Date());
             aggregateReport.setProjectId(projectId);
             aggregateReport.setText(text);
-            aggregateReportRepository.save(aggregateReport);
+            aggregateReport.setId(UUID.randomUUID().toString());
+            aggregateReportRepository.insert(aggregateReport);
         }
 
     }
