@@ -172,11 +172,12 @@ public class TaskController {
     }
 
     @DeleteMapping("/aggregateReport/record/delete")
-    @ApiOperation(value = "聚合报告归档数据删除", notes = "传入记录id列表")
+    @ApiOperation(value = "聚合报告归档数据删除", notes = "传入记录id字符串")
     @PermissionMeta(value = "聚合报告归档数据", module = "jmeter数据")
     @LoginRequired
-    public DeletedVO aggregateReportRecordRemove(@RequestBody List<String> ids) {
-        for (String id: ids) {
+    public DeletedVO aggregateReportRecordRemove(@Parameter String ids) {
+        List<String> idList= Arrays.stream(ids.split(",")).map(String::trim).collect(Collectors.toList());
+        for (String id: idList) {
             AggregateReportDO aggregateReportDO = aggregateReportRepository.findById(id).get();
             aggregateReportDO.setDeleteTime(new Date());
             aggregateReportRepository.save(aggregateReportDO);

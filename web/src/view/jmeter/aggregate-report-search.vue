@@ -14,13 +14,13 @@
         </el-form-item></el-col>
         <el-col class="search-item" :span="8"></el-col>
         <el-col class="search-item search-btn" :span="8" >
-          <el-button type="success" @click="" class="btn">归档</el-button>
+          <el-button type="success" @click="archiveDialogShow" class="btn">归档</el-button>
           <el-button type="primary" @click="getDatas" class="btn">查询</el-button>
         </el-col>
       </el-row>
-      <el-table :data="datas" v-loading="loading" :row-class-name="getRowClassName" :max-height="maxTableHeight">
+      <el-table :data="datas" v-loading="loading" @selection-change="handleSelectionChange" :row-class-name="getRowClassName" :max-height="maxTableHeight" ref="tableRef">
         <el-table-column type="selection"/>
-        <el-table-column prop="application" label="application" width="130" show-overflow-tooltip fixed="left"></el-table-column>
+        <el-table-column prop="application" label="application" width="110" show-overflow-tooltip fixed="left"></el-table-column>
         <el-table-column prop="tags" label="tags" width="150" show-overflow-tooltip fixed="left"></el-table-column>
         <el-table-column prop="transaction" label="label" width="150" show-overflow-tooltip fixed="left"></el-table-column>
         <el-table-column prop="sample" label="sample" width="90" show-overflow-tooltip></el-table-column>
@@ -38,13 +38,28 @@
         <el-table-column prop="text" label="text" width="100" show-overflow-tooltip></el-table-column>
         <el-table-column label="time" width="90" show-overflow-tooltip><template v-slot="scope">{{ scope.row.startTime }} {{ scope.row.endTime }}</template></el-table-column>
       </el-table>
+      <el-dialog v-model="archiveVisible" title="数据归档" width="30%"> 
+        <el-form :model="archiveModel" ref="form">
+          <el-form-item label="项目" label-width="60px" prop="text">
+            <el-select v-model="archiveModel.project_id" placeholder="请选择工程" filterable style="width: 100%;">
+                <el-option v-for="item in projects" :key="item.id" :label="item.name" :value="item.id"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="备注" label-width="60px" prop="text">
+            <el-input placeholder="请输入备注" v-model="archiveModel.text" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }"></el-input>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer"> <el-button type="primary" @click="submitForm">确定</el-button></span>
+        </template>
+      </el-dialog>
     </div>
   </template>
   
   <script>
     import Utils from 'lin/util/util'
     import { onMounted, ref, reactive, onActivated, onBeforeUnmount } from 'vue'
-    import { post } from '@/lin/plugin/axios'
+    import { get, post } from '@/lin/plugin/axios'
     import { ElMessageBox, ElMessage } from 'element-plus'
   
     export default {
@@ -57,6 +72,10 @@
         const search = reactive({ application:'',tags:'',text:'',start_time:'',end_time:''})
         const colorPool = ref(['#1abc9c', '#3498db', '#9b59b6', '#e74c3c', '#f1c40f'])
         const maxTableHeight = ref(0)
+        const archiveVisible = ref(false)
+        const archiveModel = reactive({ text:'', project_id: '',aggregate_reports:[]})
+        const projects = ref([])
+        const tableRef = ref(null);
   
         const calculateMaxHeight = () => {
           const browserHeight = window.innerHeight || document.documentElement.clientHeight;
@@ -74,6 +93,57 @@
         onBeforeUnmount(() => {
           window.removeEventListener('resize', calculateMaxHeight)
         })
+  
+        const submitForm = async() => {
+          for (let i = 0; i < archiveModel.aggregate_reports.length; i++) {
+            archiveModel.aggregate_reports[i].pct90=archiveModel.aggregate_reports[i]["pct90.0"];
+            archiveModel.aggregate_reports[i].pct95=archiveModel.aggregate_reports[i]["pct95.0"];
+            archiveModel.aggregate_reports[i].pct99=archiveModel.aggregate_reports[i]["pct99.0"];
+            archiveModel.aggregate_reports[i].start_time=archiveModel.aggregate_reports[i].startTime;
+            archiveModel.aggregate_reports[i].end_time=archiveModel.aggregate_reports[i].endTime;
+            archiveModel.aggregate_reports[i].label=archiveModel.aggregate_reports[i].transaction;
+          }
+          let res
+          try {
+            res = await post('/v1/task/aggregateReport/archive', archiveModel , { showBackend: true })
+            archiveVisible.value = false
+            archiveModel.aggregate_reports = []
+            ElMessage.success(`${res.message}`)
+            tableRef.value.clearSelection()
+          
+          } catch (error) {
+            console.log(error);
+          }
+  
+        }
+  
+        const handleSelectionChange = (selection) => {
+          archiveModel.aggregate_reports = selection
+        }
+  
+        const archiveDialogShow = () => {
+          if (archiveModel.aggregate_reports.length === 0) {
+            ElMessage({
+              message: '请选择数据',
+              type: 'warning'
+            })
+            return
+          }
+          archiveVisible.value = true
+          archiveModel.text = ''
+          getProjects()
+        }
+  
+        const getProjects = async () => {
+            let res
+            try {
+              res = await get('/v1/project/all', { showBackend: true })
+              projects.value = res
+              archiveModel.project_id = projects.value[0].id
+            } catch (error) {
+              projects.value = []
+            }
+          }
   
         const getDatas = async () => {
           let res
@@ -145,7 +215,15 @@
           setDefaultDateRange,
           colorPool,
           getRowClassName,
-          maxTableHeight
+          maxTableHeight,
+          archiveVisible,
+          archiveModel,
+          archiveDialogShow,
+          getProjects,
+          projects,
+          submitForm,
+          handleSelectionChange,
+          tableRef,
         }
       },
     }
@@ -153,7 +231,6 @@
     
     <style lang="scss" scoped>
     .container {
-  
       padding: 58px 30px 20px 30px;
         .search{
           margin: 0 10px;
