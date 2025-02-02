@@ -230,6 +230,9 @@
   </script>
     
     <style lang="scss" scoped>
+    ::v-deep .el-dialog__body {
+      padding-bottom: 0;
+    }
     .container {
       padding: 58px 30px 20px 30px;
         .search{
